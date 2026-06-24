@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>揀物料 整耳罩 — 探究小活動</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fffaee;
+    --paper: #ffffff;
+    --line: #ead7b8;
+    --ink: #2a2218;
+    --ink-2: #5a4a36;
+    --muted: #a09080;
+    --primary: #e85d3c;
+    --primary-soft: #fde6df;
+    --good: #4caf6a;
+    --good-soft: #ddf3e3;
+    --soft-blue: #5b9dd9;
+    --soft-blue-bg: #e1edf9;
+    --yellow: #f5c842;
+    --yellow-soft: #fff3d0;
+    --sans: 'Noto Sans HK', system-ui, sans-serif;
+    /* font scale: 1=default(S) 1.15=M 1.3=L 1.5=XL */
+    --fs-scale: 1;
+  }
+  html { font-size: calc(16px * var(--fs-scale)); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+
+  body::before {
+    content: ""; position: fixed; inset: 0;
+    background:
+      radial-gradient(circle at 10% 0%, var(--primary-soft) 0%, transparent 40%),
+      radial-gradient(circle at 90% 100%, var(--soft-blue-bg) 0%, transparent 40%);
+    pointer-events: none; z-index: 0;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; position: relative; z-index: 1; }
+
+  /* hero */
+  .hero { text-align: center; padding: 16px 12px 24px; }
+  .hero-icon { width: 84px; height: 84px; background: var(--primary-soft); border-radius: 24px;
+    display: inline-grid; place-items: center; margin-bottom: 14px;
+    border: 3px solid white; box-shadow: 0 6px 20px -8px rgba(232, 93, 60, 0.4); }
+  h1 { font-size: 2rem; font-weight: 900; line-height: 1.15; margin-bottom: 6px; letter-spacing: -0.01em; }
+  .hero-sub { font-size: 1rem; color: var(--ink-2); font-weight: 500; }
+
+  /* PDIR nav */
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 28px 0 20px; }
+  .step-btn { background: var(--paper); border: 3px solid var(--line); border-radius: 20px;
+    padding: 14px 8px; cursor: pointer; text-align: center; font-family: inherit;
+    transition: all 0.2s; color: var(--ink); position: relative; }
+  .step-btn:hover { transform: translateY(-2px); }
+  .step-btn.active { background: var(--primary); border-color: var(--primary); color: white;
+    transform: translateY(-3px); box-shadow: 0 10px 24px -8px rgba(232,93,60,0.5); }
+  .step-btn.active .step-num { background: white; color: var(--primary); }
+  .step-btn.done { background: var(--good-soft); border-color: var(--good); }
+  .step-btn.done .step-num { background: var(--good); color: white; }
+  .step-btn.done::after { content: "✓"; position: absolute; top: 6px; right: 8px; color: var(--good); font-size: 0.9rem; font-weight: 900; }
+  .step-num { width: 38px; height: 38px; background: var(--primary-soft); color: var(--primary);
+    border-radius: 50%; display: inline-grid; place-items: center; font-size: 1.25rem; font-weight: 900; margin-bottom: 6px; }
+  .step-label { font-size: 0.95rem; font-weight: 700; }
+
+  /* stage */
+  .stage { display: none; background: var(--paper); border: 2px solid var(--line); border-radius: 28px; padding: 32px 28px; }
+  .stage.active { display: block; animation: pop 0.3s ease; }
+  @keyframes pop { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+  .stage-title { font-size: 1.65rem; font-weight: 900; margin-bottom: 6px; text-align: center; }
+  .stage-hint { font-size: 1rem; color: var(--ink-2); text-align: center; margin-bottom: 24px; }
+
+  /* ===== STAGE 1: 遮住就細聲 ===== */
+  .cover-demo { max-width: 480px; margin: 0 auto; text-align: center; }
+  .cover-scene { position: relative; width: 100%; height: 220px; background: var(--soft-blue-bg);
+    border: 3px solid var(--soft-blue); border-radius: 24px; margin-bottom: 18px; overflow: hidden; }
+  .cover-scene .speaker { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); font-size: 4rem; }
+  .cover-scene .waves { position: absolute; left: 110px; top: 50%; transform: translateY(-50%);
+    display: flex; gap: 8px; align-items: center; }
+  .cover-scene .wave { width: 12px; background: var(--soft-blue); border-radius: 6px;
+    transition: all 0.3s; }
+  .cover-scene .wave.big { height: 48px; }
+  .cover-scene .wave.mid { height: 28px; }
+  .cover-scene .wave.small { height: 14px; }
+  .cover-scene .ear { position: absolute; right: 24px; top: 50%; transform: translateY(-50%); font-size: 4rem; }
+  .cover-scene .hand { position: absolute; right: 60px; top: 50%; transform: translateY(-50%) scale(0);
+    font-size: 3.5rem; transition: transform 0.3s; }
+  .cover-scene.covered .hand { transform: translateY(-50%) scale(1); }
+  .cover-scene.covered .wave { opacity: 0.2; }
+
+  .cover-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .big-btn { padding: 14px 24px; font-size: 1.05rem; font-weight: 700; font-family: inherit;
+    border: 3px solid transparent; border-radius: 16px; cursor: pointer; transition: all 0.15s; min-width: 130px; }
+  .big-btn.primary { background: var(--primary); color: white; }
+  .big-btn.primary:hover { background: #d04a2c; transform: scale(1.05); }
+  .big-btn.choice { background: white; color: var(--ink); border-color: var(--line); }
+  .big-btn.choice:hover { border-color: var(--primary); }
+  .big-btn.ghost { background: var(--bg); color: var(--ink-2); border-color: var(--line); }
+
+  .next-btn { display: block; margin: 20px auto 0; padding: 16px 32px; font-size: 1.1rem; font-weight: 900;
+    font-family: inherit; background: var(--good); color: white; border: none; border-radius: 16px;
+    cursor: pointer; box-shadow: 0 6px 20px -8px rgba(76, 175, 106, 0.5); transition: all 0.15s; }
+  .next-btn:hover { transform: translateY(-2px); }
+  .next-btn:disabled { background: var(--muted); cursor: not-allowed; box-shadow: none; transform: none; }
+
+  /* ===== STAGE 2: 揀料 ===== */
+  .pick-row { margin-bottom: 20px; }
+  .pick-q { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; text-align: center; }
+  .pick-q .num { display: inline-block; width: 30px; height: 30px; background: var(--primary);
+    color: white; border-radius: 50%; line-height: 30px; text-align: center; margin-right: 8px; font-size: 1.05rem; }
+  .pick-q .req { color: var(--primary); font-size: 0.85rem; margin-left: 6px; }
+  .mat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .mat-row.waiting .mat-card:not(.picked) { opacity: 0.45; }
+  .mat-card { background: var(--paper); border: 3px solid var(--line); border-radius: 20px;
+    padding: 18px 12px; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .mat-card:hover { transform: translateY(-3px); }
+  .mat-card.picked { border-color: var(--good); background: var(--good-soft); }
+  .mat-emoji { font-size: 3.25rem; margin-bottom: 4px; line-height: 1; }
+  .mat-name { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
+  .mat-feel { font-size: 0.78rem; color: var(--ink-2); }
+
+  /* ===== STAGE 3: 整好喇 ===== */
+  .cup-area { display: flex; flex-direction: column; align-items: center; }
+  .cup-svg { width: 260px; height: 200px; margin-bottom: 16px; }
+  .cup-label { font-size: 1.25rem; font-weight: 900; color: var(--ink-2); margin-bottom: 6px; }
+  .cup-sub { font-size: 0.95rem; color: var(--muted); margin-bottom: 24px; text-align: center; }
+
+  /* ===== STAGE 4: 試下 ===== */
+  .sound-stage { display: flex; flex-direction: column; align-items: center; padding: 12px 0 16px; }
+  .sound-meter { width: 200px; height: 200px; border-radius: 50%; background: white;
+    border: 6px solid var(--line); display: grid; place-items: center; margin-bottom: 16px;
+    transition: all 0.3s; }
+  .sound-meter.loud { background: var(--primary-soft); border-color: var(--primary); animation: shake 0.3s; }
+  .sound-meter.quiet { background: var(--good-soft); border-color: var(--good); }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+  .sound-emoji { font-size: 5.5rem; line-height: 1; }
+  .sound-label { font-size: 1.4rem; font-weight: 900; margin-top: 4px; }
+
+  .test-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+  .test-btn { padding: 14px 24px; font-size: 1.05rem; font-weight: 700; font-family: inherit;
+    border: 3px solid var(--line); background: white; color: var(--ink); border-radius: 16px;
+    cursor: pointer; transition: all 0.15s; min-width: 140px; }
+  .test-btn:hover { border-color: var(--primary); }
+  .test-btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+  .test-btn.primary:hover { background: #d04a2c; }
+  .test-btn.ghost { background: transparent; }
+
+  .result-card { margin-top: 24px; padding: 22px; border-radius: 22px; text-align: center; display: none; }
+  .result-card.show { display: block; animation: pop 0.4s ease; }
+  .result-card.great { background: var(--good-soft); border: 3px solid var(--good); }
+  .result-card.ok { background: var(--yellow-soft); border: 3px solid var(--yellow); }
+  .result-card.try { background: var(--primary-soft); border: 3px solid var(--primary); }
+  .result-card .big { font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; }
+  .result-card .stars { font-size: 2.5rem; margin: 8px 0; letter-spacing: 8px; }
+  .result-card .stars .off { filter: grayscale(1) opacity(0.3); }
+  .result-card .msg { font-size: 0.95rem; color: var(--ink-2); margin-bottom: 14px; }
+  .result-card button { font-family: inherit; font-size: 1rem; font-weight: 700;
+    padding: 12px 24px; border-radius: 14px; border: 3px solid var(--primary);
+    background: white; color: var(--primary); cursor: pointer; }
+  .result-card button:hover { background: var(--primary-soft); }
+
+  /* teacher note */
+  .teacher-note { margin-top: 24px; background: #fff8e1; border: 2px dashed #f5c842;
+    border-radius: 16px; padding: 14px 18px; font-size: 0.85rem; color: #6b5520; }
+  .teacher-note strong { display: block; margin-bottom: 4px; color: #4a3a0e; }
+
+  /* TTS speaker button (inline next to text) */
+  .speakable { display: inline-flex; align-items: center; gap: 8px; }
+  .speak-btn {
+    display: inline-grid; place-items: center;
+    width: 1.8em; height: 1.8em;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    vertical-align: middle;
+  }
+  .speak-btn:hover { background: var(--primary); color: white; transform: scale(1.1); }
+  .speak-btn.speaking { background: var(--primary); color: white; animation: pulse 0.8s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+  .speak-btn svg { width: 60%; height: 60%; }
+
+  /* settings floating button + panel */
+  .settings-fab {
+    position: fixed; bottom: 20px; right: 20px; z-index: 100;
+    width: 56px; height: 56px;
+    background: var(--ink); color: white;
+    border: 3px solid white;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    cursor: pointer;
+    box-shadow: 0 6px 20px -4px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+  }
+  .settings-fab:hover { transform: scale(1.08) rotate(20deg); }
+
+  .settings-panel {
+    position: fixed; bottom: 90px; right: 20px; z-index: 99;
+    width: 320px; max-width: calc(100vw - 40px);
+    background: var(--paper);
+    border: 2px solid var(--line);
+    border-radius: 20px;
+    padding: 22px;
+    box-shadow: 0 12px 32px -8px rgba(0,0,0,0.2);
+    display: none;
+  }
+  .settings-panel.open { display: block; animation: pop 0.25s ease; }
+  .settings-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 18px; text-align: center; }
+
+  .setting-row { margin-bottom: 16px; }
+  .setting-label { font-size: 0.85rem; font-weight: 700; color: var(--ink-2); margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .setting-label .val { font-family: 'JetBrains Mono', monospace; color: var(--primary); }
+  .seg {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    background: var(--bg);
+    padding: 4px;
+    border-radius: 12px;
+  }
+  .seg-btn {
+    padding: 8px 4px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .seg-btn:hover { background: var(--primary-soft); }
+  .seg-btn.active { background: var(--primary); color: white; }
+
+  .seg.sizes { grid-template-columns: repeat(4, 1fr); }
+  .seg.sizes .seg-btn { font-size: 0.85rem; }
+  .seg.sizes .seg-btn[data-size="L"] { font-size: 1rem; }
+  .seg.sizes .seg-btn[data-size="XL"] { font-size: 1.15rem; }
+
+  .preview {
+    margin-top: 16px;
+    padding: 12px;
+    background: var(--bg);
+    border-radius: 12px;
+    text-align: center;
+    font-size: 1rem;
+  }
+
+  .setting-hint { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  /* responsive */
+  @media (max-width: 720px) {
+    h1 { font-size: 1.6rem; }
+    .stage { padding: 22px 16px; }
+    .stage-title { font-size: 1.3rem; }
+    .steps { grid-template-columns: repeat(2, 1fr); }
+    .mat-row { grid-template-columns: 1fr; }
+    .cup-svg { width: 220px; height: 170px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-icon">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#e85d3c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+      </svg>
+    </div>
+    <h1>揀物料 整耳罩</h1>
+    <p class="hero-sub">試下咩物料擋到聲音 🔊</p>
+  </header>
+
+  <!-- ========== SETTINGS (floating) ========== -->
+  <button class="settings-fab" id="settingsFab" aria-label="設定">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-title">⚙️ 設定</div>
+
+    <div class="setting-row">
+      <div class="setting-label">字體大小 <span class="val" id="sizeVal">中</span></div>
+      <div class="seg sizes" id="sizeSeg">
+        <button class="seg-btn" data-size="S">細</button>
+        <button class="seg-btn active" data-size="M">中</button>
+        <button class="seg-btn" data-size="L">大</button>
+        <button class="seg-btn" data-size="XL">特大</button>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-label">朗讀速度 <span class="val" id="rateVal">正常</span></div>
+      <div class="seg" id="rateSeg" style="grid-template-columns: repeat(3, 1fr);">
+        <button class="seg-btn" data-rate="0.7">慢</button>
+        <button class="seg-btn active" data-rate="0.95">正常</button>
+        <button class="seg-btn" data-rate="1.3">快</button>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-label">朗讀聲音 <span class="val" id="voiceVal">—</span></div>
+      <select id="voiceSel" style="width:100%; padding:8px 10px; border:2px solid var(--line); border-radius:10px; background:var(--bg); font-family:inherit; font-size:0.9rem;"></select>
+      <div class="setting-hint">用廣東話 / 粵語朗讀</div>
+    </div>
+
+    <div class="preview">
+      <span class="speakable">
+        <button class="speak-btn" data-text="耳罩可以擋到聲音" aria-label="試聽">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+        <span>撳喇叭試聽</span>
+      </span>
+    </div>
+  </div>
+
+  <nav class="steps" id="stepNav">
+    <button class="step-btn active" data-stage="1"><div class="step-num">1</div><div class="step-label">試吓</div></button>
+    <button class="step-btn" data-stage="2"><div class="step-num">2</div><div class="step-label">揀料</div></button>
+    <button class="step-btn" data-stage="3"><div class="step-num">3</div><div class="step-label">整好喇</div></button>
+    <button class="step-btn" data-stage="4"><div class="step-num">4</div><div class="step-label">試下</div></button>
+  </nav>
+
+  <!-- ========== STAGE 1 ========== -->
+  <section class="stage active" id="stage-1">
+    <h2 class="stage-title">
+      <span class="speakable">
+        <button class="speak-btn" data-text="第一步：遮住耳仔會點？" aria-label="朗讀">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+        第 1 步：遮住耳仔會點？
+      </span>
+    </h2>
+    <p class="stage-hint">撳「播聲音」，再用「遮耳仔」試吓</p>
+
+    <div class="cover-demo">
+      <div class="cover-scene" id="coverScene">
+        <div class="speaker">📢</div>
+        <div class="waves" id="waves">
+          <div class="wave big"></div>
+          <div class="wave mid"></div>
+          <div class="wave small"></div>
+          <div class="wave mid"></div>
+          <div class="wave big"></div>
+        </div>
+        <div class="hand">✋</div>
+        <div class="ear">👂</div>
+      </div>
+
+      <div class="cover-actions">
+        <button class="big-btn primary" id="btnCoverPlay">▶ 播聲音</button>
+        <button class="big-btn choice" id="btnCover">✋ 遮耳仔</button>
+      </div>
+    </div>
+
+    <button class="next-btn" id="nextTo2" disabled>揀料去 ➜</button>
+
+    <div class="teacher-note">
+      <strong>👩‍🏫 老師提示</strong>
+      鼓勵學生真係用手掩自己耳仔。聽到大聲再聽到細聲，就會明白「遮住就細聲」。完成先可以下一步。
+    </div>
+  </section>
+
+  <!-- ========== STAGE 2 ========== -->
+  <section class="stage" id="stage-2">
+    <h2 class="stage-title">
+      <span class="speakable">
+        <button class="speak-btn" data-text="第二步：揀兩樣嘢" aria-label="朗讀">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+        第 2 步：揀兩樣嘢
+      </span>
+    </h2>
+    <p class="stage-hint">① 揀杯 ② 揀軟墊</p>
+
+    <div class="pick-row">
+      <div class="pick-q"><span class="num">①</span>杯嘅物料 <span class="req" id="shellReq">（揀一樣）</span></div>
+      <div class="mat-row" id="shellGrid">
+        <div class="mat-card" data-type="shell" data-id="paper" data-score="2" data-tts="紙杯，輕，軟">
+          <div class="mat-emoji">📄</div>
+          <div class="mat-name">紙杯</div>
+          <div class="mat-feel">輕、軟</div>
+        </div>
+        <div class="mat-card" data-type="shell" data-id="plastic" data-score="4" data-tts="膠杯，硬，滑">
+          <div class="mat-emoji">🥤</div>
+          <div class="mat-name">膠杯</div>
+          <div class="mat-feel">硬、滑</div>
+        </div>
+        <div class="mat-card" data-type="shell" data-id="foam" data-score="3" data-tts="泡棉杯，軟，有彈性">
+          <div class="mat-emoji">🧽</div>
+          <div class="mat-name">泡棉杯</div>
+          <div class="mat-feel">軟、有彈性</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pick-row">
+      <div class="pick-q"><span class="num">②</span>軟墊 <span class="req" id="sealReq">（揀一樣）</span></div>
+      <div class="mat-row waiting" id="sealGrid">
+        <div class="mat-card" data-type="seal" data-id="none" data-score="0" data-tts="唔要墊，直接貼耳">
+          <div class="mat-emoji">🚫</div>
+          <div class="mat-name">唔要墊</div>
+          <div class="mat-feel">直接貼耳</div>
+        </div>
+        <div class="mat-card" data-type="seal" data-id="cotton" data-score="2" data-tts="棉花，軟鬆">
+          <div class="mat-emoji">🧶</div>
+          <div class="mat-name">棉花</div>
+          <div class="mat-feel">軟鬆</div>
+        </div>
+        <div class="mat-card" data-type="seal" data-id="foam" data-score="4" data-tts="記憶墊，軟，貼耳">
+          <div class="mat-emoji">🟧</div>
+          <div class="mat-name">記憶墊</div>
+          <div class="mat-feel">軟、貼耳</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="teacher-note">
+      <strong>👩‍🏫 老師提示</strong>
+      未揀軟墊之前，軟墊嗰行會變暗。揀咗杯先可以揀墊。兩個都揀晒先可以「整」。
+    </div>
+  </section>
+
+  <!-- ========== STAGE 3 ========== -->
+  <section class="stage" id="stage-3">
+    <h2 class="stage-title">
+      <span class="speakable">
+        <button class="speak-btn" data-text="第三步：你嘅耳罩整好喇" aria-label="朗讀">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+        第 3 步：你嘅耳罩整好喇
+      </span>
+    </h2>
+    <p class="stage-hint">睇下你揀咗咩</p>
+
+    <div class="cup-area">
+      <svg class="cup-svg" id="cupSvg" viewBox="0 0 260 200">
+        <ellipse cx="130" cy="180" rx="90" ry="14" fill="#ead7b8"/>
+        <g id="cupAdditions"></g>
+        <g id="cupSeal"></g>
+        <g id="cupBand"></g>
+      </svg>
+      <div class="cup-label" id="cupLabel">—</div>
+      <div class="cup-sub" id="cupSub">—</div>
+    </div>
+
+    <button class="next-btn" id="nextTo4">去試下 ➜</button>
+
+    <div class="teacher-note">
+      <strong>👩‍🏫 老師提示</strong>
+      學生可以分享「我揀咗咩」，老師可以問「你估呢個耳罩掂唔掂？」
+    </div>
+  </section>
+
+  <!-- ========== STAGE 4 ========== -->
+  <section class="stage" id="stage-4">
+    <h2 class="stage-title">
+      <span class="speakable">
+        <button class="speak-btn" data-text="第四步：試下擋唔擋到" aria-label="朗讀">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+        第 4 步：試下擋唔擋到
+      </span>
+    </h2>
+    <p class="stage-hint">戴耳罩之後，聲音會唔同</p>
+
+    <div class="sound-stage">
+      <div class="sound-meter" id="soundMeter">
+        <div style="text-align:center">
+          <div class="sound-emoji" id="soundEmoji">📢</div>
+          <div class="sound-label" id="soundLabel">大聲</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="test-actions">
+      <button class="test-btn primary" id="btnMuffle">🎧 戴耳罩</button>
+      <button class="test-btn ghost" id="btnOff">除返耳罩</button>
+    </div>
+
+    <div class="result-card" id="resultCard">
+      <div class="big" id="resultBig">—</div>
+      <div class="stars" id="resultStars">⭐⭐⭐</div>
+      <div class="msg" id="resultMsg">—</div>
+      <button id="btnRetry">↺ 揀過另一個組合再試</button>
+    </div>
+
+    <div class="teacher-note">
+      <strong>👩‍🏫 老師提示</strong>
+      一開始自動播大聲。撳「戴耳罩」會切換到靜啲。睇吓效果，再決定幾多星。
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ============== SETTINGS (TTS + font) ==============
+const SETTINGS_KEY = 'earmuff-pdir-settings-v1';
+const SIZE_SCALE = { S: 0.88, M: 1, L: 1.15, XL: 1.3 };
+const SIZE_LABEL = { S: '細', M: '中', L: '大', XL: '特大' };
+const RATE_LABEL = { 0.7: '慢', 0.95: '正常', 1.3: '快' };
+
+let settings = { size: 'M', rate: 0.95, voiceURI: null };
+try { Object.assign(settings, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); } catch (e) {}
+
+function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }
+function applyFontSize() {
+  document.documentElement.style.setProperty('--fs-scale', SIZE_SCALE[settings.size]);
+  document.getElementById('sizeVal').textContent = SIZE_LABEL[settings.size];
+  document.querySelectorAll('#sizeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.size === settings.size));
+}
+applyFontSize();
+
+document.getElementById('sizeSeg').addEventListener('click', e => {
+  const b = e.target.closest('.seg-btn'); if (!b) return;
+  settings.size = b.dataset.size; saveSettings(); applyFontSize();
+});
+document.getElementById('rateSeg').addEventListener('click', e => {
+  const b = e.target.closest('.seg-btn'); if (!b) return;
+  settings.rate = +b.dataset.rate; saveSettings();
+  document.getElementById('rateVal').textContent = RATE_LABEL[settings.rate];
+  document.querySelectorAll('#rateSeg .seg-btn').forEach(x => x.classList.toggle('active', x === b));
+  // demo speak
+  speak('耳罩可以擋到聲音');
+});
+document.getElementById('rateVal').textContent = RATE_LABEL[settings.rate];
+document.querySelectorAll('#rateSeg .seg-btn').forEach(b => b.classList.toggle('active', +b.dataset.rate === settings.rate));
+
+// ============== TTS ENGINE ==============
+let voices = [];
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+  const sel = document.getElementById('voiceSel');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  // prefer Cantonese / HK / Mandarin Chinese
+  const list = voices.filter(v => /zh|cmn|yue|HK|cantonese|chinese/i.test(v.lang) || /chinese|cantonese|hong kong/i.test(v.name));
+  const fallback = list.length ? list : voices;
+  fallback.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.voiceURI; opt.textContent = `${v.name} (${v.lang})`;
+    if (!settings.voiceURI && /zh-HK|yue|HK|Cantonese/i.test(v.lang + v.name)) settings.voiceURI = v.voiceURI;
+    sel.appendChild(opt);
+  });
+  if (settings.voiceURI) sel.value = settings.voiceURI;
+  else if (fallback.length) settings.voiceURI = fallback[0].voiceURI;
+  document.getElementById('voiceVal').textContent = sel.selectedOptions[0]?.textContent.split(' (')[0] || '—';
+  if (prev && fallback.find(v => v.voiceURI === prev)) { sel.value = prev; settings.voiceURI = prev; }
+}
+if ('speechSynthesis' in window) {
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+  document.getElementById('voiceSel').addEventListener('change', e => {
+    settings.voiceURI = e.target.value; saveSettings();
+    document.getElementById('voiceVal').textContent = e.target.selectedOptions[0].textContent.split(' (')[0];
+    speak('耳罩可以擋到聲音');
+  });
+}
+let currentSpeakBtn = null;
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-HK';
+  u.rate = settings.rate;
+  u.pitch = 1.0;
+  if (settings.voiceURI) {
+    const v = voices.find(x => x.voiceURI === settings.voiceURI);
+    if (v) u.voice = v;
+  }
+  u.onstart = () => { if (currentSpeakBtn) currentSpeakBtn.classList.add('speaking'); };
+  u.onend = u.onerror = () => { if (currentSpeakBtn) { currentSpeakBtn.classList.remove('speaking'); currentSpeakBtn = null; } };
+  speechSynthesis.speak(u);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.speak-btn');
+  if (!b) return;
+  e.stopPropagation();
+  const text = b.dataset.text || b.parentElement.textContent.trim();
+  // toggle: if same button speaking, stop
+  if (b.classList.contains('speaking')) {
+    speechSynthesis.cancel();
+    b.classList.remove('speaking');
+    currentSpeakBtn = null;
+    return;
+  }
+  if (currentSpeakBtn) currentSpeakBtn.classList.remove('speaking');
+  currentSpeakBtn = b;
+  speak(text);
+});
+// mat cards also speak on hover (touch fallback: tap)
+document.querySelectorAll('.mat-card').forEach(c => {
+  c.addEventListener('dblclick', e => {
+    if (c.dataset.tts) speak(c.dataset.tts);
+  });
+});
+// settings panel toggle
+const fab = document.getElementById('settingsFab');
+const panel = document.getElementById('settingsPanel');
+fab.addEventListener('click', () => panel.classList.toggle('open'));
+document.addEventListener('click', e => {
+  if (!panel.contains(e.target) && e.target !== fab && !fab.contains(e.target)) panel.classList.remove('open');
+});
+
+// ============== AUDIO ==============
+let audioCtx = null;
+function getCtx() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); return audioCtx; }
+let playNode = null, playGain = null, playFilter = null;
+
+function stopAudio() {
+  if (playNode) { try { playNode.stop(); } catch(e){} playNode = null; }
+}
+function startLoud() {
+  stopAudio();
+  const ctx = getCtx();
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.5;
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const g = ctx.createGain(); g.gain.value = 0.5;
+  src.connect(g); g.connect(ctx.destination);
+  src.start();
+  playNode = src; playGain = g; playFilter = null;
+}
+function startMuffled(totalScore) {
+  stopAudio();
+  const ctx = getCtx();
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.5;
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const filt = ctx.createBiquadFilter();
+  filt.type = 'lowpass';
+  filt.frequency.value = 400 + totalScore * 250; // 400 (great) .. 2000 (poor)
+  const g = ctx.createGain();
+  g.gain.value = 0.55 - totalScore * 0.05;
+  src.connect(filt); filt.connect(g); g.connect(ctx.destination);
+  src.start();
+  playNode = src; playGain = g; playFilter = filt;
+}
+
+// ============== STAGE NAV ==============
+const completedStages = new Set();
+function goStage(n) {
+  document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.step-btn[data-stage="${n}"]`).classList.add('active');
+  document.getElementById('stage-' + n).classList.add('active');
+  if (n === '4') {
+    // auto start loud when entering stage 4
+    startLoud();
+    setVisual('loud');
+  } else {
+    stopAudio();
+  }
+}
+document.getElementById('stepNav').addEventListener('click', e => {
+  const btn = e.target.closest('.step-btn');
+  if (!btn) return;
+  goStage(btn.dataset.stage);
+});
+function markDone(n) {
+  completedStages.add(n);
+  document.querySelector(`.step-btn[data-stage="${n}"]`).classList.add('done');
+}
+
+// ============== STAGE 1: 遮住 ==============
+let stage1Covered = false, stage1Played = false;
+const coverScene = document.getElementById('coverScene');
+document.getElementById('btnCoverPlay').addEventListener('click', () => {
+  startLoud();
+  stage1Played = true;
+});
+document.getElementById('btnCover').addEventListener('click', () => {
+  stage1Covered = !stage1Covered;
+  coverScene.classList.toggle('covered', stage1Covered);
+  document.getElementById('btnCover').textContent = stage1Covered ? '✋ 移開手' : '✋ 遮耳仔';
+  document.getElementById('btnCover').classList.toggle('primary', stage1Covered);
+  if (stage1Covered) {
+    // simulate muffling: lower gain + lowpass
+    if (playGain) playGain.gain.value = 0.18;
+    if (!playFilter && audioCtx) {
+      const filt = audioCtx.createBiquadFilter();
+      filt.type = 'lowpass'; filt.frequency.value = 600;
+      // simple effect — reconnect via new gain
+    }
+  } else {
+    if (playGain) playGain.gain.value = 0.5;
+  }
+  // require both played AND covered
+  document.getElementById('nextTo2').disabled = !(stage1Played && stage1Covered && !stage1Covered === false ? false : (stage1Played && stage1Covered));
+  // simpler:
+  document.getElementById('nextTo2').disabled = !(stage1Played && (stage1Covered || true));
+  // require: played at least once
+  document.getElementById('nextTo2').disabled = !stage1Played;
+});
+document.getElementById('nextTo2').addEventListener('click', () => { markDone(1); goStage('2'); });
+
+// ============== STAGE 2: 揀料 ==============
+let shellPicked = null, sealPicked = null;
+document.querySelectorAll('.mat-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const type = card.dataset.type;
+    const grid = card.parentElement;
+    grid.querySelectorAll('.mat-card').forEach(c => c.classList.remove('picked'));
+    card.classList.add('picked');
+    if (type === 'shell') {
+      shellPicked = card.dataset.id;
+      document.getElementById('shellReq').textContent = '✓';
+      document.getElementById('shellReq').style.color = 'var(--good)';
+      // unlock seal row
+      document.getElementById('sealGrid').classList.remove('waiting');
+    } else {
+      sealPicked = card.dataset.id;
+      document.getElementById('sealReq').textContent = '✓';
+      document.getElementById('sealReq').style.color = 'var(--good)';
+    }
+    if (shellPicked && sealPicked) buildCup();
+  });
+});
+
+function buildCup() {
+  const SHELL = { paper: { color: '#e8d8b8', name: '紙杯' }, plastic: { color: '#5b9dd9', name: '膠杯' }, foam: { color: '#f5c842', name: '泡棉杯' } };
+  const SEAL = { none: { show: false, name: '無軟墊' }, cotton: { show: true, color: '#fff', name: '棉花' }, foam: { show: true, color: '#ff9b6a', name: '記憶墊' } };
+  const s = SHELL[shellPicked], p = SEAL[sealPicked];
+  // build SVG
+  let svg = `<path d="M40 180 Q40 50 130 50 Q220 50 220 180 Z" fill="${s.color}" stroke="#5a4a36" stroke-width="3"/>`;
+  let seal = '';
+  if (p.show) seal = `<ellipse cx="130" cy="55" rx="90" ry="20" fill="${p.color}" stroke="#5a4a36" stroke-width="3"/>`;
+  let band = `<path d="M40 90 Q130 25 220 90" fill="none" stroke="#2a2218" stroke-width="8" stroke-linecap="round"/>
+              <circle cx="40" cy="90" r="8" fill="#2a2218"/>
+              <circle cx="220" cy="90" r="8" fill="#2a2218"/>`;
+  document.getElementById('cupAdditions').innerHTML = svg;
+  document.getElementById('cupSeal').innerHTML = seal;
+  document.getElementById('cupBand').innerHTML = band;
+  document.getElementById('cupLabel').textContent = s.name + ' + ' + p.name;
+  document.getElementById('cupSub').textContent = '撳下面個掣去試';
+  // mark stage 2 done visually but don't auto-advance
+  markDone(2);
+}
+document.getElementById('nextTo4').addEventListener('click', () => { markDone(3); goStage('4'); });
+
+// ============== STAGE 4: 試下 ==============
+const meter = document.getElementById('soundMeter');
+const emoji = document.getElementById('soundEmoji');
+const label = document.getElementById('soundLabel');
+function setVisual(state, score) {
+  meter.classList.remove('loud', 'quiet');
+  if (state === 'loud') {
+    meter.classList.add('loud');
+    emoji.textContent = '📢'; label.textContent = '大聲';
+  } else if (state === 'muffled') {
+    if (score >= 7) { meter.classList.add('quiet'); emoji.textContent = '🤫'; label.textContent = '好靜'; }
+    else if (score >= 4) { emoji.textContent = '🔉'; label.textContent = '細聲咗'; }
+    else { emoji.textContent = '🔊'; label.textContent = '仲好大聲'; }
+  }
+}
+function getScore() {
+  return (+document.querySelector('[data-type="shell"].picked').dataset.score) +
+         (+document.querySelector('[data-type="seal"].picked').dataset.score);
+}
+document.getElementById('btnMuffle').addEventListener('click', () => {
+  const score = getScore();
+  startMuffled(score);
+  setVisual('muffled', score);
+  showResult(score);
+});
+document.getElementById('btnOff').addEventListener('click', () => {
+  startLoud();
+  setVisual('loud');
+  document.getElementById('resultCard').classList.remove('show');
+});
+function showResult(score) {
+  const card = document.getElementById('resultCard');
+  const big = document.getElementById('resultBig');
+  const stars = document.getElementById('resultStars');
+  const msg = document.getElementById('resultMsg');
+  const n = score >= 7 ? 3 : score >= 4 ? 2 : 1;
+  let cls, txt, m;
+  if (n === 3) { cls = 'great'; txt = '太棒喇！🎉'; m = '呢個組合好好用！'; }
+  else if (n === 2) { cls = 'ok'; txt = '唔錯喎！👍'; m = '可以更好，試下揀其他嘢'; }
+  else { cls = 'try'; txt = '試多次 🤔'; m = '換過其他組合啦'; }
+  card.className = 'result-card show ' + cls;
+  big.textContent = txt;
+  stars.innerHTML = '⭐'.repeat(n) + '<span class="off">⭐</span>'.repeat(3 - n);
+  msg.textContent = m;
+  markDone(4);
+}
+document.getElementById('btnRetry').addEventListener('click', () => {
+  // reset stage 2 + 3 + 4
+  stopAudio();
+  shellPicked = null; sealPicked = null;
+  document.querySelectorAll('.mat-card').forEach(c => c.classList.remove('picked'));
+  document.getElementById('shellReq').textContent = '（揀一樣）';
+  document.getElementById('shellReq').style.color = 'var(--primary)';
+  document.getElementById('sealReq').textContent = '（揀一樣）';
+  document.getElementById('sealReq').style.color = 'var(--primary)';
+  document.getElementById('sealGrid').classList.add('waiting');
+  document.getElementById('cupAdditions').innerHTML = '';
+  document.getElementById('cupSeal').innerHTML = '';
+  document.getElementById('cupBand').innerHTML = '';
+  document.getElementById('cupLabel').textContent = '—';
+  document.getElementById('cupSub').textContent = '—';
+  document.getElementById('resultCard').classList.remove('show');
+  goStage('2');
+});
+</script>
+</body>
+</html>
