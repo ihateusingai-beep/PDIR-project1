@@ -73,21 +73,41 @@
 
   /* ===== STAGE 1: 遮住就細聲 ===== */
   .cover-demo { max-width: 480px; margin: 0 auto; text-align: center; }
-  .cover-scene { position: relative; width: 100%; height: 220px; background: var(--soft-blue-bg);
+  .cover-scene { position: relative; width: 100%; height: 240px; background: linear-gradient(135deg, var(--soft-blue-bg) 0%, #f0f7fc 100%);
     border: 3px solid var(--soft-blue); border-radius: 24px; margin-bottom: 18px; overflow: hidden; }
-  .cover-scene .speaker { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); font-size: 4rem; }
-  .cover-scene .waves { position: absolute; left: 110px; top: 50%; transform: translateY(-50%);
-    display: flex; gap: 8px; align-items: center; }
-  .cover-scene .wave { width: 12px; background: var(--soft-blue); border-radius: 6px;
-    transition: all 0.3s; }
-  .cover-scene .wave.big { height: 48px; }
-  .cover-scene .wave.mid { height: 28px; }
-  .cover-scene .wave.small { height: 14px; }
-  .cover-scene .ear { position: absolute; right: 24px; top: 50%; transform: translateY(-50%); font-size: 4rem; }
-  .cover-scene .hand { position: absolute; right: 60px; top: 50%; transform: translateY(-50%) scale(0);
-    font-size: 3.5rem; transition: transform 0.3s; }
-  .cover-scene.covered .hand { transform: translateY(-50%) scale(1); }
-  .cover-scene.covered .wave { opacity: 0.2; }
+  .cover-scene .speaker { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); width: 84px; height: 84px; }
+  .cover-scene .speaker svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(91, 157, 217, 0.3)); }
+  .cover-scene .speaker.playing svg { animation: speakerPulse 0.6s ease-in-out infinite; }
+  @keyframes speakerPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+
+  .cover-scene .waves { position: absolute; left: 130px; top: 50%; transform: translateY(-50%);
+    display: flex; gap: 10px; align-items: center; }
+  .cover-scene .wave { width: 8px; background: var(--soft-blue); border-radius: 6px;
+    transition: opacity 0.3s, transform 0.3s; transform-origin: center; }
+  .cover-scene .wave.big { height: 56px; }
+  .cover-scene .wave.mid { height: 36px; }
+  .cover-scene .wave.small { height: 18px; }
+  .cover-scene.playing .wave { animation: waveFlow 1.2s ease-in-out infinite; }
+  .cover-scene.playing .wave:nth-child(1) { animation-delay: 0s; }
+  .cover-scene.playing .wave:nth-child(2) { animation-delay: 0.1s; }
+  .cover-scene.playing .wave:nth-child(3) { animation-delay: 0.2s; }
+  .cover-scene.playing .wave:nth-child(4) { animation-delay: 0.3s; }
+  .cover-scene.playing .wave:nth-child(5) { animation-delay: 0.4s; }
+  @keyframes waveFlow { 0%,100%{transform:scaleY(0.5); opacity:0.5} 50%{transform:scaleY(1.2); opacity:1} }
+  .cover-scene.covered .wave { opacity: 0.15; animation: none; }
+
+  .cover-scene .ear { position: absolute; right: 24px; top: 50%; transform: translateY(-50%); width: 84px; height: 84px; }
+  .cover-scene .ear svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(232, 93, 60, 0.3)); }
+  .cover-scene .ear.hear::after {
+    content: ""; position: absolute; top: -8px; right: -8px;
+    width: 20px; height: 20px; background: var(--primary); border: 3px solid white;
+    border-radius: 50%; box-shadow: 0 2px 6px rgba(232, 93, 60, 0.4);
+  }
+
+  .cover-scene .hand { position: absolute; right: 50px; top: 50%; transform: translateY(-50%) scale(0) rotate(-20deg);
+    width: 70px; height: 70px; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .cover-scene .hand svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2)); }
+  .cover-scene.covered .hand { transform: translateY(-50%) scale(1) rotate(0); }
 
   .cover-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
   .big-btn { padding: 14px 24px; font-size: 1.05rem; font-weight: 700; font-family: inherit;
@@ -113,9 +133,19 @@
   .mat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
   .mat-row.waiting .mat-card:not(.picked) { opacity: 0.45; }
   .mat-card { background: var(--paper); border: 3px solid var(--line); border-radius: 20px;
-    padding: 18px 12px; text-align: center; cursor: pointer; transition: all 0.15s; }
-  .mat-card:hover { transform: translateY(-3px); }
+    padding: 18px 12px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden; }
+  .mat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px -8px rgba(0,0,0,0.12); }
   .mat-card.picked { border-color: var(--good); background: var(--good-soft); }
+  .mat-card.picked::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--good), #6fd087, var(--good));
+    animation: shine 2s ease-in-out infinite;
+  }
+  @keyframes shine { 0%,100%{opacity:0.6} 50%{opacity:1} }
+  .mat-preview { width: 70px; height: 70px; margin: 0 auto 8px; display: block; transition: transform 0.3s; }
+  .mat-card:hover .mat-preview { transform: scale(1.1) rotate(-3deg); }
+  .mat-card.picked .mat-preview { transform: scale(1.15); animation: matBounce 0.6s ease; }
+  @keyframes matBounce { 0%{transform:scale(0.9)} 50%{transform:scale(1.25)} 100%{transform:scale(1.15)} }
   .mat-emoji { font-size: 3.25rem; margin-bottom: 4px; line-height: 1; }
   .mat-name { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
   .mat-feel { font-size: 0.78rem; color: var(--ink-2); }
@@ -125,17 +155,56 @@
   .cup-svg { width: 260px; height: 200px; margin-bottom: 16px; }
   .cup-label { font-size: 1.25rem; font-weight: 900; color: var(--ink-2); margin-bottom: 6px; }
   .cup-sub { font-size: 0.95rem; color: var(--muted); margin-bottom: 24px; text-align: center; }
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: translate(var(--x,0), var(--y,0)) scale(0.3) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
+  }
 
   /* ===== STAGE 4: 試下 ===== */
   .sound-stage { display: flex; flex-direction: column; align-items: center; padding: 12px 0 16px; }
+  .meter-wrap { position: relative; width: 240px; height: 240px; display: grid; place-items: center; margin-bottom: 16px; }
+  .sound-rings { position: absolute; inset: 0; pointer-events: none; }
+  .sound-ring { position: absolute; inset: 0; border: 3px solid var(--primary); border-radius: 50%;
+    opacity: 0; transition: all 0.3s; }
+  .sound-ring.r1 { inset: 20px; }
+  .sound-ring.r2 { inset: 40px; }
+  .sound-ring.r3 { inset: 60px; }
+  .sound-meter.loud ~ .sound-rings .sound-ring,
+  .meter-wrap.loud .sound-ring {
+    border-color: var(--primary); opacity: 0.5;
+  }
+  .meter-wrap.loud .sound-ring.r1 { animation: ringPulse 1.2s ease-out infinite; }
+  .meter-wrap.loud .sound-ring.r2 { animation: ringPulse 1.2s ease-out infinite 0.2s; }
+  .meter-wrap.loud .sound-ring.r3 { animation: ringPulse 1.2s ease-out infinite 0.4s; }
+  @keyframes ringPulse { 0%{transform:scale(0.6); opacity:0.6} 100%{transform:scale(1.2); opacity:0} }
+  .meter-wrap.muffled .sound-ring { border-color: var(--good); }
+  .meter-wrap.muffled .sound-ring.r1 { animation: ringQuiet 1.5s ease-in-out infinite; }
+  .meter-wrap.muffled .sound-ring.r2 { animation: ringQuiet 1.5s ease-in-out infinite 0.3s; opacity: 0.3; }
+  .sound-ring.r3 { display: none; }
+  .meter-wrap.muffled .sound-ring.r3 { display: block; }
+  @keyframes ringQuiet { 0%,100%{transform:scale(0.95); opacity:0.4} 50%{transform:scale(1.05); opacity:0.6} }
+
   .sound-meter { width: 200px; height: 200px; border-radius: 50%; background: white;
-    border: 6px solid var(--line); display: grid; place-items: center; margin-bottom: 16px;
-    transition: all 0.3s; }
+    border: 6px solid var(--line); display: grid; place-items: center;
+    transition: all 0.3s; position: relative; z-index: 1; }
   .sound-meter.loud { background: var(--primary-soft); border-color: var(--primary); animation: shake 0.3s; }
   .sound-meter.quiet { background: var(--good-soft); border-color: var(--good); }
   @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
   .sound-emoji { font-size: 5.5rem; line-height: 1; }
   .sound-label { font-size: 1.4rem; font-weight: 900; margin-top: 4px; }
+  .volume-bars { display: flex; gap: 3px; align-items: flex-end; height: 24px; margin-top: 6px; }
+  .volume-bars .vb { width: 6px; background: var(--line); border-radius: 3px; transition: all 0.3s; }
+  .vb:nth-child(1) { height: 6px; } .vb:nth-child(2) { height: 10px; } .vb:nth-child(3) { height: 14px; }
+  .vb:nth-child(4) { height: 18px; } .vb:nth-child(5) { height: 22px; }
+  .meter-wrap.loud .vb { background: var(--primary); animation: vbDance 0.5s ease-in-out infinite; }
+  .meter-wrap.loud .vb:nth-child(1) { animation-delay: 0s; }
+  .meter-wrap.loud .vb:nth-child(2) { animation-delay: 0.1s; }
+  .meter-wrap.loud .vb:nth-child(3) { animation-delay: 0.2s; }
+  .meter-wrap.loud .vb:nth-child(4) { animation-delay: 0.3s; }
+  .meter-wrap.loud .vb:nth-child(5) { animation-delay: 0.4s; }
+  @keyframes vbDance { 0%,100%{transform:scaleY(0.5)} 50%{transform:scaleY(1.3)} }
+  .meter-wrap.muffled .vb { background: var(--good); }
+  .meter-wrap.muffled .vb:nth-child(4), .meter-wrap.muffled .vb:nth-child(5) { opacity: 0.2; height: 8px; animation: none; }
 
   .test-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
   .test-btn { padding: 14px 24px; font-size: 1.05rem; font-weight: 700; font-family: inherit;
@@ -153,7 +222,237 @@
   .result-card.try { background: var(--primary-soft); border: 3px solid var(--primary); }
   .result-card .big { font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; }
   .result-card .stars { font-size: 2.5rem; margin: 8px 0; letter-spacing: 8px; }
+  .result-card .stars .star { display: inline-block; opacity: 0; transform: scale(0) rotate(-180deg); }
+  .result-card.show .stars .star { animation: starFly 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  .result-card.show .stars .star:nth-child(1) { animation-delay: 0.2s; }
+  .result-card.show .stars .star:nth-child(2) { animation-delay: 0.4s; }
+  .result-card.show .stars .star:nth-child(3) { animation-delay: 0.6s; }
+  .result-card.show .stars .star:nth-child(4) { animation-delay: 0.8s; }
+  .result-card.show .stars .star:nth-child(5) { animation-delay: 1.0s; }
+  @keyframes starFly { 0%{opacity:0; transform:scale(0) rotate(-180deg)} 100%{opacity:1; transform:scale(1) rotate(0)} }
   .result-card .stars .off { filter: grayscale(1) opacity(0.3); }
+
+  /* experiment log */
+  .log-section { margin-top: 18px; padding-top: 18px; border-top: 2px dashed rgba(0,0,0,0.1); text-align: left; }
+  .log-section h4 { font-family: 'Noto Sans HK'; font-weight: 900; font-size: 1rem; text-align: center; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .log-q { margin-bottom: 14px; }
+  .log-q-label { font-size: 0.85rem; font-weight: 700; color: var(--ink-2); margin-bottom: 6px; }
+  .chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { padding: 8px 12px; background: white; border: 2px solid var(--line); border-radius: 14px;
+    font-family: inherit; font-size: 0.85rem; font-weight: 700; color: var(--ink-2);
+    cursor: pointer; transition: all 0.15s; }
+  .chip:hover { border-color: var(--primary); transform: translateY(-2px); }
+  .chip.picked { background: var(--primary); color: white; border-color: var(--primary); }
+  .chip .emoji { font-size: 1.1rem; margin-right: 4px; }
+  .log-save { display: block; width: 100%; margin-top: 6px; padding: 12px;
+    font-family: inherit; font-size: 1rem; font-weight: 900;
+    background: var(--good); color: white; border: none; border-radius: 14px;
+    cursor: pointer; box-shadow: 0 4px 14px -4px rgba(76, 175, 106, 0.5); }
+  .log-save:hover { background: #3e9856; }
+  .log-save:disabled { background: var(--muted); cursor: not-allowed; box-shadow: none; }
+  .log-saved { display: none; padding: 12px; background: var(--good-soft); border: 2px solid var(--good);
+    border-radius: 14px; text-align: center; font-weight: 700; color: var(--good); }
+  .log-saved.show { display: block; animation: pop 0.3s ease; }
+
+  /* log modal (shared view from settings) */
+  .log-modal { position: fixed; inset: 0; z-index: 200; background: rgba(42,34,24,0.6);
+    backdrop-filter: blur(6px); display: none; place-items: center; padding: 20px; }
+  .log-modal.show { display: grid; animation: fade 0.3s ease; }
+  .log-modal-card { background: var(--paper); border: 3px solid var(--line); border-radius: 24px;
+    padding: 24px; max-width: 520px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; }
+
+  /* compare button (under conclusion) */
+  .compare-trigger { display: block; width: 100%; margin-bottom: 14px; padding: 12px;
+    font-family: inherit; font-size: 0.95rem; font-weight: 700;
+    background: var(--soft-blue-bg); color: var(--soft-blue);
+    border: 2px solid var(--soft-blue); border-radius: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .compare-trigger:hover { background: var(--soft-blue); color: white; }
+  .compare-trigger:disabled { opacity: 0.4; cursor: not-allowed; }
+  .compare-trigger:disabled:hover { background: var(--soft-blue-bg); color: var(--soft-blue); }
+
+  /* compare modal */
+  .compare-modal { position: fixed; inset: 0; z-index: 201; background: rgba(42,34,24,0.6);
+    backdrop-filter: blur(6px); display: none; place-items: center; padding: 20px; }
+  .compare-modal.show { display: grid; animation: fade 0.3s ease; }
+  .compare-card { background: var(--paper); border: 3px solid var(--line); border-radius: 24px;
+    padding: 24px; max-width: 580px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .compare-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .compare-head h3 { font-family: 'Noto Sans HK'; font-weight: 900; font-size: 1.2rem;
+    display: flex; align-items: center; gap: 8px; }
+  .compare-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: stretch; }
+  .compare-side { background: var(--bg); border: 3px solid var(--line); border-radius: 18px;
+    padding: 16px 14px; text-align: center; transition: all 0.3s; }
+  .compare-side.winner { border-color: var(--good); background: var(--good-soft);
+    box-shadow: 0 4px 16px -4px rgba(76, 175, 106, 0.4); }
+  .compare-side.loser { opacity: 0.85; }
+  .compare-side .cs-label { font-size: 0.7rem; font-weight: 700; color: var(--muted);
+    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .compare-side .cs-icon { font-size: 2.5rem; margin-bottom: 4px; }
+  .compare-side .cs-name { font-size: 0.95rem; font-weight: 900; margin-bottom: 10px; }
+  .compare-side select { width: 100%; padding: 8px 10px; border: 2px solid var(--line);
+    border-radius: 10px; background: white; font-family: inherit; font-size: 0.85rem;
+    color: var(--ink); margin-bottom: 4px; }
+  .compare-side .cs-score { font-family: 'Noto Sans HK'; font-size: 2rem; font-weight: 900;
+    color: var(--primary); line-height: 1; margin: 10px 0 4px; }
+  .compare-side .cs-n { font-size: 0.75rem; color: var(--muted); }
+  .compare-side .cs-feel { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;
+    margin-top: 8px; font-size: 0.7rem; }
+  .compare-side .cs-feel .pill { padding: 2px 8px; background: white; border: 1.5px solid var(--line);
+    border-radius: 10px; }
+  .compare-vs { display: grid; place-items: center; font-family: 'Noto Sans HK';
+    font-size: 1.5rem; font-weight: 900; color: var(--muted); }
+  .compare-result { margin-top: 16px; padding: 14px; background: var(--soft-blue-bg);
+    border: 2px solid var(--soft-blue); border-radius: 14px; text-align: center;
+    font-size: 0.9rem; font-weight: 700; color: var(--soft-blue); }
+  .compare-result .winner-name { font-size: 1.05rem; color: var(--good); display: block; margin-bottom: 4px; }
+  .compare-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .compare-actions button { flex: 1; padding: 12px; font-family: inherit; font-size: 0.9rem;
+    font-weight: 700; border-radius: 12px; cursor: pointer; }
+  .compare-actions .primary { background: var(--good); color: white; border: none; }
+  .compare-actions .primary:hover { background: #3e9856; }
+  .compare-actions .secondary { background: white; color: var(--ink-2); border: 2px solid var(--line); }
+  .compare-actions .secondary:hover { border-color: var(--primary); }
+  .compare-empty { text-align: center; color: var(--muted); font-size: 0.85rem;
+    padding: 10px 0; font-style: italic; }
+
+  /* TTS button on conclusion card */
+  .conclusion-head .conclusion-tts { margin-left: auto; background: rgba(255,255,255,0.25);
+    border: 1.5px solid rgba(255,255,255,0.5); border-radius: 50%; width: 32px; height: 32px;
+    display: grid; place-items: center; cursor: pointer; color: white; transition: all 0.15s; }
+  .conclusion-head .conclusion-tts:hover { background: rgba(255,255,255,0.4); transform: scale(1.1); }
+  .conclusion-head .conclusion-tts.speaking { background: white; color: var(--primary); animation: pulse 0.8s infinite; }
+  .conclusion-head .conclusion-tts svg { width: 16px; height: 16px; }
+  .log-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .log-modal-head h3 { font-family: 'Noto Sans HK'; font-weight: 900; font-size: 1.3rem; }
+  .log-close { background: none; border: 2px solid var(--line); border-radius: 12px;
+    padding: 6px 14px; font-family: inherit; font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; color: var(--ink-2); }
+  .log-close:hover { border-color: var(--primary); color: var(--primary); }
+  .log-list { flex: 1; overflow-y: auto; padding-right: 4px; }
+  .log-list:empty::before { content: "未有紀錄。整一個耳罩試吓啦！"; display: block; text-align: center;
+    color: var(--muted); padding: 30px 0; font-style: italic; }
+  .log-entry { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+    padding: 10px 12px; background: var(--bg); border-radius: 12px; margin-bottom: 8px;
+    border: 2px solid transparent; transition: all 0.2s; }
+  .log-entry:hover { border-color: var(--line); }
+  .log-entry .n { width: 28px; height: 28px; background: var(--primary-soft); color: var(--primary);
+    border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: 0.8rem; }
+  .log-entry .info { font-size: 0.85rem; }
+  .log-entry .info .title { font-weight: 700; margin-bottom: 2px; }
+  .log-entry .info .meta { color: var(--muted); font-size: 0.75rem; }
+  .log-entry .stars-mini { color: var(--yellow); font-size: 0.9rem; }
+  .log-entry .del { background: none; border: none; color: var(--warn); cursor: pointer; font-size: 1rem; padding: 4px 8px; }
+  .log-entry .del:hover { color: white; background: var(--warn); border-radius: 8px; }
+  .log-empty { text-align: center; padding: 30px 0; color: var(--muted); font-style: italic; }
+  .log-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .log-stat { text-align: center; padding: 10px 6px; background: var(--bg); border-radius: 12px; }
+  .log-stat-n { font-family: 'Noto Sans HK'; font-weight: 900; font-size: 1.5rem; color: var(--primary); }
+  .log-stat-l { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+  .log-modal-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .log-modal-actions button { flex: 1; padding: 10px; font-family: inherit; font-size: 0.9rem;
+    font-weight: 700; border: 2px solid var(--line); border-radius: 12px; background: white;
+    color: var(--ink-2); cursor: pointer; }
+  .log-modal-actions button:hover { border-color: var(--primary); }
+  .log-modal-actions button.danger { color: var(--warn); border-color: var(--warn); }
+  .log-modal-actions button.danger:hover { background: var(--warn); color: white; }
+
+  /* scientific conclusion card */
+  .conclusion { background: linear-gradient(135deg, #f5c842 0%, #c97b3f 100%);
+    color: white; border-radius: 18px; padding: 16px; margin-bottom: 14px;
+    box-shadow: 0 6px 18px -6px rgba(201, 123, 63, 0.4); position: relative; overflow: hidden; }
+  .conclusion::before { content: ""; position: absolute; top: -20px; right: -20px;
+    width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+  .conclusion-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .conclusion-head .ic { font-size: 1.3rem; }
+  .conclusion-head .label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; opacity: 0.85; }
+  .conclusion h3 { font-family: 'Noto Sans HK'; font-weight: 900; font-size: 1.05rem;
+    line-height: 1.3; margin-bottom: 8px; }
+  .conclusion-claim { font-weight: 900; }
+  .conclusion-evidence { background: rgba(255,255,255,0.18); border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
+  .conclusion-evidence .ev-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; opacity: 0.85; margin-bottom: 6px; }
+  .conclusion-evidence .ev-row { display: grid; grid-template-columns: 60px 1fr 36px; gap: 8px;
+    align-items: center; margin: 4px 0; font-size: 0.82rem; }
+  .conclusion-evidence .ev-label { font-weight: 700; }
+  .conclusion-evidence .ev-bar { height: 8px; background: rgba(255,255,255,0.25); border-radius: 4px; overflow: hidden; }
+  .conclusion-evidence .ev-fill { height: 100%; background: white; border-radius: 4px; transition: width 0.6s; }
+  .conclusion-evidence .ev-num { font-family: 'JetBrains Mono'; font-weight: 700; text-align: right; font-size: 0.78rem; }
+  .conclusion-confidence { display: flex; align-items: center; gap: 6px; font-size: 0.78rem;
+    margin: 8px 0; opacity: 0.95; }
+  .conclusion-confidence .cf-stars { color: #fff8d0; letter-spacing: 1px; }
+  .conclusion-limitation { font-size: 0.72rem; opacity: 0.75; margin-top: 6px;
+    padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.3); }
+  .conclusion-next { margin-top: 10px; padding: 8px 10px; background: white; color: #c97b3f;
+    border-radius: 10px; font-size: 0.8rem; font-weight: 700; text-align: center; }
+  .conclusion.empty { background: var(--bg); color: var(--ink-2); border: 2px dashed var(--line);
+    box-shadow: none; }
+  .conclusion.empty::before { display: none; }
+  .conclusion.empty h3 { font-size: 0.9rem; font-weight: 700; color: var(--ink-2); }
+
+  /* scientist level badge (sticky top of modal) */
+  .level-badge { display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+    background: linear-gradient(135deg, var(--good-soft) 0%, var(--yellow-soft) 100%);
+    border: 2px solid var(--good); border-radius: 16px; margin-bottom: 14px; }
+  .level-medal { font-size: 2.2rem; line-height: 1; flex-shrink: 0; }
+  .level-info { flex: 1; }
+  .level-title { font-weight: 900; font-size: 1rem; color: var(--good); }
+  .level-sub { font-size: 0.78rem; color: var(--ink-2); margin-top: 2px; }
+  .level-progress { height: 6px; background: white; border-radius: 3px; margin-top: 6px; overflow: hidden; }
+  .level-progress-fill { height: 100%; background: linear-gradient(90deg, var(--good), #6fd087); border-radius: 3px; transition: width 0.6s; }
+
+  /* comparison ranking */
+  .log-section-title { font-size: 0.85rem; font-weight: 700; color: var(--muted);
+    margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .rank-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .rank-row { display: grid; grid-template-columns: 28px 1fr 80px 40px; align-items: center; gap: 10px;
+    padding: 8px 12px; background: var(--bg); border-radius: 12px; }
+  .rank-row.gold { background: linear-gradient(90deg, #fff3d0 0%, var(--bg) 60%); border: 2px solid var(--yellow); }
+  .rank-row.silver { background: linear-gradient(90deg, #e8e8e8 0%, var(--bg) 60%); border: 2px solid #b8b8b8; }
+  .rank-row.bronze { background: linear-gradient(90deg, #f4d4a8 0%, var(--bg) 60%); border: 2px solid #c97b3f; }
+  .rank-num { font-family: 'JetBrains Mono'; font-weight: 700; text-align: center; }
+  .rank-row.gold .rank-num { color: #c97b3f; }
+  .rank-name { font-size: 0.85rem; font-weight: 700; }
+  .rank-bar { height: 10px; background: var(--line-soft); border-radius: 5px; overflow: hidden; }
+  .rank-bar-fill { height: 100%; background: var(--good); border-radius: 5px; transition: width 0.6s; }
+  .rank-score { font-family: 'JetBrains Mono'; font-weight: 700; font-size: 0.85rem; text-align: right; color: var(--good); }
+
+  /* insights */
+  .insight-card { background: linear-gradient(135deg, var(--soft-blue-bg) 0%, #f0f7fc 100%);
+    border: 2px solid var(--soft-blue); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; }
+  .insight-card .ic-title { font-weight: 900; font-size: 0.9rem; color: var(--soft-blue); margin-bottom: 4px;
+    display: flex; align-items: center; gap: 6px; }
+  .insight-card .ic-msg { font-size: 0.82rem; color: var(--ink-2); line-height: 1.5; }
+
+  /* print sheet */
+  .print-sheet { display: none; }
+  @media print {
+    body * { visibility: hidden; }
+    .print-sheet, .print-sheet * { visibility: visible; }
+    .print-sheet { display: block; position: absolute; top: 0; left: 0; width: 100%; padding: 30px;
+      background: white; color: #2a2218; font-family: 'Noto Sans HK', sans-serif; }
+  }
+  .print-sheet h1 { font-size: 1.8rem; margin-bottom: 4px; color: #c97b3f; }
+  .print-sheet .ps-meta { font-size: 0.85rem; color: #5a4a36; margin-bottom: 18px; border-bottom: 2px solid #ead7b8; padding-bottom: 10px; }
+  .print-sheet .ps-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 16px; }
+  .print-sheet .ps-table th, .print-sheet .ps-table td { padding: 8px; border: 1px solid #ead7b8; text-align: left; }
+  .print-sheet .ps-table th { background: #fff3d0; font-weight: 700; }
+  .print-sheet .ps-table td.num { font-family: 'JetBrains Mono'; text-align: right; }
+  .print-sheet .ps-section { margin-top: 16px; page-break-inside: avoid; }
+  .print-sheet .ps-section h2 { font-size: 1.1rem; color: #c97b3f; margin-bottom: 8px; }
+  .print-sheet .ps-footer { margin-top: 30px; padding-top: 14px; border-top: 2px dashed #ead7b8;
+    font-size: 0.75rem; color: #a09080; text-align: center; }
+  .print-sheet .ps-cups { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .print-sheet .ps-cup { background: #fffaee; border: 2px solid #ead7b8; border-radius: 12px; padding: 8px; text-align: center; }
+  .print-sheet .ps-cup svg { width: 100px; height: 80px; }
+
+  /* saved toast (mini) */
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(40px);
+    background: var(--good); color: white; padding: 10px 20px; border-radius: 24px;
+    font-weight: 700; font-size: 0.95rem; box-shadow: 0 6px 20px -4px rgba(76, 175, 106, 0.5);
+    opacity: 0; pointer-events: none; transition: all 0.4s; z-index: 150; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .result-card .msg { font-size: 0.95rem; color: var(--ink-2); margin-bottom: 14px; }
   .result-card button { font-family: inherit; font-size: 1rem; font-weight: 700;
     padding: 12px 24px; border-radius: 14px; border: 3px solid var(--primary);
@@ -183,6 +482,56 @@
   .speak-btn.speaking { background: var(--primary); color: white; animation: pulse 0.8s infinite; }
   @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
   .speak-btn svg { width: 60%; height: 60%; }
+
+  /* per-word highlight during TTS */
+  .tts-reading { background: linear-gradient(180deg, transparent 60%, #fff3d0 60%);
+    border-radius: 3px; transition: background 0.05s linear; }
+  .tts-word { display: inline; transition: background 0.1s; border-radius: 3px;
+    padding: 0 1px; }
+  .tts-word.active { background: #fff3d0; box-shadow: 0 2px 0 #f5c842; }
+
+  /* stage TTS control bar (in header) */
+  .stage-tts-bar {
+    display: flex; align-items: center; gap: 6px;
+    margin: 8px 0 12px; padding: 8px 12px;
+    background: linear-gradient(90deg, var(--primary-soft) 0%, #f0f7fc 100%);
+    border: 2px solid var(--primary); border-radius: 14px;
+    font-size: 0.82rem; color: var(--ink-2);
+  }
+  .stage-tts-bar .tts-c {
+    background: white; color: var(--primary);
+    border: 1.5px solid var(--primary); border-radius: 10px;
+    padding: 6px 10px; cursor: pointer;
+    font-family: inherit; font-size: 1rem; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: all 0.15s;
+    min-width: 36px; min-height: 36px;
+    justify-content: center;
+  }
+  .stage-tts-bar .tts-c:hover { background: var(--primary); color: white; transform: translateY(-1px); }
+  .stage-tts-bar .tts-c:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .stage-tts-bar .tts-c:disabled:hover { background: white; color: var(--primary); }
+  .stage-tts-bar .tts-c.playing { background: var(--primary); color: white; animation: pulse 0.8s infinite; }
+  .stage-tts-bar .tts-label { font-weight: 700; color: var(--ink-2); margin-right: 4px; }
+  .stage-tts-bar .tts-progress { flex: 1; height: 6px;
+    background: white; border-radius: 3px; overflow: hidden; min-width: 40px; }
+  .stage-tts-bar .tts-progress-fill { height: 100%; background: var(--primary);
+    width: 0%; transition: width 0.2s; border-radius: 3px; }
+  .stage-tts-bar .tts-status { font-size: 0.72rem; color: var(--muted); min-width: 60px; text-align: right; }
+  .stage-tts-bar .tts-fallback-warn { font-size: 0.7rem; color: #c97b3f;
+    background: #fff8e1; padding: 2px 6px; border-radius: 6px; font-weight: 700; }
+
+  /* read-all-block button */
+  .read-block-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--primary-soft); color: var(--primary);
+    border: 2px solid var(--primary); border-radius: 12px;
+    padding: 6px 12px; font-family: inherit; font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; margin: 4px 0;
+  }
+  .read-block-btn:hover { background: var(--primary); color: white; }
+  .read-block-btn.speaking { background: var(--primary); color: white; animation: pulse 0.8s infinite; }
+  .read-block-btn svg { width: 14px; height: 14px; }
 
   /* settings floating button + panel */
   .settings-fab {
@@ -253,6 +602,130 @@
 
   .setting-hint { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
 
+  /* celebration banner */
+  .celebration {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(42, 34, 24, 0.6);
+    backdrop-filter: blur(6px);
+    display: none; place-items: center;
+    padding: 20px;
+  }
+  .celebration.show { display: grid; animation: fade 0.3s ease; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .cert {
+    background: linear-gradient(135deg, #fffaee 0%, #fff5d8 100%);
+    border: 4px solid #f5c842;
+    border-radius: 28px;
+    padding: 36px 28px;
+    max-width: 420px; width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px -10px rgba(0,0,0,0.4);
+    animation: certPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+  @keyframes certPop { 0%{transform:scale(0.5) rotate(-10deg); opacity:0} 100%{transform:scale(1) rotate(0); opacity:1} }
+  .cert::before, .cert::after {
+    content: "⭐"; position: absolute; font-size: 2rem;
+  }
+  .cert::before { top: -12px; left: -12px; transform: rotate(-20deg); }
+  .cert::after { top: -12px; right: -12px; transform: rotate(20deg); }
+  .cert-medal {
+    width: 100px; height: 100px;
+    margin: 0 auto 12px;
+    background: radial-gradient(circle, #f5c842 0%, #c97b3f 100%);
+    border: 4px solid white;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    box-shadow: 0 6px 20px rgba(201, 123, 63, 0.5);
+    font-size: 3rem;
+    animation: medalSpin 2s ease-in-out infinite;
+  }
+  @keyframes medalSpin { 0%,100%{transform:rotate(-5deg) scale(1)} 50%{transform:rotate(5deg) scale(1.05)} }
+  .cert h3 { font-family: 'Noto Sans HK'; font-size: 1.6rem; font-weight: 900; margin-bottom: 6px; color: #c97b3f; }
+  .cert p { font-size: 1rem; color: var(--ink-2); margin-bottom: 16px; }
+  .cert .cup-show {
+    background: white; border: 2px solid #ead7b8; border-radius: 16px;
+    padding: 12px; margin: 0 auto 16px; width: fit-content;
+  }
+  .cert .cup-show svg { width: 140px; height: 100px; }
+  .cert-close { font-family: inherit; font-size: 1rem; font-weight: 700;
+    padding: 12px 28px; background: #c97b3f; color: white;
+    border: none; border-radius: 16px; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(201, 123, 63, 0.4); }
+  .cert-close:hover { background: #b06a30; }
+  .confetti { position: absolute; pointer-events: none; font-size: 1.5rem; }
+  @keyframes confetti {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(500px) rotate(720deg); opacity: 0; }
+  }
+
+  /* science principles in cert */
+  .principles { margin: 14px 0; text-align: left; }
+  .principles-title { font-weight: 900; font-size: 0.85rem; color: #c97b3f;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 6px; justify-content: center; }
+  .principle-row { display: grid; grid-template-columns: 36px 1fr; gap: 8px;
+    padding: 8px 10px; background: white; border-radius: 12px; margin-bottom: 6px;
+    border: 2px solid #ead7b8; }
+  .principle-icon { font-size: 1.5rem; line-height: 1; }
+  .principle-text strong { display: block; font-size: 0.85rem; color: #2a2218; margin-bottom: 2px; }
+  .principle-text span { font-size: 0.75rem; color: #5a4a36; line-height: 1.4; }
+  .principle-real { font-size: 0.7rem; color: #a09080; margin-top: 4px; font-style: italic; }
+
+  /* quiz section in cert */
+  .quiz-section { margin: 14px 0 6px; }
+  .quiz-trigger { width: 100%; padding: 12px; font-family: inherit; font-size: 0.95rem;
+    font-weight: 700; background: var(--primary); color: white; border: none;
+    border-radius: 14px; cursor: pointer; box-shadow: 0 4px 12px -4px rgba(232, 93, 60, 0.5);
+    display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .quiz-trigger:hover { background: #d04a2c; }
+
+  /* quiz modal */
+  .quiz-modal { position: fixed; inset: 0; z-index: 201; background: rgba(42,34,24,0.6);
+    backdrop-filter: blur(6px); display: none; place-items: center; padding: 20px; }
+  .quiz-modal.show { display: grid; animation: fade 0.3s ease; }
+  .quiz-card { background: var(--paper); border: 3px solid var(--line); border-radius: 24px;
+    padding: 24px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .quiz-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .quiz-head h3 { font-family: 'Noto Sans HK'; font-weight: 900; font-size: 1.2rem;
+    display: flex; align-items: center; gap: 8px; }
+  .quiz-progress { display: flex; gap: 6px; margin-bottom: 16px; }
+  .quiz-progress .dot { flex: 1; height: 6px; background: var(--line); border-radius: 3px;
+    transition: background 0.3s; }
+  .quiz-progress .dot.done { background: var(--good); }
+  .quiz-progress .dot.cur { background: var(--primary); }
+  .quiz-q { text-align: center; margin-bottom: 18px; }
+  .quiz-q .q-num { font-family: 'JetBrains Mono'; font-size: 0.75rem; color: var(--muted);
+    letter-spacing: 0.1em; }
+  .quiz-q h4 { font-family: 'Noto Sans HK'; font-weight: 900; font-size: 1.2rem; margin-top: 4px; }
+  .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .quiz-options.three { grid-template-columns: 1fr; }
+  .quiz-opt { background: var(--bg); border: 3px solid var(--line); border-radius: 16px;
+    padding: 14px 8px; text-align: center; cursor: pointer; transition: all 0.2s;
+    font-family: inherit; }
+  .quiz-opt:hover { transform: translateY(-2px); border-color: var(--primary); }
+  .quiz-opt .opt-emoji { font-size: 3rem; line-height: 1; margin-bottom: 4px; }
+  .quiz-opt .opt-label { font-size: 0.95rem; font-weight: 700; color: var(--ink-2); }
+  .quiz-opt.correct { background: var(--good-soft); border-color: var(--good); animation: pop 0.4s; }
+  .quiz-opt.correct .opt-label { color: var(--good); }
+  .quiz-opt.wrong { background: #fde6df; border-color: var(--primary); animation: shake 0.4s; }
+  .quiz-opt.wrong .opt-label { color: var(--primary); }
+  .quiz-opt:disabled { cursor: not-allowed; opacity: 0.7; }
+  .quiz-feedback { text-align: center; font-weight: 900; font-size: 1.1rem; min-height: 32px; margin-bottom: 10px; }
+  .quiz-feedback.correct { color: var(--good); }
+  .quiz-feedback.wrong { color: var(--primary); }
+  .quiz-next { width: 100%; padding: 12px; font-family: inherit; font-size: 1rem; font-weight: 900;
+    background: var(--primary); color: white; border: none; border-radius: 14px; cursor: pointer; }
+  .quiz-next:hover { background: #d04a2c; }
+  .quiz-next:disabled { background: var(--muted); cursor: not-allowed; }
+  .quiz-result { text-align: center; padding: 20px 0; }
+  .quiz-result .qr-emoji { font-size: 5rem; line-height: 1; }
+  .quiz-result h3 { font-family: 'Noto Sans HK'; font-weight: 900; font-size: 1.4rem; margin: 10px 0 6px; }
+  .quiz-result p { font-size: 0.95rem; color: var(--ink-2); margin-bottom: 14px; }
+  .quiz-result .qr-score { font-family: 'Noto Sans HK'; font-size: 3rem; font-weight: 900;
+    color: var(--primary); }
+  .quiz-result .qr-stars { font-size: 2rem; margin: 8px 0 16px; letter-spacing: 6px; }
+  .quiz-result .qr-stars .off { opacity: 0.25; }
+
   /* responsive */
   @media (max-width: 720px) {
     h1 { font-size: 1.6rem; }
@@ -261,6 +734,20 @@
     .steps { grid-template-columns: repeat(2, 1fr); }
     .mat-row { grid-template-columns: 1fr; }
     .cup-svg { width: 220px; height: 170px; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .compare-vs { padding: 8px 0; }
+    .quiz-options { grid-template-columns: 1fr; }
+    .sound-meter { width: 160px; height: 160px; }
+    .meter-wrap { width: 200px; height: 200px; }
+    .sound-emoji { font-size: 4rem; }
+    .volume-bars { display: none; }
+    .log-modal-card, .compare-card, .quiz-card { max-height: 95vh; }
+    .settings-fab { width: 50px; height: 50px; bottom: 16px; right: 16px; }
+    .settings-panel { right: 12px; bottom: 76px; width: calc(100vw - 24px); }
+    .stage-tts-bar { flex-wrap: wrap; gap: 4px; padding: 6px 8px; }
+    .stage-tts-bar .tts-progress { width: 100%; order: 99; flex: 0 0 100%; }
+    .stage-tts-bar .tts-status { width: 100%; text-align: left; order: 98; font-size: 0.7rem; }
+    .read-block-btn { font-size: 0.75rem; padding: 5px 10px; }
   }
 </style>
 </head>
@@ -322,6 +809,10 @@
         <span>撳喇叭試聽</span>
       </span>
     </div>
+
+    <button class="seg-btn" id="openLogBtn" style="width:100%; margin-top:14px; background: var(--good-soft); color: var(--good); border: 2px solid var(--good);">
+      📒 開我嘅日誌 <span id="logCount" style="margin-left:6px; background:var(--good); color:white; padding:2px 8px; border-radius:10px; font-size:0.8rem;">0</span>
+    </button>
   </div>
 
   <nav class="steps" id="stepNav">
@@ -341,11 +832,28 @@
         第 1 步：遮住耳仔會點？
       </span>
     </h2>
+    <div class="stage-tts-bar" data-stage-tts data-read-blocks=".stage-hint|.cover-demo .cover-actions|.teacher-note">
+      <span class="tts-label">🔊 導讀</span>
+      <button class="tts-c" data-tts-action="play" aria-label="開始讀">▶</button>
+      <button class="tts-c" data-tts-action="pause" aria-label="暫停" disabled>⏸</button>
+      <button class="tts-c" data-tts-action="replay" aria-label="重讀">↻</button>
+      <button class="tts-c" data-tts-action="stop" aria-label="停止" disabled>⏹</button>
+      <div class="tts-progress"><div class="tts-progress-fill"></div></div>
+      <span class="tts-status">未開始</span>
+    </div>
     <p class="stage-hint">撳「播聲音」，再用「遮耳仔」試吓</p>
 
     <div class="cover-demo">
       <div class="cover-scene" id="coverScene">
-        <div class="speaker">📢</div>
+        <div class="speaker" id="speaker">
+          <svg viewBox="0 0 100 100" fill="none">
+            <rect x="15" y="35" width="20" height="30" rx="3" fill="#5b9dd9"/>
+            <path d="M35 50 L60 25 L60 75 L35 50 Z" fill="#5b9dd9"/>
+            <path d="M65 35 Q75 50 65 65" stroke="#5b9dd9" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.6"/>
+            <path d="M72 28 Q85 50 72 72" stroke="#5b9dd9" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.4"/>
+            <circle cx="25" cy="50" r="3" fill="#3d7bb0"/>
+          </svg>
+        </div>
         <div class="waves" id="waves">
           <div class="wave big"></div>
           <div class="wave mid"></div>
@@ -353,8 +861,19 @@
           <div class="wave mid"></div>
           <div class="wave big"></div>
         </div>
-        <div class="hand">✋</div>
-        <div class="ear">👂</div>
+        <div class="hand" id="hand">
+          <svg viewBox="0 0 100 100" fill="none">
+            <path d="M30 90 L30 45 Q30 38 37 38 L37 25 Q37 18 44 18 Q51 18 51 25 L51 38 L55 38 L55 22 Q55 15 62 15 Q69 15 69 22 L69 38 L73 38 L73 28 Q73 21 80 21 Q87 21 87 28 L87 60 Q87 85 60 88 L45 88 Q32 87 30 78 Z" fill="#ffd5a0" stroke="#c97b3f" stroke-width="2.5"/>
+            <path d="M37 38 L37 50 M51 38 L51 50 M62 22 L62 50 M73 28 L73 50" stroke="#c97b3f" stroke-width="1.5" opacity="0.5"/>
+          </svg>
+        </div>
+        <div class="ear" id="ear">
+          <svg viewBox="0 0 100 100" fill="none">
+            <path d="M30 30 Q30 15 50 15 Q70 15 75 35 Q78 50 75 65 Q72 80 55 82 Q40 82 32 70 Q25 58 28 45 Q30 38 30 30 Z" fill="#f5c5a0" stroke="#c97b3f" stroke-width="2.5"/>
+            <path d="M45 45 Q45 55 50 60 Q55 55 55 45 Q52 40 45 45 Z" fill="#c97b3f" opacity="0.4"/>
+            <path d="M40 30 Q40 25 45 25" stroke="#c97b3f" stroke-width="2" fill="none" opacity="0.5"/>
+          </svg>
+        </div>
       </div>
 
       <div class="cover-actions">
@@ -381,23 +900,52 @@
         第 2 步：揀兩樣嘢
       </span>
     </h2>
+    <div class="stage-tts-bar" data-stage-tts data-read-blocks=".stage-hint|.pick-row .pick-q|.mat-row|.teacher-note">
+      <span class="tts-label">🔊 導讀</span>
+      <button class="tts-c" data-tts-action="play" aria-label="開始讀">▶</button>
+      <button class="tts-c" data-tts-action="pause" aria-label="暫停" disabled>⏸</button>
+      <button class="tts-c" data-tts-action="replay" aria-label="重讀">↻</button>
+      <button class="tts-c" data-tts-action="stop" aria-label="停止" disabled>⏹</button>
+      <div class="tts-progress"><div class="tts-progress-fill"></div></div>
+      <span class="tts-status">未開始</span>
+    </div>
     <p class="stage-hint">① 揀杯 ② 揀軟墊</p>
 
     <div class="pick-row">
       <div class="pick-q"><span class="num">①</span>杯嘅物料 <span class="req" id="shellReq">（揀一樣）</span></div>
       <div class="mat-row" id="shellGrid">
         <div class="mat-card" data-type="shell" data-id="paper" data-score="2" data-tts="紙杯，輕，軟">
-          <div class="mat-emoji">📄</div>
+          <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
+            <path d="M20 25 L80 25 L72 88 Q72 92 68 92 L32 92 Q28 92 28 88 Z" fill="#f4e4c1" stroke="#a08060" stroke-width="2.5"/>
+            <ellipse cx="50" cy="25" rx="30" ry="6" fill="#fff" stroke="#a08060" stroke-width="2.5"/>
+            <path d="M30 35 L30 82 M40 35 L40 82 M50 35 L50 82 M60 35 L60 82 M70 35 L70 82" stroke="#d4b890" stroke-width="1" opacity="0.7"/>
+            <ellipse cx="50" cy="25" rx="20" ry="3" fill="#a08060" opacity="0.3"/>
+          </svg>
           <div class="mat-name">紙杯</div>
           <div class="mat-feel">輕、軟</div>
         </div>
         <div class="mat-card" data-type="shell" data-id="plastic" data-score="4" data-tts="膠杯，硬，滑">
-          <div class="mat-emoji">🥤</div>
+          <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
+            <path d="M20 25 L80 25 L74 88 Q74 92 70 92 L30 92 Q26 92 26 88 Z" fill="#7bc4f0" stroke="#3d7bb0" stroke-width="2.5"/>
+            <ellipse cx="50" cy="25" rx="30" ry="6" fill="#a8d8f5" stroke="#3d7bb0" stroke-width="2.5"/>
+            <ellipse cx="50" cy="25" rx="20" ry="3" fill="#3d7bb0" opacity="0.3"/>
+            <path d="M30 30 L32 85 M72 30 L70 85" stroke="white" stroke-width="3" opacity="0.5" stroke-linecap="round"/>
+            <path d="M28 50 L74 50" stroke="white" stroke-width="1.5" opacity="0.3"/>
+          </svg>
           <div class="mat-name">膠杯</div>
           <div class="mat-feel">硬、滑</div>
         </div>
         <div class="mat-card" data-type="shell" data-id="foam" data-score="3" data-tts="泡棉杯，軟，有彈性">
-          <div class="mat-emoji">🧽</div>
+          <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
+            <path d="M22 25 L78 25 L70 88 Q70 92 66 92 L34 92 Q30 92 30 88 Z" fill="#f5d76e" stroke="#b8941a" stroke-width="2.5"/>
+            <ellipse cx="50" cy="25" rx="28" ry="6" fill="#fce394" stroke="#b8941a" stroke-width="2.5"/>
+            <circle cx="35" cy="50" r="3" fill="#b8941a" opacity="0.4"/>
+            <circle cx="55" cy="42" r="2.5" fill="#b8941a" opacity="0.4"/>
+            <circle cx="65" cy="60" r="2" fill="#b8941a" opacity="0.4"/>
+            <circle cx="42" cy="70" r="2.5" fill="#b8941a" opacity="0.4"/>
+            <circle cx="50" cy="80" r="2" fill="#b8941a" opacity="0.4"/>
+            <circle cx="60" cy="35" r="1.5" fill="#b8941a" opacity="0.4"/>
+          </svg>
           <div class="mat-name">泡棉杯</div>
           <div class="mat-feel">軟、有彈性</div>
         </div>
@@ -405,20 +953,39 @@
     </div>
 
     <div class="pick-row">
-      <div class="pick-q"><span class="num">②</span>軟墊 <span class="req" id="sealReq">（揀一樣）</span></div>
+      <div class="pick-q"><span class="num">②</span>軟墊 <span class="req" id="sealReq">🔒 先揀杯</span></div>
       <div class="mat-row waiting" id="sealGrid">
         <div class="mat-card" data-type="seal" data-id="none" data-score="0" data-tts="唔要墊，直接貼耳">
-          <div class="mat-emoji">🚫</div>
+          <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
+            <ellipse cx="50" cy="50" rx="35" ry="10" fill="none" stroke="#a09080" stroke-width="3" stroke-dasharray="6 4"/>
+            <line x1="15" y1="50" x2="85" y2="50" stroke="#a09080" stroke-width="2" opacity="0.4"/>
+            <text x="50" y="75" text-anchor="middle" font-size="28" fill="#a09080">✕</text>
+          </svg>
           <div class="mat-name">唔要墊</div>
           <div class="mat-feel">直接貼耳</div>
         </div>
         <div class="mat-card" data-type="seal" data-id="cotton" data-score="2" data-tts="棉花，軟鬆">
-          <div class="mat-emoji">🧶</div>
+          <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
+            <ellipse cx="50" cy="55" rx="32" ry="22" fill="white" stroke="#d0c8b8" stroke-width="2"/>
+            <circle cx="38" cy="48" r="8" fill="white" stroke="#d0c8b8" stroke-width="1.5"/>
+            <circle cx="55" cy="42" r="9" fill="white" stroke="#d0c8b8" stroke-width="1.5"/>
+            <circle cx="65" cy="55" r="8" fill="white" stroke="#d0c8b8" stroke-width="1.5"/>
+            <circle cx="45" cy="62" r="7" fill="white" stroke="#d0c8b8" stroke-width="1.5"/>
+            <circle cx="58" cy="65" r="6" fill="white" stroke="#d0c8b8" stroke-width="1.5"/>
+            <line x1="30" y1="30" x2="25" y2="22" stroke="#7a8a5a" stroke-width="2" stroke-linecap="round"/>
+            <path d="M25 22 L20 18 M25 22 L22 28 M25 22 L30 20" stroke="#7a8a5a" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
           <div class="mat-name">棉花</div>
           <div class="mat-feel">軟鬆</div>
         </div>
         <div class="mat-card" data-type="seal" data-id="foam" data-score="4" data-tts="記憶墊，軟，貼耳">
-          <div class="mat-emoji">🟧</div>
+          <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
+            <ellipse cx="50" cy="50" rx="35" ry="20" fill="#ff9b6a" stroke="#c0582a" stroke-width="2.5"/>
+            <ellipse cx="50" cy="48" rx="30" ry="15" fill="#ffb88a" opacity="0.6"/>
+            <ellipse cx="42" cy="46" rx="8" ry="3" fill="white" opacity="0.5"/>
+            <ellipse cx="58" cy="46" rx="6" ry="2" fill="white" opacity="0.5"/>
+            <path d="M20 50 Q15 50 12 55 M80 50 Q85 50 88 55" stroke="#c0582a" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+          </svg>
           <div class="mat-name">記憶墊</div>
           <div class="mat-feel">軟、貼耳</div>
         </div>
@@ -435,20 +1002,45 @@
   <section class="stage" id="stage-3">
     <h2 class="stage-title">
       <span class="speakable">
-        <button class="speak-btn" data-text="第三步：你嘅耳罩整好喇" aria-label="朗讀">
+        <button class="speak-btn" data-text="第三步：睇下你揀咗咩" aria-label="朗讀">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
         </button>
-        第 3 步：你嘅耳罩整好喇
+        第 3 步：睇下你揀咗咩
       </span>
     </h2>
+    <div class="stage-tts-bar" data-stage-tts data-read-blocks=".stage-hint|.build-summary|.teacher-note">
+      <span class="tts-label">🔊 導讀</span>
+      <button class="tts-c" data-tts-action="play" aria-label="開始讀">▶</button>
+      <button class="tts-c" data-tts-action="pause" aria-label="暫停" disabled>⏸</button>
+      <button class="tts-c" data-tts-action="replay" aria-label="重讀">↻</button>
+      <button class="tts-c" data-tts-action="stop" aria-label="停止" disabled>⏹</button>
+      <div class="tts-progress"><div class="tts-progress-fill"></div></div>
+      <span class="tts-status">未開始</span>
+    </div>
     <p class="stage-hint">睇下你揀咗咩</p>
 
     <div class="cup-area">
       <svg class="cup-svg" id="cupSvg" viewBox="0 0 260 200">
-        <ellipse cx="130" cy="180" rx="90" ry="14" fill="#ead7b8"/>
-        <g id="cupAdditions"></g>
-        <g id="cupSeal"></g>
-        <g id="cupBand"></g>
+        <defs>
+          <linearGradient id="cupShadow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(0,0,0,0.18)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+          </linearGradient>
+          <linearGradient id="cupHighlight" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.6)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </linearGradient>
+          <filter id="cupSoft">
+            <feGaussianBlur stdDeviation="0.8"/>
+          </filter>
+        </defs>
+        <!-- floor shadow -->
+        <ellipse cx="130" cy="184" rx="92" ry="12" fill="url(#cupShadow)"/>
+        <g id="cupAdditions" style="opacity:0; transform: scale(0.5); transform-origin: 130px 100px; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);"></g>
+        <g id="cupSeal" style="opacity:0; transform: scale(0.5); transform-origin: 130px 60px; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;"></g>
+        <g id="cupBand" style="opacity:0; transform: scale(0.7); transform-origin: 130px 90px; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s;"></g>
+        <!-- sparkles overlay -->
+        <g id="cupSparkles" style="opacity:0; transition: opacity 0.3s;"></g>
       </svg>
       <div class="cup-label" id="cupLabel">—</div>
       <div class="cup-sub" id="cupSub">—</div>
@@ -466,19 +1058,39 @@
   <section class="stage" id="stage-4">
     <h2 class="stage-title">
       <span class="speakable">
-        <button class="speak-btn" data-text="第四步：試下擋唔擋到" aria-label="朗讀">
+        <button class="speak-btn" data-text="第四步：戴住耳罩試吓" aria-label="朗讀">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
         </button>
-        第 4 步：試下擋唔擋到
+        第 4 步：戴住耳罩試吓
       </span>
     </h2>
+    <div class="stage-tts-bar" data-stage-tts data-read-blocks=".stage-hint|.wear-actions|.teacher-note">
+      <span class="tts-label">🔊 導讀</span>
+      <button class="tts-c" data-tts-action="play" aria-label="開始讀">▶</button>
+      <button class="tts-c" data-tts-action="pause" aria-label="暫停" disabled>⏸</button>
+      <button class="tts-c" data-tts-action="replay" aria-label="重讀">↻</button>
+      <button class="tts-c" data-tts-action="stop" aria-label="停止" disabled>⏹</button>
+      <div class="tts-progress"><div class="tts-progress-fill"></div></div>
+      <span class="tts-status">未開始</span>
+    </div>
     <p class="stage-hint">戴耳罩之後，聲音會唔同</p>
 
     <div class="sound-stage">
-      <div class="sound-meter" id="soundMeter">
-        <div style="text-align:center">
-          <div class="sound-emoji" id="soundEmoji">📢</div>
-          <div class="sound-label" id="soundLabel">大聲</div>
+      <div class="meter-wrap loud" id="meterWrap">
+        <div class="sound-rings">
+          <div class="sound-ring r1"></div>
+          <div class="sound-ring r2"></div>
+          <div class="sound-ring r3"></div>
+        </div>
+        <div class="sound-meter" id="soundMeter">
+          <div style="text-align:center">
+            <div class="sound-emoji" id="soundEmoji">📢</div>
+            <div class="sound-label" id="soundLabel">大聲</div>
+            <div class="volume-bars">
+              <div class="vb"></div><div class="vb"></div><div class="vb"></div>
+              <div class="vb"></div><div class="vb"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -492,16 +1104,166 @@
       <div class="big" id="resultBig">—</div>
       <div class="stars" id="resultStars">⭐⭐⭐</div>
       <div class="msg" id="resultMsg">—</div>
-      <button id="btnRetry">↺ 揀過另一個組合再試</button>
+
+      <div class="log-section">
+        <h4>🔬 記低今次實驗</h4>
+
+        <div class="log-q">
+          <div class="log-q-label">① 個聲細咗幾多？</div>
+          <div class="chip-row" id="feelChips">
+            <button class="chip" data-feel="quiet"><span class="emoji">🤫</span>好靜</button>
+            <button class="chip" data-feel="less"><span class="emoji">🔉</span>細聲咗</button>
+            <button class="chip" data-feel="loud"><span class="emoji">🔊</span>仲好嘈</button>
+          </div>
+        </div>
+
+        <div class="log-q">
+          <div class="log-q-label">② 戴住耳仔，舒唔舒服？</div>
+          <div class="chip-row" id="comfortChips">
+            <button class="chip" data-comfort="good"><span class="emoji">😊</span>好舒服</button>
+            <button class="chip" data-comfort="ok"><span class="emoji">😐</span>還可以</button>
+            <button class="chip" data-comfort="bad"><span class="emoji">😣</span>好唔舒服</button>
+          </div>
+        </div>
+
+        <button class="log-save" id="logSave" disabled>✅ 記低</button>
+        <div class="log-saved" id="logSaved">✓ 已記低！</div>
+      </div>
+
+      <button id="btnRetry" style="margin-top:14px;">↺ 揀過另一個組合再試</button>
     </div>
 
     <div class="teacher-note">
       <strong>👩‍🏫 老師提示</strong>
-      一開始自動播大聲。撳「戴耳罩」會切換到靜啲。睇吓效果，再決定幾多星。
+      一開始自動播大聲。撳「戴耳罩」會切換到靜啲。睒吓效果，再決定幾多星。
     </div>
   </section>
 
 </div>
+
+<!-- ========== CELEBRATION ========== -->
+<div class="celebration" id="celebration">
+  <div class="cert">
+    <div class="cert-medal">🏆</div>
+    <h3>你完成喇！</h3>
+    <p>你整咗一個隔音耳罩</p>
+    <div class="cup-show" id="certCup"></div>
+
+    <div class="principles">
+      <div class="principles-title">🎓 你學到嘅科學原理</div>
+      <div class="principle-row">
+        <div class="principle-icon">⚖️</div>
+        <div class="principle-text">
+          <strong>重嘅嘢擋到更多聲</strong>
+          <span>膠杯重過紙杯，所以擋到更多聲。呢個叫「質量定律」。</span>
+          <div class="principle-real">🛩️ 飛機窗用厚玻璃就係呢個原因</div>
+        </div>
+      </div>
+      <div class="principle-row">
+        <div class="principle-icon">🧽</div>
+        <div class="principle-text">
+          <strong>軟嘅嘢會吸震動</strong>
+          <span>棉花、泡棉會震動，將聲能變熱散走。</span>
+          <div class="principle-real">🎵 錄音室牆壁都鋪滿軟泡棉</div>
+        </div>
+      </div>
+      <div class="principle-row">
+        <div class="principle-icon">🔒</div>
+        <div class="principle-text">
+          <strong>密封先唔會漏聲</strong>
+          <span>杯邊有記憶墊貼住，聲就會走唔到入去。</span>
+          <div class="principle-real">👷 建築工人戴耳罩就係要 block 哂所有聲</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quiz-section">
+      <button class="quiz-trigger" id="openQuizBtn">🧠 玩個小測試！（3 題）</button>
+    </div>
+
+    <button class="cert-close" id="certClose">收埋</button>
+  </div>
+</div>
+
+<!-- ========== QUIZ MODAL ========== -->
+<div class="quiz-modal" id="quizModal">
+  <div class="quiz-card">
+    <div class="quiz-head">
+      <h3>🧠 小測試</h3>
+      <button class="log-close" id="quizClose">關</button>
+    </div>
+    <div class="quiz-progress" id="quizProgress"></div>
+    <div id="quizBody"></div>
+  </div>
+</div>
+
+<!-- ========== COMPARE MODAL ========== -->
+<div class="compare-modal" id="compareModal">
+  <div class="compare-card">
+    <div class="compare-head">
+      <h3>⚖️ 對比兩個組合</h3>
+      <button class="log-close" id="compareClose">關</button>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-side" id="cmpLeft">
+        <div class="cs-label">A 組合</div>
+        <div class="cs-icon">🥽</div>
+        <div class="cs-name">—</div>
+        <select id="cmpLeftShell"></select>
+        <select id="cmpLeftSeal"></select>
+        <div class="cs-score">—</div>
+        <div class="cs-n">—</div>
+        <div class="cs-feel"></div>
+      </div>
+      <div class="compare-vs">VS</div>
+      <div class="compare-side" id="cmpRight">
+        <div class="cs-label">B 組合</div>
+        <div class="cs-icon">🥽</div>
+        <div class="cs-name">—</div>
+        <select id="cmpRightShell"></select>
+        <select id="cmpRightSeal"></select>
+        <div class="cs-score">—</div>
+        <div class="cs-n">—</div>
+        <div class="cs-feel"></div>
+      </div>
+    </div>
+    <div class="compare-result" id="cmpResult">揀兩個組合就會見到對比！</div>
+    <div class="compare-actions">
+      <button class="primary" id="cmpUseWinner">🎧 用贏嗰個組合再試</button>
+      <button class="secondary" id="cmpSpeak">🔊 念結果</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== LOG MODAL ========== -->
+<div class="log-modal" id="logModal">
+  <div class="log-modal-card">
+    <div class="log-modal-head">
+      <h3>📒 我嘅實驗日誌</h3>
+      <button class="log-close" id="logClose">關</button>
+    </div>
+    <div id="conclusion" class="conclusion"></div>
+    <button class="compare-trigger" id="openCompareBtn" disabled>⚖️ 對比兩個組合（要 2 個實驗）</button>
+    <div class="level-badge" id="levelBadge"></div>
+    <div class="log-stats" id="logStats"></div>
+    <div id="insights" class="insights-area"></div>
+    <div class="log-section-title">🏆 邊個組合最好？</div>
+    <div id="ranking" class="rank-list"></div>
+    <div class="log-section-title">📋 全部紀錄</div>
+    <div class="log-list" id="logList"></div>
+    <div class="log-modal-actions">
+      <button id="logPrint">🖨️ 印出嚟</button>
+      <button id="logExport">📤 複製文字</button>
+      <button id="logClear" class="danger">🗑️ 全部拎走</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PRINT SHEET ========== -->
+<div class="print-sheet" id="printSheet"></div>
+
+<!-- ========== TOAST ========== -->
+<div class="toast" id="toast"></div>
 
 <script>
 // ============== SETTINGS (TTS + font) ==============
@@ -567,9 +1329,91 @@ if ('speechSynthesis' in window) {
   });
 }
 let currentSpeakBtn = null;
-function speak(text) {
+let currentUtterance = null;
+let currentController = null; // { wrapEl, words, charIndex, totalChars, onEnd }
+let isPaused = false;
+
+// Cantonese fallback detection — if no zh-HK/yue voice, warn user
+function isCantoneseAvailable() {
+  return voices.some(v => /zh-HK|zh-Hant-HK|yue/i.test(v.lang) || /cantonese|hong kong/i.test(v.name));
+}
+
+// Wrap text nodes in <span class="tts-word"> for highlight tracking.
+// Preserves child elements (icons, bold) by NOT touching element children;
+// only wraps raw text. `text` arg = exact text we sent to utterance.
+function wrapForHighlight(rootEl, text) {
+  // First unmark any prior wrap
+  if (rootEl._ttsOrig) { rootEl.innerHTML = rootEl._ttsOrig; }
+  else { rootEl._ttsOrig = rootEl.innerHTML; }
+
+  // Find all text nodes that contain portion of `text`. We rebuild simply:
+  // for each direct child text node, wrap each char run that appears in `text`.
+  // Simpler: walk text nodes, for each, tokenise by Chinese-char + ASCII-word.
+  const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, null);
+  const textNodes = [];
+  let n; while ((n = walker.nextNode())) {
+    if (n.nodeValue.trim()) textNodes.push(n);
+  }
+  textNodes.forEach(tn => {
+    const txt = tn.nodeValue;
+    const frag = document.createDocumentFragment();
+    // tokenise: chinese chars individually + ascii words as units
+    const tokens = txt.match(/[\u4e00-\u9fff]|[A-Za-z0-9]+|[^\u4e00-\u9fffA-Za-z0-9]+/g) || [];
+    tokens.forEach(tok => {
+      if (/^[\u4e00-\u9fff]$/.test(tok)) {
+        const sp = document.createElement('span');
+        sp.className = 'tts-word';
+        sp.textContent = tok;
+        frag.appendChild(sp);
+      } else {
+        frag.appendChild(document.createTextNode(tok));
+      }
+    });
+    tn.parentNode.replaceChild(frag, tn);
+  });
+}
+
+// Highlight char-by-char using onboundary event.
+// charIndex points to the position in the utterance text. We approximate by
+// tracking a running offset that increments based on the boundary char length.
+function attachWordTracker(controller) {
+  controller.words = Array.from(controller.wrapEl.querySelectorAll('.tts-word'));
+  controller.charPos = [];
+  let pos = 0;
+  controller.words.forEach(w => {
+    controller.charPos.push(pos);
+    pos += w.textContent.length;
+  });
+  controller.totalChars = pos;
+}
+
+function highlightWord(controller, charIndex) {
+  if (!controller || !controller.words) return;
+  // find first word whose charPos >= charIndex
+  let idx = controller.words.findIndex((w, i) =>
+    charIndex >= controller.charPos[i] && charIndex < controller.charPos[i] + controller.words[i].textContent.length
+  );
+  if (idx < 0) {
+    // past last word
+    if (controller.words.length) idx = controller.words.length - 1;
+    else return;
+  }
+  controller.words.forEach((w, i) => w.classList.toggle('active', i === idx));
+}
+
+function clearHighlight(controller) {
+  if (!controller) return;
+  if (controller.words) controller.words.forEach(w => w.classList.remove('active'));
+  if (controller.wrapEl && controller.wrapEl._ttsOrig) {
+    controller.wrapEl.innerHTML = controller.wrapEl._ttsOrig;
+    delete controller.wrapEl._ttsOrig;
+  }
+}
+
+function speak(text, opts = {}) {
   if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
+  isPaused = false;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'zh-HK';
   u.rate = settings.rate;
@@ -578,10 +1422,102 @@ function speak(text) {
     const v = voices.find(x => x.voiceURI === settings.voiceURI);
     if (v) u.voice = v;
   }
-  u.onstart = () => { if (currentSpeakBtn) currentSpeakBtn.classList.add('speaking'); };
-  u.onend = u.onerror = () => { if (currentSpeakBtn) { currentSpeakBtn.classList.remove('speaking'); currentSpeakBtn = null; } };
+
+  // Per-element highlight support
+  const wrapEl = opts.wrapEl || null;
+  let controller = null;
+  if (wrapEl) {
+    wrapForHighlight(wrapEl, text);
+    controller = { wrapEl, words: null, charPos: [], totalChars: 0, paused: false };
+    attachWordTracker(controller);
+    // Some browsers (Chrome) don't fire onboundary reliably — fall back to setInterval progress
+    u.onboundary = e => {
+      if (controller.paused) return;
+      highlightWord(controller, e.charIndex || 0);
+    };
+  }
+  currentController = controller;
+  currentUtterance = u;
+
+  u.onstart = () => {
+    if (currentSpeakBtn) currentSpeakBtn.classList.add('speaking');
+    if (opts.onStart) opts.onStart();
+    // Fallback: poll progress every 80ms in case onboundary never fires
+    if (controller && !controller._fallbackTimer) {
+      let fakeIdx = 0;
+      controller._fallbackTimer = setInterval(() => {
+        if (!currentController || controller.paused) return;
+        if (fakeIdx >= controller.totalChars) return;
+        fakeIdx = Math.min(fakeIdx + Math.max(1, Math.floor(controller.totalChars / 40)), controller.totalChars);
+        highlightWord(controller, fakeIdx);
+        if (fakeIdx >= controller.totalChars) clearInterval(controller._fallbackTimer);
+      }, 100);
+    }
+  };
+  u.onend = u.onerror = () => {
+    if (currentSpeakBtn) { currentSpeakBtn.classList.remove('speaking'); currentSpeakBtn = null; }
+    if (controller && controller._fallbackTimer) { clearInterval(controller._fallbackTimer); controller._fallbackTimer = null; }
+    clearHighlight(controller);
+    currentController = null;
+    currentUtterance = null;
+    if (opts.onEnd) opts.onEnd();
+  };
   speechSynthesis.speak(u);
 }
+
+// speakSequence — queue multiple utterances with highlight per block
+function speakSequence(blocks, onProgress) {
+  // blocks: [{ text, wrapEl }]
+  if (!('speechSynthesis' in window) || !blocks.length) return;
+  speechSynthesis.cancel();
+  isPaused = false;
+  let i = 0;
+
+  const next = () => {
+    if (i >= blocks.length) { if (onProgress) onProgress(1, 1, '完成'); return; }
+    const b = blocks[i];
+    if (onProgress) onProgress(i, blocks.length, `讀緊 ${i + 1}/${blocks.length}`);
+    const u = new SpeechSynthesisUtterance(b.text);
+    u.lang = 'zh-HK'; u.rate = settings.rate; u.pitch = 1.0;
+    if (settings.voiceURI) {
+      const v = voices.find(x => x.voiceURI === settings.voiceURI);
+      if (v) u.voice = v;
+    }
+    let controller = null;
+    if (b.wrapEl) {
+      wrapForHighlight(b.wrapEl, b.text);
+      controller = { wrapEl: b.wrapEl, words: null, charPos: [], totalChars: 0, paused: false };
+      attachWordTracker(controller);
+      u.onboundary = e => { if (!controller.paused) highlightWord(controller, e.charIndex || 0); };
+    }
+    currentController = controller;
+    currentUtterance = u;
+    u.onstart = () => {
+      if (b.wrapEl && controller && !controller._fallbackTimer) {
+        let fakeIdx = 0;
+        controller._fallbackTimer = setInterval(() => {
+          if (!currentController || controller.paused) return;
+          if (fakeIdx >= controller.totalChars) return;
+          fakeIdx = Math.min(fakeIdx + Math.max(1, Math.floor(controller.totalChars / 40)), controller.totalChars);
+          highlightWord(controller, fakeIdx);
+          if (fakeIdx >= controller.totalChars) clearInterval(controller._fallbackTimer);
+        }, 100);
+      }
+    };
+    u.onend = () => {
+      if (controller && controller._fallbackTimer) { clearInterval(controller._fallbackTimer); controller._fallbackTimer = null; }
+      clearHighlight(controller);
+      currentController = null;
+      currentUtterance = null;
+      i++; next();
+    };
+    u.onerror = u.onend;
+    speechSynthesis.speak(u);
+  };
+  next();
+}
+
+// ---------- speak button delegation (point-read) ----------
 document.addEventListener('click', e => {
   const b = e.target.closest('.speak-btn');
   if (!b) return;
@@ -596,8 +1532,169 @@ document.addEventListener('click', e => {
   }
   if (currentSpeakBtn) currentSpeakBtn.classList.remove('speaking');
   currentSpeakBtn = b;
-  speak(text);
+  // Highlight the parent span during speak
+  const wrapEl = b.closest('.speakable') || b.parentElement;
+  speak(text, { wrapEl });
 });
+
+// ---------- read-block (整段讀) button delegation ----------
+document.addEventListener('click', e => {
+  const b = e.target.closest('.read-block-btn');
+  if (!b) return;
+  e.stopPropagation();
+  const sel = b.dataset.read;
+  const target = b.closest('[data-read-blocks]') || document;
+  const root = sel ? target : (b.closest('[data-read-blocks]') || b.parentElement);
+  const blockSel = sel || b.dataset.readBlocks;
+  if (!blockSel) return;
+  const blocks = collectBlocks(blockSel, root);
+  if (!blocks.length) return;
+
+  if (b.classList.contains('speaking')) {
+    speechSynthesis.cancel();
+    b.classList.remove('speaking');
+    return;
+  }
+  document.querySelectorAll('.read-block-btn.speaking').forEach(x => x.classList.remove('speaking'));
+  b.classList.add('speaking');
+  speakSequence(blocks, () => { b.classList.remove('speaking'); });
+});
+
+// Build list of { text, wrapEl } from CSS selectors (pipe-separated) within root.
+function collectBlocks(selectorList, root) {
+  const sels = selectorList.split('|').map(s => s.trim()).filter(Boolean);
+  const blocks = [];
+  sels.forEach(sel => {
+    root.querySelectorAll(sel).forEach(el => {
+      // skip if inside an active speakable (already covered)
+      if (el.closest('.speakable') && !el.matches('.speakable')) return;
+      const txt = el.innerText.trim();
+      if (txt && txt.length > 1) blocks.push({ text: txt, wrapEl: el });
+    });
+  });
+  return blocks;
+}
+
+// ---------- stage TTS control bar (auto-guide) ----------
+function bindStageTtsBars() {
+  document.querySelectorAll('[data-stage-tts]').forEach(bar => {
+    const stage = bar.closest('.stage');
+    if (!stage) return;
+    const playBtn = bar.querySelector('[data-tts-action="play"]');
+    const pauseBtn = bar.querySelector('[data-tts-action="pause"]');
+    const replayBtn = bar.querySelector('[data-tts-action="replay"]');
+    const stopBtn = bar.querySelector('[data-tts-action="stop"]');
+    const statusEl = bar.querySelector('.tts-status');
+    const fillEl = bar.querySelector('.tts-progress-fill');
+    const blocksSel = bar.dataset.readBlocks;
+
+    // Auto-guide: read stage title + hint on entering (only if user not in middle of something)
+    // We attach via custom event from stage transition (later).
+
+    playBtn.addEventListener('click', () => {
+      const blocks = collectBlocks(blocksSel, stage);
+      if (!blocks.length) { statusEl.textContent = '冇內容'; return; }
+      playBtn.classList.add('playing');
+      pauseBtn.disabled = false; stopBtn.disabled = false;
+      statusEl.textContent = '讀緊…';
+      speakSequence(blocks, (done, total, label) => {
+        if (label === '完成') {
+          playBtn.classList.remove('playing');
+          pauseBtn.disabled = true; stopBtn.disabled = true; isPaused = false;
+          pauseBtn.textContent = '⏸';
+          statusEl.textContent = '完成 ✓';
+          fillEl.style.width = '100%';
+        } else { statusEl.textContent = label; }
+      });
+      // approximate progress: animate fill across estimated duration
+      const totalChars = blocks.reduce((s, b) => s + b.text.length, 0);
+      const totalSec = (totalChars / 3) * (1 / settings.rate); // ~3 chars/sec baseline
+      const startT = Date.now();
+      const tick = () => {
+        if (!playBtn.classList.contains('playing')) return;
+        const pct = Math.min(100, ((Date.now() - startT) / (totalSec * 1000)) * 100);
+        fillEl.style.width = pct + '%';
+        if (pct < 100) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      if (!('speechSynthesis' in window)) return;
+      if (isPaused) {
+        speechSynthesis.resume();
+        isPaused = false;
+        pauseBtn.textContent = '⏸';
+        statusEl.textContent = '繼續…';
+        if (currentController) currentController.paused = false;
+      } else {
+        speechSynthesis.pause();
+        isPaused = true;
+        pauseBtn.textContent = '▶';
+        statusEl.textContent = '已暫停';
+        if (currentController) currentController.paused = true;
+      }
+    });
+
+    replayBtn.addEventListener('click', () => {
+      const blocks = collectBlocks(blocksSel, stage);
+      if (!blocks.length) return;
+      speechSynthesis.cancel();
+      fillEl.style.width = '0%';
+      playBtn.click();
+    });
+
+    stopBtn.addEventListener('click', () => {
+      speechSynthesis.cancel();
+      playBtn.classList.remove('playing');
+      pauseBtn.disabled = true; stopBtn.disabled = true; isPaused = false;
+      pauseBtn.textContent = '⏸';
+      statusEl.textContent = '已停止';
+      fillEl.style.width = '0%';
+    });
+  });
+}
+bindStageTtsBars();
+
+// ---------- inject 📖 讀晒呢段 buttons into designated blocks ----------
+function injectReadBlockButtons() {
+  document.querySelectorAll('[data-stage-tts]').forEach(bar => {
+    const stage = bar.closest('.stage');
+    if (!stage) return;
+    const sels = bar.dataset.readBlocks.split('|').map(s => s.trim()).filter(Boolean);
+    sels.forEach(sel => {
+      // skip selectors that target many small siblings (e.g. .mat-row)
+      stage.querySelectorAll(sel).forEach(el => {
+        if (el.querySelector('.read-block-btn')) return;
+        if (el.closest('.stage-tts-bar')) return;
+        if (el.children.length > 8) return; // skip dense grids
+        const btn = document.createElement('button');
+        btn.className = 'read-block-btn';
+        btn.dataset.read = sel;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>📖 讀晒呢段';
+        // insert as first child of the element
+        el.insertBefore(btn, el.firstChild);
+      });
+    });
+  });
+}
+injectReadBlockButtons();
+
+// ---------- Cantonese fallback notice ----------
+if ('speechSynthesis' in window) {
+  // Wait for voices to load (some browsers need a tick)
+  setTimeout(() => {
+    if (!voices.length) loadVoices();
+    if (!isCantoneseAvailable()) {
+      const notice = document.createElement('div');
+      notice.className = 'cantonese-warn';
+      notice.style.cssText = 'position:fixed;bottom:90px;right:20px;z-index:99;background:#fff8e1;border:2px solid #f5c842;border-radius:12px;padding:8px 12px;font-size:0.78rem;color:#6b5520;max-width:240px;box-shadow:0 4px 12px rgba(0,0,0,0.15);';
+      notice.innerHTML = '⚠️ 搵唔到廣東話語音，會用返其他語音讀。Settings → 揀其他聲音。';
+      document.body.appendChild(notice);
+      setTimeout(() => notice.remove(), 8000);
+    }
+  }, 1500);
+}
 // mat cards also speak on hover (touch fallback: tap)
 document.querySelectorAll('.mat-card').forEach(c => {
   c.addEventListener('dblclick', e => {
@@ -653,7 +1750,7 @@ function startMuffled(totalScore) {
 
 // ============== STAGE NAV ==============
 const completedStages = new Set();
-function goStage(n) {
+ function goStage(n) {
   document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
   document.querySelector(`.step-btn[data-stage="${n}"]`).classList.add('active');
@@ -664,6 +1761,19 @@ function goStage(n) {
     setVisual('loud');
   } else {
     stopAudio();
+  }
+  // Auto-guide TTS: read stage title + hint 700ms after entering
+  const stageEl = document.getElementById('stage-' + n);
+  const titleEl = stageEl.querySelector('.stage-title .speakable');
+  const hintEl = stageEl.querySelector('.stage-hint');
+  if (titleEl && hintEl && 'speechSynthesis' in window) {
+    const titleText = titleEl.querySelector('.speak-btn')?.dataset.text || titleEl.innerText.trim();
+    const hintText = hintEl.innerText.trim();
+    setTimeout(() => {
+      // respect: don't override if user already manually triggered TTS in last 2s
+      if (currentUtterance) return;
+      speakSequence([{ text: titleText, wrapEl: titleEl }, { text: hintText, wrapEl: hintEl }]);
+    }, 600);
   }
 }
 document.getElementById('stepNav').addEventListener('click', e => {
@@ -679,34 +1789,55 @@ function markDone(n) {
 // ============== STAGE 1: 遮住 ==============
 let stage1Covered = false, stage1Played = false;
 const coverScene = document.getElementById('coverScene');
-document.getElementById('btnCoverPlay').addEventListener('click', () => {
-  startLoud();
-  stage1Played = true;
-});
-document.getElementById('btnCover').addEventListener('click', () => {
-  stage1Covered = !stage1Covered;
-  coverScene.classList.toggle('covered', stage1Covered);
-  document.getElementById('btnCover').textContent = stage1Covered ? '✋ 移開手' : '✋ 遮耳仔';
-  document.getElementById('btnCover').classList.toggle('primary', stage1Covered);
-  if (stage1Covered) {
-    // simulate muffling: lower gain + lowpass
-    if (playGain) playGain.gain.value = 0.18;
-    if (!playFilter && audioCtx) {
-      const filt = audioCtx.createBiquadFilter();
-      filt.type = 'lowpass'; filt.frequency.value = 600;
-      // simple effect — reconnect via new gain
-    }
-  } else {
-    if (playGain) playGain.gain.value = 0.5;
+const speaker = document.getElementById('speaker');
+const ear = document.getElementById('ear');
+const btnCoverPlay = document.getElementById('btnCoverPlay');
+const btnCover = document.getElementById('btnCover');
+const nextTo2 = document.getElementById('nextTo2');
+
+function refreshStage1Next() {
+  // both must happen: played once AND covered once
+  nextTo2.disabled = !(stage1Played && stage1Covered);
+}
+
+btnCoverPlay.addEventListener('click', (e) => {
+  e.stopPropagation();
+  try {
+    startLoud();
+    stage1Played = true;
+    coverScene.classList.add('playing');
+    speaker.classList.add('playing');
+    ear.classList.add('hear');
+    refreshStage1Next();
+  } catch (err) {
+    console.error('btnCoverPlay error:', err);
   }
-  // require both played AND covered
-  document.getElementById('nextTo2').disabled = !(stage1Played && stage1Covered && !stage1Covered === false ? false : (stage1Played && stage1Covered));
-  // simpler:
-  document.getElementById('nextTo2').disabled = !(stage1Played && (stage1Covered || true));
-  // require: played at least once
-  document.getElementById('nextTo2').disabled = !stage1Played;
 });
-document.getElementById('nextTo2').addEventListener('click', () => { markDone(1); goStage('2'); });
+
+btnCover.addEventListener('click', (e) => {
+  e.stopPropagation();
+  try {
+    stage1Covered = !stage1Covered;
+    coverScene.classList.toggle('covered', stage1Covered);
+    btnCover.textContent = stage1Covered ? '✋ 移開手' : '✋ 遮耳仔';
+    btnCover.classList.toggle('primary', stage1Covered);
+    if (stage1Covered) {
+      if (playGain) playGain.gain.value = 0.18;
+    } else {
+      if (playGain) playGain.gain.value = 0.5;
+    }
+    refreshStage1Next();
+  } catch (err) {
+    console.error('btnCover error:', err);
+  }
+});
+
+nextTo2.addEventListener('click', (e) => {
+  e.stopPropagation();
+  stopAudio();
+  markDone(1);
+  goStage('2');
+});
 
 // ============== STAGE 2: 揀料 ==============
 let shellPicked = null, sealPicked = null;
@@ -732,39 +1863,139 @@ document.querySelectorAll('.mat-card').forEach(card => {
 });
 
 function buildCup() {
-  const SHELL = { paper: { color: '#e8d8b8', name: '紙杯' }, plastic: { color: '#5b9dd9', name: '膠杯' }, foam: { color: '#f5c842', name: '泡棉杯' } };
-  const SEAL = { none: { show: false, name: '無軟墊' }, cotton: { show: true, color: '#fff', name: '棉花' }, foam: { show: true, color: '#ff9b6a', name: '記憶墊' } };
+  const SHELL = {
+    paper:   { color: '#f4e4c1', stroke: '#a08060', name: '紙杯',   texture: 'ridges' },
+    plastic: { color: '#7bc4f0', stroke: '#3d7bb0', name: '膠杯',   texture: 'gloss' },
+    foam:    { color: '#f5d76e', stroke: '#b8941a', name: '泡棉杯', texture: 'dots' },
+  };
+  const SEAL = {
+    none:   { show: false, name: '無軟墊' },
+    cotton: { show: true, color: '#fff', stroke: '#d0c8b8', name: '棉花',   detail: 'fluffy' },
+    foam:   { show: true, color: '#ff9b6a', stroke: '#c0582a', name: '記憶墊', detail: 'pillow' },
+  };
   const s = SHELL[shellPicked], p = SEAL[sealPicked];
-  // build SVG
-  let svg = `<path d="M40 180 Q40 50 130 50 Q220 50 220 180 Z" fill="${s.color}" stroke="#5a4a36" stroke-width="3"/>`;
+
+  // cup body with texture + highlight
+  let texture = '';
+  if (s.texture === 'ridges') {
+    for (let i = 0; i < 6; i++) {
+      const x = 55 + i * 25;
+      texture += `<path d="M${x} 70 L${x-3} 175" stroke="#d4b890" stroke-width="1.2" opacity="0.7"/>`;
+    }
+  } else if (s.texture === 'gloss') {
+    texture += `<path d="M60 70 Q60 70 65 175" stroke="white" stroke-width="4" opacity="0.6" stroke-linecap="round"/>`;
+    texture += `<path d="M195 70 Q200 70 200 175" stroke="white" stroke-width="2" opacity="0.3" stroke-linecap="round"/>`;
+  } else if (s.texture === 'dots') {
+    const dots = [[70,90,3],[105,75,2.5],[130,100,3],[160,80,2],[185,95,2.5],[80,140,2],[115,130,2.5],[145,150,2.5],[175,140,2.5],[95,165,2],[140,170,2.5]];
+    dots.forEach(([cx,cy,r]) => texture += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${s.stroke}" opacity="0.35"/>`);
+  }
+
+  const cup = `
+    <!-- back ellipse (rim) -->
+    <ellipse cx="130" cy="50" rx="90" ry="14" fill="${s.color}" stroke="${s.stroke}" stroke-width="3"/>
+    <ellipse cx="130" cy="50" rx="80" ry="9" fill="${s.stroke}" opacity="0.25"/>
+    <!-- main body -->
+    <path d="M40 50 Q40 50 40 50 L42 175 Q42 182 50 182 L210 182 Q218 182 218 175 L220 50" fill="${s.color}" stroke="${s.stroke}" stroke-width="3"/>
+    <!-- left side highlight -->
+    <path d="M52 60 L54 175" stroke="url(#cupHighlight)" stroke-width="14" stroke-linecap="round" opacity="0.8"/>
+    <!-- right side soft shadow -->
+    <path d="M205 60 L207 175" stroke="rgba(0,0,0,0.15)" stroke-width="10" stroke-linecap="round"/>
+    ${texture}
+    <!-- front opening -->
+    <ellipse cx="130" cy="182" rx="88" ry="8" fill="rgba(0,0,0,0.25)"/>
+  `;
+
+  // seal (padding ring)
   let seal = '';
-  if (p.show) seal = `<ellipse cx="130" cy="55" rx="90" ry="20" fill="${p.color}" stroke="#5a4a36" stroke-width="3"/>`;
-  let band = `<path d="M40 90 Q130 25 220 90" fill="none" stroke="#2a2218" stroke-width="8" stroke-linecap="round"/>
-              <circle cx="40" cy="90" r="8" fill="#2a2218"/>
-              <circle cx="220" cy="90" r="8" fill="#2a2218"/>`;
-  document.getElementById('cupAdditions').innerHTML = svg;
-  document.getElementById('cupSeal').innerHTML = seal;
-  document.getElementById('cupBand').innerHTML = band;
+  if (p.show) {
+    let detail = '';
+    if (p.detail === 'fluffy') {
+      // cotton: bumpy cloud-like top
+      for (let i = 0; i < 8; i++) {
+        const cx = 55 + i * 22;
+        detail += `<circle cx="${cx}" cy="${45 - (i%2)*4}" r="${10 + (i%3)*2}" fill="white" stroke="${p.stroke}" stroke-width="1.5"/>`;
+      }
+    } else if (p.detail === 'pillow') {
+      // memory foam: smooth highlight
+      detail = `<ellipse cx="110" cy="48" rx="22" ry="5" fill="white" opacity="0.5"/>
+                <ellipse cx="155" cy="48" rx="14" ry="3" fill="white" opacity="0.4"/>`;
+    }
+    seal = `
+      <ellipse cx="130" cy="52" rx="88" ry="16" fill="${p.color}" stroke="${p.stroke}" stroke-width="2.5"/>
+      ${detail}
+    `;
+  }
+
+  // headband (thicker, with elastic pattern)
+  const band = `
+    <path d="M42 110 Q130 35 218 110" fill="none" stroke="#3a2e22" stroke-width="12" stroke-linecap="round"/>
+    <path d="M42 110 Q130 35 218 110" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 8" opacity="0.5"/>
+    <!-- left hinge -->
+    <circle cx="42" cy="110" r="11" fill="#3a2e22"/>
+    <circle cx="42" cy="110" r="6" fill="#5a4a36"/>
+    <circle cx="42" cy="110" r="2.5" fill="#3a2e22"/>
+    <!-- right hinge -->
+    <circle cx="218" cy="110" r="11" fill="#3a2e22"/>
+    <circle cx="218" cy="110" r="6" fill="#5a4a36"/>
+    <circle cx="218" cy="110" r="2.5" fill="#3a2e22"/>
+  `;
+
+  const addsEl = document.getElementById('cupAdditions');
+  const sealEl = document.getElementById('cupSeal');
+  const bandEl = document.getElementById('cupBand');
+  const sparklesEl = document.getElementById('cupSparkles');
+
+  addsEl.innerHTML = cup;
+  sealEl.innerHTML = seal;
+  bandEl.innerHTML = band;
+
+  // animate in
+  requestAnimationFrame(() => {
+    addsEl.style.opacity = '1';
+    addsEl.style.transform = 'scale(1)';
+    sealEl.style.opacity = '1';
+    sealEl.style.transform = 'scale(1)';
+    bandEl.style.opacity = '1';
+    bandEl.style.transform = 'scale(1)';
+  });
+
+  // sparkles after a moment
+  setTimeout(() => {
+    const sparkles = [
+      [70, 30, 0], [200, 40, 1], [240, 100, 2], [30, 90, 3],
+      [180, 25, 0], [50, 130, 1], [220, 130, 2], [130, 15, 3]
+    ];
+    sparklesEl.innerHTML = sparkles.map(([cx, cy, i], idx) =>
+      `<g transform="translate(${cx} ${cy})" style="animation: sparkle 1.5s ease-in-out ${idx * 0.1}s infinite;">
+        <path d="M0 -8 L2 -2 L8 0 L2 2 L0 8 L-2 2 L-8 0 L-2 -2 Z" fill="#f5c842" stroke="#c97b3f" stroke-width="1"/>
+      </g>`
+    ).join('');
+    sparklesEl.style.opacity = '1';
+  }, 700);
+
   document.getElementById('cupLabel').textContent = s.name + ' + ' + p.name;
   document.getElementById('cupSub').textContent = '撳下面個掣去試';
-  // mark stage 2 done visually but don't auto-advance
   markDone(2);
 }
 document.getElementById('nextTo4').addEventListener('click', () => { markDone(3); goStage('4'); });
 
 // ============== STAGE 4: 試下 ==============
+const meterWrap = document.getElementById('meterWrap');
 const meter = document.getElementById('soundMeter');
 const emoji = document.getElementById('soundEmoji');
 const label = document.getElementById('soundLabel');
 function setVisual(state, score) {
+  meterWrap.classList.remove('loud', 'muffled');
   meter.classList.remove('loud', 'quiet');
   if (state === 'loud') {
+    meterWrap.classList.add('loud');
     meter.classList.add('loud');
     emoji.textContent = '📢'; label.textContent = '大聲';
   } else if (state === 'muffled') {
+    meterWrap.classList.add('muffled');
     if (score >= 7) { meter.classList.add('quiet'); emoji.textContent = '🤫'; label.textContent = '好靜'; }
     else if (score >= 4) { emoji.textContent = '🔉'; label.textContent = '細聲咗'; }
-    else { emoji.textContent = '🔊'; label.textContent = '仲好大聲'; }
+    else { emoji.textContent = '🔉'; label.textContent = '細聲咗少少'; }
   }
 }
 function getScore() {
@@ -794,9 +2025,24 @@ function showResult(score) {
   else { cls = 'try'; txt = '試多次 🤔'; m = '換過其他組合啦'; }
   card.className = 'result-card show ' + cls;
   big.textContent = txt;
-  stars.innerHTML = '⭐'.repeat(n) + '<span class="off">⭐</span>'.repeat(3 - n);
+  // build stars with .star class for fly-in
+  stars.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('span');
+    s.className = 'star'; s.textContent = '⭐';
+    stars.appendChild(s);
+  }
+  for (let i = n; i < 3; i++) {
+    const s = document.createElement('span');
+    s.className = 'star off'; s.textContent = '⭐';
+    stars.appendChild(s);
+  }
   msg.textContent = m;
   markDone(4);
+  // reset log chips so a fresh experiment can be recorded
+  resetLogChips();
+  // show celebration after stars fly in
+  if (n >= 2) setTimeout(showCelebration, 1200);
 }
 document.getElementById('btnRetry').addEventListener('click', () => {
   // reset stage 2 + 3 + 4
@@ -805,16 +2051,968 @@ document.getElementById('btnRetry').addEventListener('click', () => {
   document.querySelectorAll('.mat-card').forEach(c => c.classList.remove('picked'));
   document.getElementById('shellReq').textContent = '（揀一樣）';
   document.getElementById('shellReq').style.color = 'var(--primary)';
-  document.getElementById('sealReq').textContent = '（揀一樣）';
+  document.getElementById('sealReq').textContent = '🔒 先揀杯';
   document.getElementById('sealReq').style.color = 'var(--primary)';
   document.getElementById('sealGrid').classList.add('waiting');
   document.getElementById('cupAdditions').innerHTML = '';
+  document.getElementById('cupAdditions').style.opacity = '0';
+  document.getElementById('cupAdditions').style.transform = 'scale(0.5)';
   document.getElementById('cupSeal').innerHTML = '';
+  document.getElementById('cupSeal').style.opacity = '0';
+  document.getElementById('cupSeal').style.transform = 'scale(0.5)';
   document.getElementById('cupBand').innerHTML = '';
+  document.getElementById('cupBand').style.opacity = '0';
+  document.getElementById('cupBand').style.transform = 'scale(0.7)';
+  document.getElementById('cupSparkles').innerHTML = '';
+  document.getElementById('cupSparkles').style.opacity = '0';
   document.getElementById('cupLabel').textContent = '—';
   document.getElementById('cupSub').textContent = '—';
   document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('celebration').classList.remove('show');
+  resetLogChips();
   goStage('2');
+});
+
+// ============== EXPERIMENT LOG ==============
+const LOG_KEY = 'earmuff-pdir-log-v1';
+let experimentLog = [];
+try { experimentLog = JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); } catch (e) { experimentLog = []; }
+function saveLog() { try { localStorage.setItem(LOG_KEY, JSON.stringify(experimentLog)); } catch (e) {} }
+function updateLogCount() {
+  const badge = document.getElementById('logCount');
+  if (badge) badge.textContent = experimentLog.length;
+}
+
+const FEEL_LABEL = { quiet: '🤫 好靜', less: '🔉 細聲咗', loud: '🔊 仲好嘈' };
+const COMFORT_LABEL = { good: '😊 好舒服', ok: '😐 還可以', bad: '😣 好唔舒服' };
+const SHELL_LABEL = { paper: '📄 紙杯', plastic: '🥤 膠杯', foam: '🧽 泡棉杯' };
+const SEAL_LABEL = { none: '🚫 無墊', cotton: '🧶 棉花', foam: '🟧 記憶墊' };
+
+// chip selection state
+let logPick = { feel: null, comfort: null };
+
+function pickChip(group, key) {
+  const grid = document.getElementById(group);
+  grid.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('picked', c.dataset[group.replace('Chips','')] === key);
+  });
+  const k = group.replace('Chips',''); // feel / comfort
+  logPick[k] = key;
+  // enable save when both picked
+  document.getElementById('logSave').disabled = !(logPick.feel && logPick.comfort);
+}
+document.getElementById('feelChips').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (b) pickChip('feelChips', b.dataset.feel);
+});
+document.getElementById('comfortChips').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (b) pickChip('comfortChips', b.dataset.comfort);
+});
+
+function resetLogChips() {
+  logPick = { feel: null, comfort: null };
+  document.querySelectorAll('#feelChips .chip, #comfortChips .chip').forEach(c => c.classList.remove('picked'));
+  document.getElementById('logSave').disabled = true;
+  document.getElementById('logSaved').classList.remove('show');
+}
+
+document.getElementById('logSave').addEventListener('click', () => {
+  // use the auto score from the result card (1/2/3 stars)
+  const autoScore = getScore();
+  const entry = {
+    id: Date.now(),
+    ts: new Date().toISOString(),
+    shell: shellPicked,
+    seal: sealPicked,
+    feel: logPick.feel,
+    comfort: logPick.comfort,
+    score: autoScore,
+  };
+  experimentLog.unshift(entry);
+  saveLog();
+  updateLogCount();
+  // show "saved" banner
+  const saved = document.getElementById('logSaved');
+  saved.classList.add('show');
+  document.getElementById('logSave').style.display = 'none';
+  // check level up
+  checkLevelUp();
+  // speak
+  speak('已記低！');
+  setTimeout(() => {
+    saved.classList.remove('show');
+    document.getElementById('logSave').style.display = 'block';
+    resetLogChips();
+  }, 1800);
+});
+
+// ============== LOG MODAL ==============
+// ============== SCIENTIFIC CONCLUSION ==============
+// Generate the most confident claim from accumulated data.
+// Returns HTML string for the conclusion card.
+function renderScientificConclusion() {
+  const el = document.getElementById('conclusion');
+  if (experimentLog.length < 2) {
+    el.className = 'conclusion empty';
+    el.innerHTML = `
+      <div class="conclusion-head"><span class="ic">🔬</span><span class="label">科學結論</span></div>
+      <h3>再做多幾次實驗，呢度就會自動寫個科學結論畀你！</h3>
+    `;
+    return;
+  }
+
+  // find biggest contrast between two categories of one dimension
+  // we try shell, seal, comfort in turn, pick the highest-confidence contrast
+  const candidates = [];
+
+  // dimension 1: shell
+  const byShell = aggregateBy(experimentLog, 'shell');
+  if (byShell.length >= 2) {
+    const c = findContrast(byShell, SHELL_LABEL, '杯');
+    if (c) candidates.push(c);
+  }
+  // dimension 2: seal
+  const bySeal = aggregateBy(experimentLog, 'seal');
+  if (bySeal.length >= 2) {
+    const c = findContrast(bySeal, SEAL_LABEL, '軟墊');
+    if (c) candidates.push(c);
+  }
+  // dimension 3: comfort -> "舒服嘅組合都係高分"
+  const goodComfort = experimentLog.filter(e => e.comfort === 'good');
+  if (goodComfort.length >= 2 && goodComfort.length < experimentLog.length) {
+    const avgGood = goodComfort.reduce((a, e) => a + e.score, 0) / goodComfort.length;
+    const avgRest = (experimentLog.reduce((a, e) => a + e.score, 0) - goodComfort.reduce((a, e) => a + e.score, 0))
+      / (experimentLog.length - goodComfort.length);
+    if (avgGood - avgRest >= 0.4) {
+      candidates.push({
+        title: '戴得舒服嘅耳罩，擋聲通常都好啲',
+        evidence: [
+          { label: '舒服', avg: avgGood, n: goodComfort.length },
+          { label: '其他', avg: avgRest, n: experimentLog.length - goodComfort.length },
+        ],
+        confidence: conf(goodComfort.length + (experimentLog.length - goodComfort.length)),
+        limitation: `只計咗 ${experimentLog.length} 個實驗`,
+        next: '舒服 + 擋聲好 = 完美！',
+      });
+    }
+  }
+
+  if (candidates.length === 0) {
+    el.className = 'conclusion empty';
+    el.innerHTML = `
+      <div class="conclusion-head"><span class="ic">🔬</span><span class="label">科學結論</span></div>
+      <h3>數據差距未夠大，未寫到結論。試多幾個唔同嘅組合啦！</h3>
+    `;
+    return;
+  }
+
+  // pick the candidate with highest confidence * contrast
+  candidates.sort((a, b) => (b.confidence.n * b.contrast) - (a.confidence.n * a.contrast));
+  const top = candidates[0];
+
+  const evHtml = top.evidence.map(e => {
+    const w = (e.avg / 3) * 100;
+    return `<div class="ev-row">
+      <div class="ev-label">${e.label}</div>
+      <div class="ev-bar"><div class="ev-fill" style="width:${w}%"></div></div>
+      <div class="ev-num">${e.avg.toFixed(1)}</div>
+    </div>`;
+  }).join('');
+
+  const confStars = '⭐'.repeat(top.confidence.stars) + '<span style="opacity:0.3">⭐</span>'.repeat(3 - top.confidence.stars);
+  const confLabel = top.confidence.stars === 3 ? '非常肯定' : top.confidence.stars === 2 ? '幾肯定' : '少少頭緒';
+
+  el.className = 'conclusion';
+  el.innerHTML = `
+    <div class="conclusion-head">
+      <span class="ic">🔬</span>
+      <span class="label">科學結論</span>
+      <button class="conclusion-tts" id="conclusionTts" aria-label="念結論">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      </button>
+    </div>
+    <h3>${top.title}</h3>
+    <div class="conclusion-evidence">
+      <div class="ev-title">📊 證據（${top.confidence.n} 個實驗）</div>
+      ${evHtml}
+    </div>
+    <div class="conclusion-confidence">
+      <span>信心：</span>
+      <span class="cf-stars">${confStars}</span>
+      <span>· ${confLabel}</span>
+    </div>
+    <div class="conclusion-limitation">⚠ ${top.limitation}</div>
+    ${top.next ? `<div class="conclusion-next">💡 ${top.next}</div>` : ''}
+  `;
+  // hook TTS
+  document.getElementById('conclusionTts').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const text = buildConclusionTtsText(top, confLabel);
+    const btn = e.currentTarget;
+    if (btn.classList.contains('speaking')) {
+      speechSynthesis.cancel();
+      btn.classList.remove('speaking');
+      currentSpeakBtn = null;
+      return;
+    }
+    // use shared speak() so the global onend handler clears the class
+    if (currentSpeakBtn) currentSpeakBtn.classList.remove('speaking');
+    currentSpeakBtn = btn;
+    btn.classList.add('speaking');
+    speak(text);
+  });
+}
+
+function buildConclusionTtsText(top, confLabel) {
+  const parts = [
+    `科學結論：${top.title}。`,
+    `證據係基於 ${top.confidence.n} 個實驗。`,
+    `平均分：${top.evidence.map(e => `${e.label} ${e.avg.toFixed(1)} 星`).join('，')}。`,
+    `信心程度：${confLabel}。`,
+    top.limitation,
+  ];
+  if (top.next) parts.push(top.next);
+  return parts.join(' ');
+}
+
+function aggregateBy(log, key) {
+  const map = {};
+  log.forEach(e => {
+    map[e[key]] = map[e[key]] || { id: e[key], sum: 0, n: 0 };
+    map[e[key]].sum += e.score;
+    map[e[key]].n++;
+  });
+  return Object.values(map).map(x => ({ id: x.id, avg: x.sum / x.n, n: x.n }));
+}
+
+function conf(n) {
+  if (n >= 5) return { stars: 3, n };
+  if (n >= 3) return { stars: 2, n };
+  if (n >= 2) return { stars: 1, n };
+  return { stars: 0, n };
+}
+
+function findContrast(items, labelMap, dimName) {
+  if (items.length < 2) return null;
+  const sorted = [...items].sort((a, b) => b.avg - a.avg);
+  const best = sorted[0], worst = sorted[sorted.length - 1];
+  const contrast = best.avg - worst.avg;
+  if (contrast < 0.4) return null; // not significant enough
+  const totalN = best.n + worst.n;
+  return {
+    title: `${labelMap[best.id]} 擋聲好過 ${labelMap[worst.id]}`,
+    evidence: [
+      { label: labelMap[best.id].split(' ')[1] || labelMap[best.id], avg: best.avg, n: best.n },
+      { label: labelMap[worst.id].split(' ')[1] || labelMap[worst.id], avg: worst.avg, n: worst.n },
+    ],
+    confidence: conf(totalN),
+    contrast,
+    limitation: `我哋只試咗 ${items.length} 種${dimName}，可能有更好嘅`,
+    next: best.avg >= 2.5
+      ? `下次整耳罩，用 ${labelMap[best.id]} 就最穩陣！`
+      : `可以再試多幾次睇下 ${labelMap[best.id]} 係咪真係好啲`,
+  };
+}
+
+// ============== SCIENTIST LEVEL SYSTEM ==============
+const LEVELS = [
+  { n: 1, min: 1, medal: '🥉', title: '見習科學家', sub: '你做咗第一個實驗！' },
+  { n: 2, min: 3, medal: '🥈', title: '初級科學家', sub: '你已經做咗 3 個實驗！' },
+  { n: 3, min: 5, medal: '🥇', title: '資深科學家', sub: '5 個實驗！你好叻！' },
+  { n: 4, min: 8, medal: '🏆', title: '首席科學家', sub: '8 個實驗！勁呀！' },
+  { n: 5, min: 12, medal: '👑', title: '隔音大師', sub: '12 個實驗！你係專家！' },
+];
+function getLevel(count) {
+  let cur = LEVELS[0];
+  for (const l of LEVELS) { if (count >= l.min) cur = l; else break; }
+  const next = LEVELS.find(l => l.min > count);
+  return { cur, next };
+}
+function renderLevelBadge() {
+  const el = document.getElementById('levelBadge');
+  if (experimentLog.length === 0) { el.innerHTML = ''; return; }
+  const { cur, next } = getLevel(experimentLog.length);
+  const progress = next
+    ? Math.min(100, ((experimentLog.length - cur.min) / (next.min - cur.min)) * 100)
+    : 100;
+  const progressText = next
+    ? `仲差 ${next.min - experimentLog.length} 個就升 ${next.title}`
+    : '你已經係最高級別！';
+  el.innerHTML = `
+    <div class="level-medal">${cur.medal}</div>
+    <div class="level-info">
+      <div class="level-title">${cur.title}</div>
+      <div class="level-sub">${cur.sub}</div>
+      <div class="level-progress"><div class="level-progress-fill" style="width:${progress}%"></div></div>
+      <div class="level-sub" style="margin-top:4px;">${progressText}</div>
+    </div>
+  `;
+}
+
+// ============== INSIGHTS (real scientific findings) ==============
+function renderInsights() {
+  const el = document.getElementById('insights');
+  if (experimentLog.length < 2) { el.innerHTML = ''; return; }
+
+  // group by shell
+  const byShell = {};
+  experimentLog.forEach(e => {
+    byShell[e.shell] = byShell[e.shell] || { total: 0, sum: 0 };
+    byShell[e.shell].total++;
+    byShell[e.shell].sum += e.score;
+  });
+  const shellAvg = Object.entries(byShell).map(([k, v]) => ({ id: k, avg: v.sum / v.total, n: v.total }))
+    .filter(x => x.n >= 1).sort((a, b) => b.avg - a.avg);
+
+  // group by seal
+  const bySeal = {};
+  experimentLog.forEach(e => {
+    bySeal[e.seal] = bySeal[e.seal] || { total: 0, sum: 0 };
+    bySeal[e.seal].total++;
+    bySeal[e.seal].sum += e.score;
+  });
+  const sealAvg = Object.entries(bySeal).map(([k, v]) => ({ id: k, avg: v.sum / v.total, n: v.total }))
+    .sort((a, b) => b.avg - a.avg);
+
+  // find best combo (group by shell+seal)
+  const byCombo = {};
+  experimentLog.forEach(e => {
+    const k = `${e.shell}+${e.seal}`;
+    byCombo[k] = byCombo[k] || { shell: e.shell, seal: e.seal, total: 0, sum: 0 };
+    byCombo[k].total++;
+    byCombo[k].sum += e.score;
+  });
+  const combos = Object.values(byCombo).map(c => ({ ...c, avg: c.sum / c.total }))
+    .sort((a, b) => b.avg - a.avg);
+
+  const insights = [];
+
+  // best shell
+  if (shellAvg.length >= 2 && shellAvg[0].avg - shellAvg[shellAvg.length-1].avg >= 0.5) {
+    const best = shellAvg[0];
+    insights.push({
+      icon: '🔍',
+      title: '發現！',
+      msg: `「${SHELL_LABEL[best.id]}」通常都比較好，平均 ${best.avg.toFixed(1)} ⭐。重嘅杯擋到更多聲！`
+    });
+  }
+  // best seal
+  if (sealAvg.length >= 2 && sealAvg[0].avg - sealAvg[sealAvg.length-1].avg >= 0.5) {
+    const best = sealAvg[0];
+    insights.push({
+      icon: '🔍',
+      title: '發現！',
+      msg: `「${SEAL_LABEL[best.id]}」通常都比較好，平均 ${best.avg.toFixed(1)} ⭐。軟嘅墊貼耳更密封！`
+    });
+  }
+  // best combo
+  if (combos.length >= 2 && combos[0].avg - combos[combos.length-1].avg >= 0.5) {
+    const best = combos[0];
+    insights.push({
+      icon: '🏅',
+      title: '黃金組合！',
+      msg: `${SHELL_LABEL[best.shell]} + ${SEAL_LABEL[best.seal]} 係你嘅最強組合，平均 ${best.avg.toFixed(1)} ⭐。`
+    });
+  }
+  // feels: how many were "quiet"?
+  const quietCount = experimentLog.filter(e => e.feel === 'quiet').length;
+  if (experimentLog.length >= 3 && quietCount / experimentLog.length >= 0.5) {
+    insights.push({
+      icon: '🌟',
+      title: '你叻叻！',
+      msg: `${quietCount}/${experimentLog.length} 次你覺得好靜。你揀嘅料真係 work！`
+    });
+  }
+  // comfort: how many were "good"?
+  const goodCount = experimentLog.filter(e => e.comfort === 'good').length;
+  if (experimentLog.length >= 3 && goodCount / experimentLog.length >= 0.5) {
+    insights.push({
+      icon: '💝',
+      title: '你戴得好舒服！',
+      msg: `${goodCount}/${experimentLog.length} 次你覺得好舒服。軟墊真係 work！`
+    });
+  }
+  // bad comfort: too heavy?
+  const badCount = experimentLog.filter(e => e.comfort === 'bad').length;
+  if (experimentLog.length >= 2 && badCount / experimentLog.length >= 0.5) {
+    insights.push({
+      icon: '💡',
+      title: '或者換輕啲嘅料？',
+      msg: `${badCount}/${experimentLog.length} 次你覺得唔舒服。試下換輕啲嘅杯。`
+    });
+  }
+
+  el.innerHTML = insights.map(i =>
+    `<div class="insight-card">
+      <div class="ic-title">${i.icon} ${i.title}</div>
+      <div class="ic-msg">${i.msg}</div>
+    </div>`
+  ).join('');
+}
+
+// ============== RANKING (best combo) ==============
+function renderRanking() {
+  const el = document.getElementById('ranking');
+  if (experimentLog.length === 0) { el.innerHTML = ''; return; }
+  // group by shell+seal, only combos tried >= 1
+  const byCombo = {};
+  experimentLog.forEach(e => {
+    const k = `${e.shell}+${e.seal}`;
+    byCombo[k] = byCombo[k] || { shell: e.shell, seal: e.seal, total: 0, sum: 0 };
+    byCombo[k].total++;
+    byCombo[k].sum += e.score;
+  });
+  const combos = Object.values(byCombo).map(c => ({ ...c, avg: c.sum / c.total }))
+    .sort((a, b) => b.avg - a.avg).slice(0, 5);
+  const max = 3; // max possible
+  const medals = ['gold', 'silver', 'bronze'];
+  el.innerHTML = combos.map((c, i) => {
+    const cls = medals[i] || '';
+    const w = (c.avg / max) * 100;
+    return `<div class="rank-row ${cls}">
+      <div class="rank-num">${i + 1}</div>
+      <div class="rank-name">${SHELL_LABEL[c.shell]}<br><span style="color:var(--muted); font-weight:400; font-size:0.75rem;">+ ${SEAL_LABEL[c.seal]}</span></div>
+      <div class="rank-bar"><div class="rank-bar-fill" style="width:${w}%"></div></div>
+      <div class="rank-score">${c.avg.toFixed(1)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderLogModal() {
+  const list = document.getElementById('logList');
+  if (experimentLog.length === 0) {
+    list.innerHTML = '<div class="log-empty">未有紀錄。整一個耳罩試吓啦！</div>';
+  } else {
+    list.innerHTML = experimentLog.map((e, i) => {
+      const stars = '⭐'.repeat(e.score) + '<span style="opacity:0.3">⭐</span>'.repeat(3 - e.score);
+      const time = new Date(e.ts).toLocaleString('zh-HK', { hour: '2-digit', minute: '2-digit', month: 'numeric', day: 'numeric' });
+      return `<div class="log-entry">
+        <div class="n">#${experimentLog.length - i}</div>
+        <div class="info">
+          <div class="title">${SHELL_LABEL[e.shell] || e.shell} + ${SEAL_LABEL[e.seal] || e.seal}</div>
+          <div class="meta">${FEEL_LABEL[e.feel] || ''} · ${COMFORT_LABEL[e.comfort] || ''} · ${time}</div>
+        </div>
+        <div class="stars-mini">${stars}</div>
+        <button class="del" data-id="${e.id}">✕</button>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('.del').forEach(b => {
+      b.addEventListener('click', () => {
+        experimentLog = experimentLog.filter(x => x.id !== +b.dataset.id);
+        saveLog();
+        updateLogCount();
+        renderLogModal();
+        checkLevelUp();
+      });
+    });
+  }
+  renderScientificConclusion();
+  // enable compare if at least 2 different combos have been tried
+  const triedCombos = new Set(experimentLog.map(e => `${e.shell}+${e.seal}`));
+  const compareBtn = document.getElementById('openCompareBtn');
+  if (compareBtn) {
+    compareBtn.disabled = triedCombos.size < 2;
+    if (triedCombos.size < 2) {
+      compareBtn.textContent = `⚖️ 對比兩個組合（要 2 個唔同嘅組合，已試 ${triedCombos.size} 個）`;
+    } else {
+      compareBtn.textContent = `⚖️ 對比兩個組合`;
+    }
+  }
+  renderLevelBadge();
+  renderInsights();
+  renderRanking();
+  renderLogStats();
+}
+function renderLogStats() {
+  const stats = document.getElementById('logStats');
+  if (experimentLog.length === 0) { stats.innerHTML = ''; return; }
+  const total = experimentLog.length;
+  const avg = (experimentLog.reduce((a, e) => a + e.score, 0) / total).toFixed(1);
+  const best = experimentLog.reduce((best, e) => e.score > best.score ? e : best, experimentLog[0]);
+  stats.innerHTML = `
+    <div class="log-stat"><div class="log-stat-n">${total}</div><div class="log-stat-l">總試過</div></div>
+    <div class="log-stat"><div class="log-stat-n">${avg}</div><div class="log-stat-l">平均分</div></div>
+    <div class="log-stat"><div class="log-stat-n">${best.score}⭐</div><div class="log-stat-l">最好嗰個</div></div>
+  `;
+}
+
+function showToast(msg, duration = 2000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ============== LEVEL UP CHECK ==============
+let prevLevel = 1;
+function checkLevelUp() {
+  const { cur } = getLevel(experimentLog.length);
+  if (cur.n > prevLevel) {
+    prevLevel = cur.n;
+    showToast(`🎉 升級！你而家係 ${cur.title}！`, 3500);
+    speak(`恭喜！你升咗做 ${cur.title}！`);
+  } else {
+    prevLevel = cur.n; // keep in sync (in case entries were deleted)
+  }
+}
+
+document.getElementById('openLogBtn').addEventListener('click', () => {
+  document.getElementById('logModal').classList.add('show');
+  document.getElementById('settingsPanel').classList.remove('open');
+  renderLogModal();
+});
+document.getElementById('logClose').addEventListener('click', () => {
+  document.getElementById('logModal').classList.remove('show');
+});
+document.getElementById('logModal').addEventListener('click', e => {
+  if (e.target.id === 'logModal') document.getElementById('logClose').click();
+});
+document.getElementById('logClear').addEventListener('click', () => {
+  if (experimentLog.length === 0) return;
+  if (confirm(`拎走晒 ${experimentLog.length} 條紀錄？`)) {
+    experimentLog = [];
+    saveLog();
+    updateLogCount();
+    prevLevel = 1;
+    renderLogModal();
+  }
+});
+document.getElementById('logExport').addEventListener('click', () => {
+  if (experimentLog.length === 0) { alert('未有紀錄可以分享。'); return; }
+  const lines = [
+    '【隔音耳罩實驗日誌】',
+    '日期：' + new Date().toLocaleString('zh-HK'),
+    '紀錄總數：' + experimentLog.length,
+    '',
+    ...experimentLog.slice().reverse().map((e, i) => {
+      const time = new Date(e.ts).toLocaleString('zh-HK');
+      return `#${i+1} ${SHELL_LABEL[e.shell]} + ${SEAL_LABEL[e.seal]} | 感覺：${FEEL_LABEL[e.feel]} | 舒適：${COMFORT_LABEL[e.comfort]} | ${e.score}⭐ | ${time}`;
+    })
+  ];
+  const text = lines.join('\n');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('✓ 已複製到剪貼簿')).catch(() => prompt('複製以下文字：', text));
+  } else {
+    prompt('複製以下文字：', text);
+  }
+});
+
+// ============== PRINT ==============
+document.getElementById('logPrint').addEventListener('click', () => {
+  if (experimentLog.length === 0) { alert('未有紀錄可以印。'); return; }
+  const sheet = document.getElementById('printSheet');
+  // top combos
+  const byCombo = {};
+  experimentLog.forEach(e => {
+    const k = `${e.shell}+${e.seal}`;
+    byCombo[k] = byCombo[k] || { shell: e.shell, seal: e.seal, n: 0, sum: 0 };
+    byCombo[k].n++;
+    byCombo[k].sum += e.score;
+  });
+  const combos = Object.values(byCombo).map(c => ({ ...c, avg: c.sum / c.n }))
+    .sort((a, b) => b.avg - a.avg);
+  const { cur } = getLevel(experimentLog.length);
+  sheet.innerHTML = `
+    <h1>📒 隔音耳罩實驗日誌</h1>
+    <div class="ps-meta">
+      ${cur.medal} <strong>${cur.title}</strong> ·
+      學生：__________ ·
+      日期：${new Date().toLocaleString('zh-HK')} ·
+      總共做咗 ${experimentLog.length} 個實驗
+    </div>
+
+    <div class="ps-section">
+      <h2>🏆 邊個組合最好？</h2>
+      <table class="ps-table">
+        <thead><tr><th>排名</th><th>杯</th><th>軟墊</th><th class="num">試過</th><th class="num">平均分</th></tr></thead>
+        <tbody>
+          ${combos.map((c, i) => `<tr>
+            <td>${['🥇','🥈','🥉'][i] || (i+1)}</td>
+            <td>${SHELL_LABEL[c.shell]}</td>
+            <td>${SEAL_LABEL[c.seal]}</td>
+            <td class="num">${c.n}</td>
+            <td class="num">${c.avg.toFixed(1)} ⭐</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="ps-section">
+      <h2>📋 全部紀錄</h2>
+      <table class="ps-table">
+        <thead><tr><th>#</th><th>杯</th><th>軟墊</th><th>感覺</th><th>舒適</th><th>分數</th><th>時間</th></tr></thead>
+        <tbody>
+          ${experimentLog.slice().reverse().map((e, i) => `<tr>
+            <td>${i+1}</td>
+            <td>${SHELL_LABEL[e.shell]}</td>
+            <td>${SEAL_LABEL[e.seal]}</td>
+            <td>${FEEL_LABEL[e.feel]}</td>
+            <td>${COMFORT_LABEL[e.comfort]}</td>
+            <td>${e.score} ⭐</td>
+            <td>${new Date(e.ts).toLocaleString('zh-HK')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="ps-section">
+      <h2>🔬 科學結論</h2>
+      <p style="background: #fff3d0; padding: 10px; border-left: 4px solid #c97b3f; margin: 8px 0;">
+        ${combos.length > 0 ? `<strong>${SHELL_LABEL[combos[0].shell]} + ${SEAL_LABEL[combos[0].seal]}</strong> 係我嘅黃金組合，平均 ${combos[0].avg.toFixed(1)} ⭐（試咗 ${combos[0].n} 次）。` : '（未有足夠紀錄）'}
+      </p>
+      <p style="font-size: 0.78rem; color: #5a4a36;">⚠ 數據只係基於我自己嘅 ${experimentLog.length} 個實驗。如果想更肯定，要做更多次同埋試其他料。</p>
+    </div>
+
+    <div class="ps-footer">
+      隔音耳罩探究活動 · PDIR Project · 列印日期 ${new Date().toLocaleString('zh-HK')}
+    </div>
+  `;
+  window.print();
+});
+
+// ============== COMPARE MODE ==============
+const SHELLS_FOR_SELECT = Object.keys(SHELL_LABEL); // paper, plastic, foam
+const SEALS_FOR_SELECT = Object.keys(SEAL_LABEL);   // none, cotton, foam
+
+function buildCompareOptions() {
+  for (const id of ['cmpLeftShell', 'cmpLeftSeal', 'cmpRightShell', 'cmpRightSeal']) {
+    const sel = document.getElementById(id);
+    const isShell = id.includes('Shell');
+    const opts = isShell ? SHELLS_FOR_SELECT : SEALS_FOR_SELECT;
+    const labels = isShell ? SHELL_LABEL : SEAL_LABEL;
+    sel.innerHTML = opts.map(k => `<option value="${k}">${labels[k]}</option>`).join('');
+  }
+}
+
+function computeCompare(side, shell, seal) {
+  const entries = experimentLog.filter(e => e.shell === shell && e.seal === seal);
+  const n = entries.length;
+  const avg = n === 0 ? 0 : entries.reduce((a, e) => a + e.score, 0) / n;
+  // feel distribution
+  const feels = entries.reduce((m, e) => { m[e.feel] = (m[e.feel] || 0) + 1; return m; }, {});
+  const comfort = entries.reduce((m, e) => { m[e.comfort] = (m[e.comfort] || 0) + 1; return m; }, {});
+  return { entries, n, avg, feels, comfort };
+}
+
+function renderCompareSide(side, shell, seal) {
+  const el = document.getElementById('cmp' + side);
+  const data = computeCompare(side, shell, seal);
+  el.querySelector('.cs-name').textContent = `${SHELL_LABEL[shell]} + ${SEAL_LABEL[seal]}`;
+  el.querySelector('.cs-score').textContent = data.n > 0 ? data.avg.toFixed(1) : '—';
+  el.querySelector('.cs-n').textContent = data.n > 0 ? `${data.n} 個實驗` : '未試過';
+  const feelEl = el.querySelector('.cs-feel');
+  if (data.n > 0) {
+    const feelPills = Object.entries(data.feel).map(([k, v]) =>
+      `<span class="pill">${FEEL_LABEL[k]} ×${v}</span>`).join('');
+    const comfortPills = Object.entries(data.comfort).map(([k, v]) =>
+      `<span class="pill">${COMFORT_LABEL[k]} ×${v}</span>`).join('');
+    feelEl.innerHTML = feelPills + comfortPills;
+  } else {
+    feelEl.innerHTML = '<div class="compare-empty">未試過呢個組合</div>';
+  }
+  return data;
+}
+
+function refreshCompare() {
+  const ls = document.getElementById('cmpLeftShell').value;
+  const lp = document.getElementById('cmpLeftSeal').value;
+  const rs = document.getElementById('cmpRightShell').value;
+  const rp = document.getElementById('cmpRightSeal').value;
+  const L = renderCompareSide('Left', ls, lp);
+  const R = renderCompareSide('Right', rs, rp);
+  // winner
+  const left = document.getElementById('cmpLeft');
+  const right = document.getElementById('cmpRight');
+  left.classList.remove('winner', 'loser');
+  right.classList.remove('winner', 'loser');
+  const result = document.getElementById('cmpResult');
+  if (L.n === 0 && R.n === 0) {
+    result.innerHTML = '兩個組合都未試過。揀試過嘅嚟對比啦！';
+    return { winner: null, L, R, ls, lp, rs, rp };
+  }
+  if (L.n === 0) { right.classList.add('winner'); result.innerHTML = `<span class="winner-name">🥇 B 組合</span>贏！A 未試過`; return { winner: 'R', R, rs, rp, L, R0: L, ls, lp }; }
+  if (R.n === 0) { left.classList.add('winner'); result.innerHTML = `<span class="winner-name">🥇 A 組合</span>贏！B 未試過`; return { winner: 'L', L, ls, lp, R, ls, lp, rs, rp }; }
+  const diff = L.avg - R.avg;
+  if (Math.abs(diff) < 0.01) {
+    result.innerHTML = `🤝 平手！兩個都係 ${L.avg.toFixed(1)} ⭐`;
+    return { winner: 'tie', L, R, ls, lp, rs, rp };
+  }
+  if (diff > 0) {
+    left.classList.add('winner'); right.classList.add('loser');
+    result.innerHTML = `<span class="winner-name">🥇 A 組合贏！</span>領先 ${diff.toFixed(1)} ⭐`;
+    return { winner: 'L', L, ls, lp, R, rs, rp };
+  } else {
+    right.classList.add('winner'); left.classList.add('loser');
+    result.innerHTML = `<span class="winner-name">🥇 B 組合贏！</span>領先 ${(-diff).toFixed(1)} ⭐`;
+    return { winner: 'R', R, rs, rp, L, ls, lp };
+  }
+}
+
+let lastCompareResult = null;
+function openCompare() {
+  // pre-select first two tested combos
+  const tried = new Set();
+  const triedList = [];
+  experimentLog.forEach(e => {
+    const k = `${e.shell}+${e.seal}`;
+    if (!tried.has(k)) { tried.add(k); triedList.push({ shell: e.shell, seal: e.seal }); }
+  });
+  if (triedList.length === 0) return;
+  document.getElementById('cmpLeftShell').value = triedList[0].shell;
+  document.getElementById('cmpLeftSeal').value = triedList[0].seal;
+  if (triedList[1]) {
+    document.getElementById('cmpRightShell').value = triedList[1].shell;
+    document.getElementById('cmpRightSeal').value = triedList[1].seal;
+  }
+  buildCompareOptions();
+  lastCompareResult = refreshCompare();
+  document.getElementById('compareModal').classList.add('show');
+}
+
+document.getElementById('openCompareBtn').addEventListener('click', openCompare);
+document.getElementById('compareClose').addEventListener('click', () => {
+  document.getElementById('compareModal').classList.remove('show');
+});
+document.getElementById('compareModal').addEventListener('click', e => {
+  if (e.target.id === 'compareModal') document.getElementById('compareClose').click();
+});
+['cmpLeftShell', 'cmpLeftSeal', 'cmpRightShell', 'cmpRightSeal'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    lastCompareResult = refreshCompare();
+  });
+});
+
+document.getElementById('cmpUseWinner').addEventListener('click', () => {
+  if (!lastCompareResult || !lastCompareResult.winner || lastCompareResult.winner === 'tie') {
+    speak('依家冇明顯贏家，揀你鍾意嘅啦');
+    return;
+  }
+  const win = lastCompareResult.winner === 'L' ? lastCompareResult.L : lastCompareResult.R;
+  const shell = lastCompareResult.winner === 'L' ? lastCompareResult.ls : lastCompareResult.rs;
+  const seal = lastCompareResult.winner === 'L' ? lastCompareResult.lp : lastCompareResult.rp;
+  // pre-fill stage 2
+  shellPicked = shell;
+  sealPicked = seal;
+  // close modals
+  document.getElementById('compareModal').classList.remove('show');
+  document.getElementById('logModal').classList.remove('show');
+  // apply selection visually
+  document.querySelectorAll('.mat-card').forEach(c => c.classList.remove('picked'));
+  const sCard = document.querySelector(`.mat-card[data-type="shell"][data-id="${shell}"]`);
+  const pCard = document.querySelector(`.mat-card[data-type="seal"][data-id="${seal}"]`);
+  if (sCard) sCard.classList.add('picked');
+  if (pCard) pCard.classList.add('picked');
+  document.getElementById('shellReq').textContent = '✓';
+  document.getElementById('shellReq').style.color = 'var(--good)';
+  document.getElementById('sealReq').textContent = '✓';
+  document.getElementById('sealReq').style.color = 'var(--good)';
+  document.getElementById('sealGrid').classList.remove('waiting');
+  goStage('2');
+  showToast(`已用 ${SHELL_LABEL[shell]} + ${SEAL_LABEL[seal]} 預填！`, 2500);
+  speak('已為你揀咗贏嘅組合，去整啦！');
+});
+
+document.getElementById('cmpSpeak').addEventListener('click', () => {
+  if (!lastCompareResult) return;
+  const ls = document.getElementById('cmpLeftShell').value;
+  const lp = document.getElementById('cmpLeftSeal').value;
+  const rs = document.getElementById('cmpRightShell').value;
+  const rp = document.getElementById('cmpRightSeal').value;
+  const L = computeCompare('Left', ls, lp);
+  const R = computeCompare('Right', rs, rp);
+  let text = `A 組合係 ${SHELL_LABEL[ls]} 加 ${SEAL_LABEL[lp]}，`;
+  text += L.n > 0 ? `平均 ${L.avg.toFixed(1)} 星，試過 ${L.n} 次。` : '未試過。';
+  text += ` B 組合係 ${SHELL_LABEL[rs]} 加 ${SEAL_LABEL[rp]}，`;
+  text += R.n > 0 ? `平均 ${R.avg.toFixed(1)} 星，試過 ${R.n} 次。` : '未試過。';
+  if (lastCompareResult.winner === 'tie') text += ' 平手！';
+  else if (lastCompareResult.winner === 'L') text += ' A 組合贏！';
+  else if (lastCompareResult.winner === 'R') text += ' B 組合贏！';
+  speak(text);
+});
+
+updateLogCount();
+prevLevel = getLevel(experimentLog.length).cur.n;
+
+// ============== CELEBRATION ==============
+function showCelebration() {
+  const celeb = document.getElementById('celebration');
+  // snapshot the cup into the cert
+  const cupSvg = document.getElementById('cupSvg');
+  const clone = cupSvg.cloneNode(true);
+  clone.removeAttribute('id');
+  // remove animation styles
+  clone.querySelectorAll('g[style]').forEach(g => {
+    g.style.opacity = '1';
+    g.style.transform = 'none';
+  });
+  document.getElementById('certCup').innerHTML = '';
+  document.getElementById('certCup').appendChild(clone);
+  celeb.classList.add('show');
+  // confetti
+  const emojis = ['🎉', '🎊', '⭐', '✨', '🌟', '💫'];
+  for (let i = 0; i < 18; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    c.style.left = (Math.random() * 100) + '%';
+    c.style.top = '-20px';
+    c.style.animation = `confetti ${2 + Math.random() * 2}s ease-in ${Math.random() * 1}s forwards`;
+    celeb.appendChild(c);
+  }
+  // TTS cheer
+  speak('恭喜你！你完成喇！');
+}
+
+// ============== QUIZ ==============
+const QUIZ = [
+  {
+    q: '邊個杯比較重？',
+    options: [
+      { emoji: '📄', label: '紙杯', correct: false, reason: '紙杯比較輕' },
+      { emoji: '🥤', label: '膠杯', correct: true, reason: '膠杯重過紙杯！' },
+    ],
+    teach: '重嘅嘢擋到更多聲，因為佢哋比較難震動。',
+  },
+  {
+    q: '邊樣嘢軟啲、可以貼住耳仔？',
+    options: [
+      { emoji: '🪨', label: '石頭', correct: false, reason: '石頭太硬啦' },
+      { emoji: '🧶', label: '棉花', correct: true, reason: '棉花軟軟地，可以貼住耳仔！' },
+    ],
+    teach: '軟嘅嘢會吸震動，密封得好，聲就唔會漏。',
+  },
+  {
+    q: '如果耳罩漏咗聲，點做好？',
+    options: [
+      { emoji: '🔊', label: '大聲啲播', correct: false, reason: '咁會更大聲喎！' },
+      { emoji: '🔒', label: '再加啲軟墊封實', correct: true, reason: '封實啲，聲就會細返！' },
+      { emoji: '🏃', label: '走開佢', correct: false, reason: '有時可以，但耳罩就冇用啦' },
+    ],
+    teach: '密封係隔音嘅關鍵！漏聲就等於冇戴。',
+  },
+];
+
+let quizIdx = 0;
+let quizCorrect = 0;
+let quizAnswered = false;
+
+function renderQuiz() {
+  const body = document.getElementById('quizBody');
+  const progress = document.getElementById('quizProgress');
+  progress.innerHTML = QUIZ.map((_, i) =>
+    `<div class="dot ${i < quizIdx ? 'done' : i === quizIdx ? 'cur' : ''}"></div>`
+  ).join('');
+
+  if (quizIdx >= QUIZ.length) {
+    // result
+    const starN = quizCorrect;
+    const msgs = [
+      '再試多次啦！',
+      '唔錯！',
+      '好叻呀！',
+      '滿分！你係隔音專家！',
+    ];
+    const msg = msgs[Math.min(starN, 3)];
+    body.innerHTML = `<div class="quiz-result">
+      <div class="qr-emoji">${starN === 3 ? '🏆' : starN >= 1 ? '🎉' : '💪'}</div>
+      <h3>${msg}</h3>
+      <p>你答啱咗</p>
+      <div class="qr-score">${quizCorrect} / ${QUIZ.length}</div>
+      <div class="qr-stars">${'⭐'.repeat(starN)}<span class="off">${'⭐'.repeat(QUIZ.length - starN)}</span></div>
+      <button class="quiz-next" id="quizDone">✓ 完成</button>
+    </div>`;
+    speak(msg);
+    return;
+  }
+
+  const item = QUIZ[quizIdx];
+  const optsHtml = item.options.map((o, i) =>
+    `<button class="quiz-opt" data-i="${i}">
+      <div class="opt-emoji">${o.emoji}</div>
+      <div class="opt-label">${o.label}</div>
+    </button>`
+  ).join('');
+  body.innerHTML = `<div class="quiz-q">
+    <div class="q-num">第 ${quizIdx + 1} 題 / 共 ${QUIZ.length} 題</div>
+    <h4>${item.q}</h4>
+  </div>
+  <div class="quiz-options ${item.options.length === 3 ? 'three' : ''}">${optsHtml}</div>
+  <div class="quiz-feedback" id="quizFeedback"></div>
+  <button class="quiz-next" id="quizNext" disabled>下一題 ➜</button>`;
+
+  body.querySelectorAll('.quiz-opt').forEach(btn => {
+    btn.addEventListener('click', () => handleQuizAnswer(btn));
+  });
+  const nextBtn = document.getElementById('quizNext');
+  const doneBtn = document.getElementById('quizDone');
+  if (nextBtn) nextBtn.addEventListener('click', () => {
+    quizIdx++;
+    renderQuiz();
+  });
+  if (doneBtn) doneBtn.addEventListener('click', closeQuiz);
+  // TTS read question
+  speak(item.q);
+}
+
+function handleQuizAnswer(btn) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const i = +btn.dataset.i;
+  const item = QUIZ[quizIdx];
+  const opt = item.options[i];
+  const feedback = document.getElementById('quizFeedback');
+  // disable all
+  document.querySelectorAll('.quiz-opt').forEach(b => b.disabled = true);
+  if (opt.correct) {
+    btn.classList.add('correct');
+    feedback.textContent = '✓ 啱喇！' + opt.reason;
+    feedback.className = 'quiz-feedback correct';
+    quizCorrect++;
+    speak('啱喇！' + opt.reason);
+  } else {
+    btn.classList.add('wrong');
+    feedback.textContent = '✗ 唔係喎。再諗吓。' + opt.reason;
+    feedback.className = 'quiz-feedback wrong';
+    // highlight correct
+    item.options.forEach((o, j) => {
+      if (o.correct) document.querySelectorAll('.quiz-opt')[j].classList.add('correct');
+    });
+    speak('唔啱，再諗吓');
+  }
+  // enable next
+  const next = document.getElementById('quizNext');
+  next.disabled = false;
+  next.textContent = quizIdx === QUIZ.length - 1 ? '睇成績 ➜' : '下一題 ➜';
+  setTimeout(() => { next.focus(); }, 100);
+}
+
+function openQuiz() {
+  quizIdx = 0;
+  quizCorrect = 0;
+  quizAnswered = false;
+  document.getElementById('quizModal').classList.add('show');
+  renderQuiz();
+}
+function closeQuiz() {
+  document.getElementById('quizModal').classList.remove('show');
+}
+
+document.getElementById('openQuizBtn').addEventListener('click', openQuiz);
+document.getElementById('quizClose').addEventListener('click', closeQuiz);
+document.getElementById('quizModal').addEventListener('click', e => {
+  if (e.target.id === 'quizModal') closeQuiz();
+});
+
+document.getElementById('certClose').addEventListener('click', () => {
+  const celeb = document.getElementById('celebration');
+  celeb.classList.remove('show');
+  // remove confetti
+  celeb.querySelectorAll('.confetti').forEach(c => c.remove());
+});
+document.getElementById('celebration').addEventListener('click', e => {
+  if (e.target.id === 'celebration') {
+    document.getElementById('certClose').click();
+  }
 });
 </script>
 </body>
