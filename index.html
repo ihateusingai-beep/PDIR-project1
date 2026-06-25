@@ -1107,6 +1107,8 @@
       <strong>👩‍🏫 老師提示</strong>
       未揀軟墊之前，軟墊嗰行會變暗。揀咗杯先可以揀墊。兩個都揀晒先可以「整」。
     </div>
+
+    <button class="next-btn" id="nextTo3" disabled>整好喇 ➜</button>
   </section>
 
   <!-- ========== STAGE 3 ========== -->
@@ -1379,8 +1381,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.9) ==============
-const APP_VERSION = '5.9.0';
+// ============== APP VERSION (v5.9.1) ==============
+const APP_VERSION = '5.9.1';
 
 // ============== BADGE SYSTEM (v5.8) ==============
 // 9 medals: Stage 1, 2, 4 × {bronze, silver, gold}. Stage 3 has no badges (no challenge).
@@ -2187,8 +2189,15 @@ document.querySelectorAll('.mat-card').forEach(card => {
       document.getElementById('sealReq').textContent = '✓';
       document.getElementById('sealReq').style.color = 'var(--good)';
     }
+    // v5.9.1: enable stage 2 → 3 next button when 1+1 picked
+    document.getElementById('nextTo3').disabled = !(shellPicked && sealPicked);
     if (shellPicked && sealPicked) buildCup();
   });
+});
+// v5.9.1: stage 2 → 3 explicit CTA (was missing — only step nav could jump)
+document.getElementById('nextTo3').addEventListener('click', () => {
+  // buildCup() already ran on pick; just advance
+  goStage('3');
 });
 
 function buildCup() {
