@@ -533,6 +533,100 @@
   .read-block-btn.speaking { background: var(--primary); color: white; animation: pulse 0.8s infinite; }
   .read-block-btn svg { width: 14px; height: 14px; }
 
+  /* ========== BADGE SYSTEM (v5.8) ========== */
+  /* overlay medals on step nav buttons */
+  .step-btn { position: relative; }
+  .badge-stack {
+    position: absolute; top: -4px; right: -4px;
+    display: flex; gap: 1px; z-index: 2;
+    pointer-events: none;
+  }
+  .badge-pip {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 11px; line-height: 1;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    background: white;
+    color: var(--muted);
+    transition: all 0.3s;
+  }
+  .badge-pip.bronze { background: linear-gradient(135deg, #f4d4a8 0%, #c97b3f 100%); color: white; }
+  .badge-pip.silver { background: linear-gradient(135deg, #e8e8e8 0%, #b8b8b8 100%); color: white; }
+  .badge-pip.gold   { background: linear-gradient(135deg, #fff3d0 0%, #f5c842 50%, #c97b3f 100%); color: white; animation: badgeShine 2.4s ease-in-out infinite; }
+  .badge-pip.empty  { background: white; color: rgba(160, 144, 128, 0.35); border: 2px dashed rgba(160, 144, 128, 0.4); box-shadow: none; }
+  @keyframes badgeShine { 0%,100%{transform:rotate(0) scale(1)} 50%{transform:rotate(15deg) scale(1.1)} }
+  .badge-pip.just-earned { animation: badgePop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes badgePop {
+    0% { transform: scale(0) rotate(-180deg); }
+    60% { transform: scale(1.4) rotate(20deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  /* badge celebration toast (top-right, 1.5s) */
+  .badge-toast {
+    position: fixed; top: 20px; right: 20px; z-index: 300;
+    background: linear-gradient(135deg, #fffaee 0%, #fff5d8 100%);
+    border: 3px solid #f5c842;
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 8px 24px -4px rgba(201, 123, 63, 0.4);
+    max-width: 320px;
+    opacity: 0; transform: translateX(120%);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .badge-toast.show { opacity: 1; transform: translateX(0); }
+  .badge-toast .bt-medal {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 24px; line-height: 1;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+    animation: medalSpin 1.2s ease-in-out infinite;
+  }
+  .badge-toast.bronze .bt-medal { background: linear-gradient(135deg, #f4d4a8 0%, #c97b3f 100%); }
+  .badge-toast.silver .bt-medal { background: linear-gradient(135deg, #e8e8e8 0%, #b8b8b8 100%); }
+  .badge-toast.gold .bt-medal { background: linear-gradient(135deg, #fff3d0 0%, #f5c842 50%, #c97b3f 100%); }
+  .badge-toast .bt-info { flex: 1; }
+  .badge-toast .bt-tier { font-size: 0.7rem; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .badge-toast.bronze .bt-tier { color: #c97b3f; }
+  .badge-toast.silver .bt-tier { color: #888; }
+  .badge-toast.gold .bt-tier { color: #c97b3f; }
+  .badge-toast .bt-title { font-size: 0.95rem; font-weight: 900; color: var(--ink); margin-top: 2px; }
+  .badge-toast .bt-sub { font-size: 0.75rem; color: var(--ink-2); margin-top: 1px; }
+
+  /* confetti for badge toast */
+  .badge-confetti {
+    position: fixed; pointer-events: none; font-size: 1.2rem;
+    z-index: 299; top: 40px; right: 60px;
+  }
+  @keyframes badgeConfetti {
+    0% { transform: translate(0,0) rotate(0); opacity: 1; }
+    100% { transform: translate(var(--dx,0), var(--dy,0)) rotate(var(--rot,720deg)); opacity: 0; }
+  }
+
+  /* badge gallery in log modal */
+  .badge-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0; }
+  .badge-tile {
+    background: var(--bg); border: 2px solid var(--line); border-radius: 12px;
+    padding: 8px 4px; text-align: center; position: relative;
+    transition: all 0.2s;
+  }
+  .badge-tile.earned { background: white; }
+  .badge-tile.bronze.earned { border-color: #c97b3f; }
+  .badge-tile.silver.earned { border-color: #b8b8b8; }
+  .badge-tile.gold.earned { border-color: #f5c842; box-shadow: 0 2px 8px -2px rgba(245, 200, 66, 0.4); }
+  .badge-tile .bt-emoji { font-size: 1.6rem; line-height: 1; margin-bottom: 2px; filter: grayscale(1) opacity(0.3); }
+  .badge-tile.earned .bt-emoji { filter: none; opacity: 1; }
+  .badge-tile .bt-name { font-size: 0.65rem; font-weight: 700; color: var(--muted); }
+  .badge-tile.earned .bt-name { color: var(--ink); }
+  .badge-tile .bt-stage { font-size: 0.6rem; color: var(--muted); margin-top: 1px; }
+
   /* settings floating button + panel */
   .settings-fab {
     position: fixed; bottom: 20px; right: 20px; z-index: 100;
@@ -748,6 +842,10 @@
     .stage-tts-bar .tts-progress { width: 100%; order: 99; flex: 0 0 100%; }
     .stage-tts-bar .tts-status { width: 100%; text-align: left; order: 98; font-size: 0.7rem; }
     .read-block-btn { font-size: 0.75rem; padding: 5px 10px; }
+    .badge-pip { width: 16px; height: 16px; font-size: 10px; }
+    .badge-toast { top: 12px; right: 12px; max-width: calc(100vw - 24px); padding: 10px 14px; }
+    .badge-toast .bt-medal { width: 36px; height: 36px; font-size: 20px; }
+    .badge-toast .bt-title { font-size: 0.85rem; }
   }
 </style>
 </head>
@@ -774,7 +872,7 @@
   </button>
 
   <div class="settings-panel" id="settingsPanel">
-    <div class="settings-title">⚙️ 設定</div>
+    <div class="settings-title">⚙️ 設定 <span style="font-size:0.7rem; color:var(--muted); font-weight:400; margin-left:6px;">v<span id="appVersion"></span></span></div>
 
     <div class="setting-row">
       <div class="setting-label">字體大小 <span class="val" id="sizeVal">中</span></div>
@@ -813,6 +911,9 @@
     <button class="seg-btn" id="openLogBtn" style="width:100%; margin-top:14px; background: var(--good-soft); color: var(--good); border: 2px solid var(--good);">
       📒 開我嘅日誌 <span id="logCount" style="margin-left:6px; background:var(--good); color:white; padding:2px 8px; border-radius:10px; font-size:0.8rem;">0</span>
     </button>
+    <div class="setting-label" style="margin-top:14px; justify-content:center;">
+      <span id="badgeCounter" style="font-size:0.9rem; color: var(--primary);">🏅 今日：0/9</span>
+    </div>
   </div>
 
   <nav class="steps" id="stepNav">
@@ -1245,6 +1346,8 @@
     <div id="conclusion" class="conclusion"></div>
     <button class="compare-trigger" id="openCompareBtn" disabled>⚖️ 對比兩個組合（要 2 個實驗）</button>
     <div class="level-badge" id="levelBadge"></div>
+    <div class="log-section-title">🏅 今日徽章</div>
+    <div class="badge-gallery" id="badgeGallery"></div>
     <div class="log-stats" id="logStats"></div>
     <div id="insights" class="insights-area"></div>
     <div class="log-section-title">🏆 邊個組合最好？</div>
@@ -1266,6 +1369,206 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ============== APP VERSION (v5.8) ==============
+const APP_VERSION = '5.8.0';
+
+// ============== BADGE SYSTEM (v5.8) ==============
+// 9 medals: Stage 1, 2, 4 × {bronze, silver, gold}. Stage 3 has no badges (no challenge).
+const BADGE_DEFS = [
+  // Stage 1 — 試吓
+  { id: 's1_bronze', stage: 1, tier: 'bronze', emoji: '🥉', name: '初步體驗', desc: '完成遮耳測試',
+    check: () => true /* trigger fires when stage 1 done */ },
+  { id: 's1_silver', stage: 1, tier: 'silver', emoji: '🥈', name: '手快之選', desc: '5 秒內完成 cycle',
+    check: () => window._stage1Done && window._stage1Done.fast /* tracked in stage1 logic */ },
+  { id: 's1_gold',   stage: 1, tier: 'gold',   emoji: '🥇', name: '閃電反應', desc: '5 秒內 + 1 次過',
+    check: () => window._stage1Done && window._stage1Done.fast && window._stage1Done.firstTry },
+
+  // Stage 2 — 揀料
+  { id: 's2_bronze', stage: 2, tier: 'bronze', emoji: '🥉', name: '完成揀料', desc: '揀齊 1 杯 + 1 墊',
+    check: () => true },
+  { id: 's2_silver', stage: 2, tier: 'silver', emoji: '🥈', name: '黃金配搭', desc: '揀到膠杯 + 記憶墊',
+    check: () => window._stage2Done && window._stage2Done.best },
+  { id: 's2_gold',   stage: 2, tier: 'gold',   emoji: '🥇', name: '神速揀料', desc: '30 秒內揀好',
+    check: () => window._stage2Done && window._stage2Done.fast },
+
+  // Stage 3 — no badges
+  // Stage 4 — 試下
+  { id: 's4_bronze', stage: 4, tier: 'bronze', emoji: '🥉', name: '完成紀錄', desc: '完成一次記低',
+    check: () => true },
+  { id: 's4_silver', stage: 4, tier: 'silver', emoji: '🥈', name: '表現良好', desc: '實驗評分 ≥ 2⭐',
+    check: () => window._stage4Done && window._stage4Done.score >= 2 },
+  { id: 's4_gold',   stage: 4, tier: 'gold',   emoji: '🥇', name: '完美隔音', desc: '實驗評分 = 3⭐',
+    check: () => window._stage4Done && window._stage4Done.score === 3 },
+];
+
+const BADGE_KEY = 'earmuff-pdir-badges-v1';
+// schema: { date: 'YYYY-MM-DD', earned: { s1_bronze: true, ... }, history: { 'YYYY-MM-DD': { ... }, ... } }
+let badgeState = (() => {
+  let s = { date: '', earned: {}, history: {} };
+  try { s = Object.assign(s, JSON.parse(localStorage.getItem(BADGE_KEY) || '{}')); } catch (e) {}
+  if (!s.earned) s.earned = {};
+  if (!s.history) s.history = {};
+  return s;
+})();
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function checkDailyReset() {
+  const today = todayKey();
+  if (badgeState.date !== today) {
+    // archive yesterday's earned to history
+    if (badgeState.date && Object.keys(badgeState.earned).length) {
+      badgeState.history[badgeState.date] = { ...badgeState.earned };
+    }
+    badgeState.date = today;
+    badgeState.earned = {};
+  }
+}
+checkDailyReset();
+
+function saveBadges() {
+  try { localStorage.setItem(BADGE_KEY, JSON.stringify(badgeState)); } catch (e) {}
+}
+
+function awardBadge(id) {
+  if (badgeState.earned[id]) return false; // already earned today
+  badgeState.earned[id] = true;
+  saveBadges();
+  const def = BADGE_DEFS.find(b => b.id === id);
+  if (def) showBadgeToast(def);
+  renderBadgePips();
+  return true;
+}
+
+// evaluate all badges for a given stage (called at stage completion time)
+function evaluateBadgesForStage(stage) {
+  const newlyEarned = [];
+  BADGE_DEFS.filter(b => b.stage === stage).forEach(b => {
+    if (badgeState.earned[b.id]) return;
+    if (b.check()) {
+      badgeState.earned[b.id] = true;
+      saveBadges();
+      newlyEarned.push(b);
+    }
+  });
+  // show toasts in sequence (so multiple badges don't overlap)
+  newlyEarned.forEach((b, i) => {
+    setTimeout(() => showBadgeToast(b), i * 1700);
+  });
+  renderBadgePips();
+  return newlyEarned;
+}
+
+function showBadgeToast(def) {
+  const tierLabel = { bronze: '銅牌', silver: '銀牌', gold: '金牌' }[def.tier];
+  let toast = document.getElementById('badgeToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'badgeToast';
+    toast.className = 'badge-toast';
+    document.body.appendChild(toast);
+  }
+  // for multiple toasts in sequence, recreate each time so animation re-fires
+  const fresh = document.createElement('div');
+  fresh.id = 'badgeToast';
+  fresh.className = `badge-toast ${def.tier}`;
+  fresh.innerHTML = `
+    <div class="bt-medal">${def.emoji}</div>
+    <div class="bt-info">
+      <div class="bt-tier">${tierLabel} · 第 ${def.stage} 步</div>
+      <div class="bt-title">${def.name}</div>
+      <div class="bt-sub">${def.desc}</div>
+    </div>
+  `;
+  toast.replaceWith(fresh);
+  toast = fresh;
+  setTimeout(() => toast.classList.add('show'), 30);
+  // celebratory confetti
+  for (let i = 0; i < 10; i++) {
+    const c = document.createElement('div');
+    c.className = 'badge-confetti';
+    c.textContent = ['🎉','✨','⭐','💫'][Math.floor(Math.random()*4)];
+    c.style.setProperty('--dx', (Math.random()*180-90) + 'px');
+    c.style.setProperty('--dy', (Math.random()*200+50) + 'px');
+    c.style.setProperty('--rot', (Math.random()*720-360) + 'deg');
+    c.style.animation = `badgeConfetti ${0.8+Math.random()*0.6}s ease-out ${Math.random()*0.1}s forwards`;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1500);
+  }
+  // TTS cheer
+  try { speak(`恭喜你拎到 ${tierLabel}！${def.name}`); } catch(e) {}
+  setTimeout(() => toast.classList.remove('show'), 1500);
+  setTimeout(() => toast.remove(), 2000);
+}
+
+// render 3 badge pips (bronze/silver/gold) on a step button
+function renderBadgePips() {
+  for (let stage = 1; stage <= 4; stage++) {
+    if (stage === 3) continue; // no badges for stage 3
+    const btn = document.querySelector(`.step-btn[data-stage="${stage}"]`);
+    if (!btn) continue;
+    let stack = btn.querySelector('.badge-stack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.className = 'badge-stack';
+      btn.appendChild(stack);
+    }
+    stack.innerHTML = '';
+    ['bronze', 'silver', 'gold'].forEach(tier => {
+      const id = `s${stage}_${tier}`;
+      const earned = !!badgeState.earned[id];
+      const pip = document.createElement('div');
+      pip.className = `badge-pip ${tier}${earned ? ' earned' : ' empty'}`;
+      pip.textContent = BADGE_DEFS.find(b => b.id === id).emoji;
+      pip.title = `${tier === 'bronze' ? '銅' : tier === 'silver' ? '銀' : '金'}牌：${BADGE_DEFS.find(b => b.id === id).name}`;
+      stack.appendChild(pip);
+    });
+  }
+}
+
+// play "just-earned" animation on a specific pip (called after awardBadge)
+function popBadgePip(id) {
+  const [stage, tier] = id.split('_'); // "s1_bronze" -> ["s1","bronze"], s1 -> "1"
+  const stageNum = stage.replace('s', '');
+  const btn = document.querySelector(`.step-btn[data-stage="${stageNum}"]`);
+  if (!btn) return;
+  const stack = btn.querySelector('.badge-stack');
+  if (!stack) return;
+  const idx = { bronze: 0, silver: 1, gold: 2 }[tier];
+  const pip = stack.children[idx];
+  if (pip) {
+    pip.classList.add('just-earned');
+    setTimeout(() => pip.classList.remove('just-earned'), 900);
+  }
+}
+
+// badge gallery in log modal
+function renderBadgeGallery() {
+  const el = document.getElementById('badgeGallery');
+  if (!el) return;
+  el.innerHTML = BADGE_DEFS.map(b => {
+    const earned = !!badgeState.earned[b.id];
+    return `<div class="badge-tile ${b.tier}${earned ? ' earned' : ''}" title="${b.desc}">
+      <div class="bt-emoji">${b.emoji}</div>
+      <div class="bt-name">${b.name}</div>
+      <div class="bt-stage">第 ${b.stage} 步</div>
+    </div>`;
+  }).join('');
+  // counter
+  const counter = document.getElementById('badgeCounter');
+  if (counter) {
+    const total = BADGE_DEFS.length;
+    const got = BADGE_DEFS.filter(b => badgeState.earned[b.id]).length;
+    counter.textContent = `🏅 今日：${got}/${total}`;
+  }
+}
+
+renderBadgePips();
+document.getElementById('appVersion').textContent = APP_VERSION;
+
 // ============== SETTINGS (TTS + font) ==============
 const SETTINGS_KEY = 'earmuff-pdir-settings-v1';
 const SIZE_SCALE = { S: 0.88, M: 1, L: 1.15, XL: 1.3 };
@@ -1704,7 +2007,10 @@ document.querySelectorAll('.mat-card').forEach(c => {
 // settings panel toggle
 const fab = document.getElementById('settingsFab');
 const panel = document.getElementById('settingsPanel');
-fab.addEventListener('click', () => panel.classList.toggle('open'));
+fab.addEventListener('click', () => {
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) renderBadgeGallery();
+});
 document.addEventListener('click', e => {
   if (!panel.contains(e.target) && e.target !== fab && !fab.contains(e.target)) panel.classList.remove('open');
 });
@@ -1788,6 +2094,7 @@ function markDone(n) {
 
 // ============== STAGE 1: 遮住 ==============
 let stage1Covered = false, stage1Played = false;
+let stage1StartTime = null, stage1PlayCount = 0, stage1CoverCount = 0;
 const coverScene = document.getElementById('coverScene');
 const speaker = document.getElementById('speaker');
 const ear = document.getElementById('ear');
@@ -1805,6 +2112,8 @@ btnCoverPlay.addEventListener('click', (e) => {
   try {
     startLoud();
     stage1Played = true;
+    if (!stage1StartTime) stage1StartTime = Date.now();
+    stage1PlayCount++;
     coverScene.classList.add('playing');
     speaker.classList.add('playing');
     ear.classList.add('hear');
@@ -1818,6 +2127,7 @@ btnCover.addEventListener('click', (e) => {
   e.stopPropagation();
   try {
     stage1Covered = !stage1Covered;
+    stage1CoverCount++;
     coverScene.classList.toggle('covered', stage1Covered);
     btnCover.textContent = stage1Covered ? '✋ 移開手' : '✋ 遮耳仔';
     btnCover.classList.toggle('primary', stage1Covered);
@@ -1835,12 +2145,20 @@ btnCover.addEventListener('click', (e) => {
 nextTo2.addEventListener('click', (e) => {
   e.stopPropagation();
   stopAudio();
+  // Track Stage 1 metadata for badge evaluation
+  const stage1Elapsed = stage1StartTime ? (Date.now() - stage1StartTime) / 1000 : 999;
+  window._stage1Done = {
+    fast: stage1Elapsed <= 8,           // silver threshold (8s = play+cover cycle)
+    firstTry: stage1PlayCount === 1 && stage1CoverCount === 1,  // 1 play + 1 cover click
+  };
   markDone(1);
+  evaluateBadgesForStage(1);
   goStage('2');
 });
 
 // ============== STAGE 2: 揀料 ==============
 let shellPicked = null, sealPicked = null;
+let stage2StartTime = null;
 document.querySelectorAll('.mat-card').forEach(card => {
   card.addEventListener('click', () => {
     const type = card.dataset.type;
@@ -1848,6 +2166,7 @@ document.querySelectorAll('.mat-card').forEach(card => {
     grid.querySelectorAll('.mat-card').forEach(c => c.classList.remove('picked'));
     card.classList.add('picked');
     if (type === 'shell') {
+      if (!stage2StartTime) stage2StartTime = Date.now();
       shellPicked = card.dataset.id;
       document.getElementById('shellReq').textContent = '✓';
       document.getElementById('shellReq').style.color = 'var(--good)';
@@ -1975,7 +2294,16 @@ function buildCup() {
 
   document.getElementById('cupLabel').textContent = s.name + ' + ' + p.name;
   document.getElementById('cupSub').textContent = '撳下面個掣去試';
+  // Stage 2 badge metadata
+  const stage2Elapsed = stage2StartTime ? (Date.now() - stage2StartTime) / 1000 : 999;
+  const shellScore = +document.querySelector('.mat-card[data-type="shell"].picked').dataset.score;
+  const sealScore  = +document.querySelector('.mat-card[data-type="seal"].picked').dataset.score;
+  window._stage2Done = {
+    best: shellPicked === 'plastic' && sealPicked === 'foam',   // silver threshold
+    fast: stage2Elapsed <= 30,                                  // gold threshold
+  };
   markDone(2);
+  evaluateBadgesForStage(2);
 }
 document.getElementById('nextTo4').addEventListener('click', () => { markDone(3); goStage('4'); });
 
@@ -2038,9 +2366,13 @@ function showResult(score) {
     stars.appendChild(s);
   }
   msg.textContent = m;
+  // Stage 4 badge metadata
+  window._stage4Done = { score: n };
   markDone(4);
   // reset log chips so a fresh experiment can be recorded
   resetLogChips();
+  // Evaluate Stage 4 badges (bronze fires here; silver/gold wait until user saves the log)
+  evaluateBadgesForStage(4);
   // show celebration after stars fly in
   if (n >= 2) setTimeout(showCelebration, 1200);
 }
@@ -2136,6 +2468,8 @@ document.getElementById('logSave').addEventListener('click', () => {
   document.getElementById('logSave').style.display = 'none';
   // check level up
   checkLevelUp();
+  // Evaluate Stage 4 silver/gold badges (bronze already fired on showResult)
+  evaluateBadgesForStage(4);
   // speak
   speak('已記低！');
   setTimeout(() => {
@@ -2560,6 +2894,7 @@ document.getElementById('openLogBtn').addEventListener('click', () => {
   document.getElementById('logModal').classList.add('show');
   document.getElementById('settingsPanel').classList.remove('open');
   renderLogModal();
+  renderBadgeGallery();
 });
 document.getElementById('logClose').addEventListener('click', () => {
   document.getElementById('logModal').classList.remove('show');
