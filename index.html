@@ -146,16 +146,17 @@
   .mat-card:hover .mat-preview { transform: scale(1.1) rotate(-3deg); }
   .mat-card.picked .mat-preview { transform: scale(1.15); animation: matBounce 0.6s ease; }
   @keyframes matBounce { 0%{transform:scale(0.9)} 50%{transform:scale(1.25)} 100%{transform:scale(1.15)} }
-  /* AI-generated real material photo (v5.9): inline base64 img after the SVG. SVG is fallback (kept hidden when img loads). */
+  /* AI-generated real material photo (v5.9.2): SVG default visible, JS reveals img after DOMContentLoaded.
+     No more CSS :has() — iOS Safari < 15.4 doesn't support it and would stack SVG + img. */
   .mat-photo {
-    width: 100px; height: 100px; margin: 0 auto 8px; display: block;
+    width: 100px; height: 100px; margin: 0 auto 8px; display: none;  /* JS toggles to 'block' on init */
     object-fit: cover; border-radius: 14px;
     background: white; box-shadow: 0 2px 6px -2px rgba(0,0,0,0.08);
     transition: transform 0.3s, box-shadow 0.3s;
   }
+  .mat-photo.is-revealed { display: block; }
   .mat-card:hover .mat-photo { transform: scale(1.08) rotate(-2deg); box-shadow: 0 6px 14px -4px rgba(0,0,0,0.18); }
   .mat-card.picked .mat-photo { transform: scale(1.12); animation: matBounce 0.6s ease; box-shadow: 0 4px 12px -2px rgba(80,160,100,0.3); }
-  .mat-card:has(.mat-photo) .mat-preview { display: none; }
   .mat-emoji { font-size: 3.25rem; margin-bottom: 4px; line-height: 1; }
   .mat-name { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
   .mat-feel { font-size: 0.78rem; color: var(--ink-2); }
@@ -1381,8 +1382,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.9.1) ==============
-const APP_VERSION = '5.9.1';
+// ============== APP VERSION (v5.9.2) ==============
+const APP_VERSION = '5.9.2';
 
 // ============== BADGE SYSTEM (v5.8) ==============
 // 9 medals: Stage 1, 2, 4 × {bronze, silver, gold}. Stage 3 has no badges (no challenge).
@@ -2069,6 +2070,10 @@ function startMuffled(totalScore) {
 // ============== STAGE NAV ==============
 const completedStages = new Set();
  function goStage(n) {
+  // v5.9.2: guard stage 3 entry — must have 1+1 picked, else redirect to stage 2 (avoid empty cup)
+  if (n === '3' && !(shellPicked && sealPicked)) {
+    n = '2';
+  }
   document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
   document.querySelector(`.step-btn[data-stage="${n}"]`).classList.add('active');
@@ -2169,6 +2174,20 @@ nextTo2.addEventListener('click', (e) => {
 });
 
 // ============== STAGE 2: 揀料 ==============
+// v5.9.2: JS-controlled SVG/img swap (replaces CSS :has() — iOS Safari < 15.4 fallback)
+document.querySelectorAll('.mat-card').forEach(card => {
+  const img = card.querySelector('img.mat-photo');
+  const svg = card.querySelector('svg.mat-preview');
+  if (img) {
+    // Reveal img (hide SVG). If load fails, restore SVG as fallback.
+    img.classList.add('is-revealed');
+    img.addEventListener('error', () => {
+      img.remove();
+      if (svg) svg.style.display = '';
+    }, { once: true });
+  }
+});
+
 let shellPicked = null, sealPicked = null;
 let stage2StartTime = null;
 document.querySelectorAll('.mat-card').forEach(card => {
@@ -2178,14 +2197,26 @@ document.querySelectorAll('.mat-card').forEach(card => {
     grid.querySelectorAll('.mat-card').forEach(c => c.classList.remove('picked'));
     card.classList.add('picked');
     if (type === 'shell') {
-      if (!stage2StartTime) stage2StartTime = Date.now();
       shellPicked = card.dataset.id;
+      // v5.9.2: start timer when first 1+1 reached; reset if user re-picks after completing once
+      if (!stage2StartTime) {
+        stage2StartTime = Date.now();
+      } else if (sealPicked) {
+        // user previously had 1+1 then re-picked → reset timer (fair)
+        stage2StartTime = Date.now();
+      }
       document.getElementById('shellReq').textContent = '✓';
       document.getElementById('shellReq').style.color = 'var(--good)';
       // unlock seal row
       document.getElementById('sealGrid').classList.remove('waiting');
     } else {
       sealPicked = card.dataset.id;
+      // v5.9.2: mirror reset logic for seal re-pick
+      if (!stage2StartTime) {
+        stage2StartTime = Date.now();
+      } else if (shellPicked) {
+        stage2StartTime = Date.now();
+      }
       document.getElementById('sealReq').textContent = '✓';
       document.getElementById('sealReq').style.color = 'var(--good)';
     }
@@ -2201,6 +2232,11 @@ document.getElementById('nextTo3').addEventListener('click', () => {
 });
 
 function buildCup() {
+  // v5.9.2: idempotent guard — same shell+seal combo = skip re-render (no double sparkles)
+  const buildKey = `${shellPicked}-${sealPicked}`;
+  if (window._lastBuildKey === buildKey) return;
+  window._lastBuildKey = buildKey;
+
   const SHELL = {
     paper:   { color: '#f4e4c1', stroke: '#a08060', name: '紙杯',   texture: 'ridges' },
     plastic: { color: '#7bc4f0', stroke: '#3d7bb0', name: '膠杯',   texture: 'gloss' },
