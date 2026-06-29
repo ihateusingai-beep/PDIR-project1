@@ -464,7 +464,8 @@
     font-weight: 700; font-size: 0.95rem; box-shadow: 0 6px 20px -4px rgba(76, 175, 106, 0.5);
     opacity: 0; pointer-events: none; transition: all 0.4s; z-index: 150; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .result-card .msg { font-size: 0.95rem; color: var(--ink-2); margin-bottom: 14px; }
+  .result-card .msg { font-size: 0.95rem; color: var(--ink-2); margin-bottom: 8px; }
+  .result-card .why { font-size: 0.85rem; color: var(--ink-2); background: #fff8e1; border-left: 3px solid #f5c842; padding: 8px 12px; border-radius: 6px; margin-bottom: 14px; line-height: 1.5; }
   .result-card button { font-family: inherit; font-size: 1rem; font-weight: 700;
     padding: 12px 24px; border-radius: 14px; border: 3px solid var(--primary);
     background: white; color: var(--primary); cursor: pointer; }
@@ -1246,6 +1247,7 @@
       <div class="big" id="resultBig">—</div>
       <div class="stars" id="resultStars">⭐⭐⭐</div>
       <div class="msg" id="resultMsg">—</div>
+      <div class="why" id="resultWhy"></div>
 
       <div class="log-section">
         <h4>🔬 記低今次實驗</h4>
@@ -1410,8 +1412,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.10) ==============
-const APP_VERSION = '5.10';
+// ============== APP VERSION (v5.11) ==============
+const APP_VERSION = '5.11';
 
 // ============== BADGE SYSTEM (v5.8) ==============
 // 9 medals: Stage 1, 2, 4 × {bronze, silver, gold}. Stage 3 has no badges (no challenge).
@@ -1427,10 +1429,10 @@ const BADGE_DEFS = [
   // Stage 2 — 揀料
   { id: 's2_bronze', stage: 2, tier: 'bronze', emoji: '🥉', name: '完成揀料', desc: '揀齊 1 杯 + 1 墊',
     check: () => true },
-  { id: 's2_silver', stage: 2, tier: 'silver', emoji: '🥈', name: '黃金配搭', desc: '揀到膠杯 + 記憶墊',
+  { id: 's2_silver', stage: 2, tier: 'silver', emoji: '🥈', name: '隔音達人', desc: '揀到 3⭐ 級組合 (≥7分)',
     check: () => window._stage2Done && window._stage2Done.best },
-  { id: 's2_gold',   stage: 2, tier: 'gold',   emoji: '🥇', name: '神速揀料', desc: '30 秒內揀好',
-    check: () => window._stage2Done && window._stage2Done.fast },
+  { id: 's2_gold',   stage: 2, tier: 'gold',   emoji: '🥇', name: '隔音大師', desc: '最完美組合 (膠+記憶墊) + 30 秒內',
+    check: () => window._stage2Done && window._stage2Done.perfect && window._stage2Done.fast },
 
   // Stage 3 — no badges
   // Stage 4 — 試下
@@ -2395,9 +2397,11 @@ function buildCup() {
   const stage2Elapsed = stage2StartTime ? (Date.now() - stage2StartTime) / 1000 : 999;
   const shellScore = +document.querySelector('.mat-card[data-type="shell"].picked').dataset.score;
   const sealScore  = +document.querySelector('.mat-card[data-type="seal"].picked').dataset.score;
+  const totalScore = shellScore + sealScore;
   window._stage2Done = {
-    best: shellPicked === 'plastic' && sealPicked === 'foam',   // silver threshold
-    fast: stage2Elapsed <= 30,                                  // gold threshold
+    best: totalScore >= 7,                              // silver: any 3⭐ combo (≥7)
+    perfect: shellPicked === 'plastic' && sealPicked === 'foam',  // gold: top combo only
+    fast: stage2Elapsed <= 30,                          // gold needs both perfect + fast
   };
   markDone(2);
   evaluateBadgesForStage(2);
@@ -2443,11 +2447,38 @@ function showResult(score) {
   const big = document.getElementById('resultBig');
   const stars = document.getElementById('resultStars');
   const msg = document.getElementById('resultMsg');
+  const why = document.getElementById('resultWhy');
   const n = score >= 7 ? 3 : score >= 4 ? 2 : 1;
-  let cls, txt, m;
-  if (n === 3) { cls = 'great'; txt = '太棒喇！🎉'; m = '呢個組合好好用！'; }
-  else if (n === 2) { cls = 'ok'; txt = '唔錯喎！👍'; m = '可以更好，試下揀其他嘢'; }
-  else { cls = 'try'; txt = '試多次 🤔'; m = '換過其他組合啦'; }
+  let cls, txt, m, whyText;
+  if (n === 3) {
+    cls = 'great'; txt = '太棒喇！🎉'; m = '呢個組合好好用！';
+    whyText = '✨ 質量夠重 + 軟墊夠厚實，密封得好，聲走唔到入去。';
+  } else if (n === 2) {
+    cls = 'ok'; txt = '唔錯喎！👍'; m = '可以更好，試下揀其他嘢';
+    // v5.11: targeted hint based on which dimension is weak
+    const shellCard = document.querySelector('[data-type="shell"].picked');
+    const sealCard  = document.querySelector('[data-type="seal"].picked');
+    const shellScore = +shellCard.dataset.score;
+    const sealScore  = +sealCard.dataset.score;
+    if (shellScore <= 2 && sealScore <= 2) {
+      whyText = '💡 杯太薄 + 墊太軟。試下用重啲嘅杯，加厚啲嘅墊。';
+    } else if (shellScore <= 2) {
+      whyText = '💡 杯太薄擋唔住聲。試下用膠杯或者泡棉杯。';
+    } else {
+      whyText = '💡 軟墊唔夠厚實，漏咗少少聲。試下用毛巾或者記憶墊。';
+    }
+  } else {
+    cls = 'try'; txt = '試多次 🤔'; m = '換過其他組合啦';
+    // v5.11: 1-star is almost always thin shell OR tissue-grade seal
+    const sealId = document.querySelector('[data-type="seal"].picked').dataset.id;
+    if (sealId === 'tissue') {
+      whyText = '🧻 紙巾太薄啦！聲直接穿過去。下次用厚少少嘅軟墊。';
+    } else if (sealId === 'none') {
+      whyText = '🚫 杯邊冇軟墊，聲從杯邊漏晒出去。要加厚墊密封。';
+    } else {
+      whyText = '💡 杯太薄 + 軟墊唔夠厚，擋唔住大聲。換重杯 + 厚墊啦。';
+    }
+  }
   card.className = 'result-card show ' + cls;
   big.textContent = txt;
   // build stars with .star class for fly-in
@@ -2463,6 +2494,7 @@ function showResult(score) {
     stars.appendChild(s);
   }
   msg.textContent = m;
+  why.textContent = whyText;
   // Stage 4 badge metadata
   window._stage4Done = { score: n };
   markDone(4);
@@ -3341,6 +3373,14 @@ const QUIZ = [
       { emoji: '🏃', label: '走開佢', correct: false, reason: '有時可以，但耳罩就冇用啦' },
     ],
     teach: '密封係隔音嘅關鍵！漏聲就等於冇戴。',
+  },
+  {
+    q: '棉花同紙巾，邊樣密封好啲？',
+    options: [
+      { emoji: '🧻', label: '紙巾', correct: false, reason: '紙巾太薄，聲會穿過去' },
+      { emoji: '🧶', label: '棉花', correct: true, reason: '棉花厚實，貼住耳仔密封好' },
+    ],
+    teach: '軟墊愈厚愈密封，愈薄愈漏聲。',
   },
 ];
 
