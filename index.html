@@ -130,7 +130,7 @@
   .pick-q .num { display: inline-block; width: 30px; height: 30px; background: var(--primary);
     color: white; border-radius: 50%; line-height: 30px; text-align: center; margin-right: 8px; font-size: 1.05rem; }
   .pick-q .req { color: var(--primary); font-size: 0.85rem; margin-left: 6px; }
-  .mat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .mat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
   .mat-row.waiting .mat-card:not(.picked) { opacity: 0.45; }
   .mat-card { background: var(--paper); border: 3px solid var(--line); border-radius: 20px;
     padding: 18px 12px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden; }
@@ -1021,7 +1021,7 @@
       <div class="tts-progress"><div class="tts-progress-fill"></div></div>
       <span class="tts-status">未開始</span>
     </div>
-    <p class="stage-hint">① 揀杯 ② 揀軟墊</p>
+    <p class="stage-hint">① 揀杯 ② 揀軟墊（4 選 1）</p>
 
     <div class="pick-row">
       <div class="pick-q"><span class="num">①</span>杯嘅物料 <span class="req" id="shellReq">（揀一樣）</span></div>
@@ -1101,12 +1101,40 @@
           <div class="mat-name">記憶墊</div>
           <div class="mat-feel">軟、貼耳</div>
         </div>
+        <div class="mat-card" data-type="seal" data-id="towel" data-score="3" data-tts="毛巾，厚，吸水">
+          <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
+            <ellipse cx="50" cy="52" rx="34" ry="18" fill="#a8c8e8" stroke="#5a7a9a" stroke-width="2.5"/>
+            <ellipse cx="50" cy="50" rx="30" ry="14" fill="#c8dcec" opacity="0.6"/>
+            <!-- weave pattern -->
+            <path d="M20 45 Q35 43 50 45 Q65 47 80 45 M20 52 Q35 50 50 52 Q65 54 80 52 M20 59 Q35 57 50 59 Q65 61 80 59" stroke="#7a9aba" stroke-width="1" fill="none" opacity="0.5"/>
+            <!-- fold edge -->
+            <path d="M28 38 Q50 35 72 38" stroke="#5a7a9a" stroke-width="1.5" fill="none" opacity="0.6"/>
+            <!-- highlight -->
+            <ellipse cx="42" cy="46" rx="6" ry="2" fill="white" opacity="0.5"/>
+          </svg>
+          <div class="mat-name">毛巾</div>
+          <div class="mat-feel">厚、有紋</div>
+        </div>
+        <div class="mat-card" data-type="seal" data-id="tissue" data-score="1" data-tts="紙巾，薄，一撕就爛">
+          <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
+            <ellipse cx="50" cy="52" rx="32" ry="14" fill="#fff" stroke="#d8d4cc" stroke-width="2"/>
+            <!-- thin sheet - subtle outline -->
+            <ellipse cx="50" cy="52" rx="28" ry="11" fill="none" stroke="#e8e4dc" stroke-width="1" stroke-dasharray="3 2" opacity="0.6"/>
+            <!-- crinkle lines -->
+            <path d="M25 50 Q40 48 50 50 Q60 52 75 50" stroke="#c8c4bc" stroke-width="0.8" fill="none" opacity="0.5"/>
+            <path d="M30 55 Q45 53 55 55 Q65 57 70 55" stroke="#c8c4bc" stroke-width="0.8" fill="none" opacity="0.5"/>
+            <!-- thin warning -->
+            <text x="50" y="78" text-anchor="middle" font-size="10" fill="#c97b3f" opacity="0.7">薄</text>
+          </svg>
+          <div class="mat-name">紙巾</div>
+          <div class="mat-feel">薄、軟</div>
+        </div>
       </div>
     </div>
 
     <div class="teacher-note">
       <strong>👩‍🏫 老師提示</strong>
-      未揀軟墊之前，軟墊嗰行會變暗。揀咗杯先可以揀墊。兩個都揀晒先可以「整」。
+      未揀軟墊之前，軟墊嗰行會變暗。揀咗杯先可以揀墊。兩個都揀晒先可以「整」。軟墊厚薄唔同，擋聲差好遠。
     </div>
 
     <button class="next-btn" id="nextTo3" disabled>整好喇 ➜</button>
@@ -1382,8 +1410,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.9.3) ==============
-const APP_VERSION = '5.9.3';
+// ============== APP VERSION (v5.10) ==============
+const APP_VERSION = '5.10';
 
 // ============== BADGE SYSTEM (v5.8) ==============
 // 9 medals: Stage 1, 2, 4 × {bronze, silver, gold}. Stage 3 has no badges (no challenge).
@@ -2245,6 +2273,8 @@ function buildCup() {
   const SEAL = {
     none:   { show: false, name: '無軟墊' },
     cotton: { show: true, color: '#fff', stroke: '#d0c8b8', name: '棉花',   detail: 'fluffy' },
+    towel:  { show: true, color: '#a8c8e8', stroke: '#5a7a9a', name: '毛巾',   detail: 'weave' },
+    tissue: { show: true, color: '#fff', stroke: '#d8d4cc', name: '紙巾',   detail: 'crinkle' },
     foam:   { show: true, color: '#ff9b6a', stroke: '#c0582a', name: '記憶墊', detail: 'pillow' },
   };
   const s = SHELL[shellPicked], p = SEAL[sealPicked];
@@ -2293,9 +2323,21 @@ function buildCup() {
       // memory foam: smooth highlight
       detail = `<ellipse cx="110" cy="48" rx="22" ry="5" fill="white" opacity="0.5"/>
                 <ellipse cx="155" cy="48" rx="14" ry="3" fill="white" opacity="0.4"/>`;
+    } else if (p.detail === 'weave') {
+      // towel: woven texture pattern
+      detail = `<path d="M50 44 Q90 41 130 44 Q170 47 210 44" stroke="${p.stroke}" stroke-width="1" fill="none" opacity="0.5"/>
+                <path d="M50 50 Q90 47 130 50 Q170 53 210 50" stroke="${p.stroke}" stroke-width="1" fill="none" opacity="0.5"/>
+                <path d="M50 56 Q90 53 130 56 Q170 59 210 56" stroke="${p.stroke}" stroke-width="1" fill="none" opacity="0.5"/>
+                <path d="M60 42 L60 58 M80 42 L80 58 M100 42 L100 58 M120 42 L120 58 M140 42 L140 58 M160 42 L160 58 M180 42 L180 58 M200 42 L200 58" stroke="${p.stroke}" stroke-width="0.8" fill="none" opacity="0.4"/>
+                <ellipse cx="100" cy="48" rx="10" ry="2" fill="white" opacity="0.6"/>`;
+    } else if (p.detail === 'crinkle') {
+      // tissue: thin crinkle lines, narrower ring
+      detail = `<path d="M60 47 Q90 45 130 47 Q170 49 200 47" stroke="${p.stroke}" stroke-width="0.8" fill="none" opacity="0.6"/>
+                <path d="M65 52 Q95 50 130 52 Q165 54 195 52" stroke="${p.stroke}" stroke-width="0.8" fill="none" opacity="0.5"/>
+                <path d="M70 57 Q100 55 130 57 Q160 59 190 57" stroke="${p.stroke}" stroke-width="0.8" fill="none" opacity="0.4"/>`;
     }
     seal = `
-      <ellipse cx="130" cy="52" rx="88" ry="16" fill="${p.color}" stroke="${p.stroke}" stroke-width="2.5"/>
+      <ellipse cx="130" cy="52" rx="88" ry="${p.detail === 'crinkle' ? 10 : 16}" fill="${p.color}" stroke="${p.stroke}" stroke-width="2.5"/>
       ${detail}
     `;
   }
@@ -2490,7 +2532,7 @@ function updateLogCount() {
 const FEEL_LABEL = { quiet: '🤫 好靜', less: '🔉 細聲咗', loud: '🔊 仲好嘈' };
 const COMFORT_LABEL = { good: '😊 好舒服', ok: '😐 還可以', bad: '😣 好唔舒服' };
 const SHELL_LABEL = { paper: '📄 紙杯', plastic: '🥤 膠杯', foam: '🧽 泡棉杯' };
-const SEAL_LABEL = { none: '🚫 無墊', cotton: '🧶 棉花', foam: '🟧 記憶墊' };
+const SEAL_LABEL = { none: '🚫 無墊', cotton: '🧶 棉花', towel: '🟦 毛巾', tissue: '🧻 紙巾', foam: '🟧 記憶墊' };
 
 // chip selection state
 let logPick = { feel: null, comfort: null };
