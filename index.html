@@ -1382,8 +1382,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.9.2) ==============
-const APP_VERSION = '5.9.2';
+// ============== APP VERSION (v5.9.3) ==============
+const APP_VERSION = '5.9.3';
 
 // ============== BADGE SYSTEM (v5.8) ==============
 // 9 medals: Stage 1, 2, 4 × {bronze, silver, gold}. Stage 3 has no badges (no challenge).
@@ -2432,15 +2432,20 @@ function showResult(score) {
   if (n >= 2) setTimeout(showCelebration, 1200);
 }
 document.getElementById('btnRetry').addEventListener('click', () => {
-  // reset stage 2 + 3 + 4
+  // reset stage 1 + 2 + 3 + 4 (v5.9.3: full reset, not just stage 2-4)
   stopAudio();
+  // stage 2 state
   shellPicked = null; sealPicked = null;
+  stage2StartTime = null; // v5.9.3: reset timer so fast-badge isn't trivially earned on retry
+  window._lastBuildKey = null; // v5.9.3: clear idempotency guard so same combo re-renders
   document.querySelectorAll('.mat-card').forEach(c => c.classList.remove('picked'));
   document.getElementById('shellReq').textContent = '（揀一樣）';
   document.getElementById('shellReq').style.color = 'var(--primary)';
   document.getElementById('sealReq').textContent = '🔒 先揀杯';
   document.getElementById('sealReq').style.color = 'var(--primary)';
   document.getElementById('sealGrid').classList.add('waiting');
+  // v5.9.3: explicitly disable nextTo3 — previous state would otherwise leak from prior round
+  document.getElementById('nextTo3').disabled = true;
   document.getElementById('cupAdditions').innerHTML = '';
   document.getElementById('cupAdditions').style.opacity = '0';
   document.getElementById('cupAdditions').style.transform = 'scale(0.5)';
@@ -2456,6 +2461,18 @@ document.getElementById('btnRetry').addEventListener('click', () => {
   document.getElementById('cupSub').textContent = '—';
   document.getElementById('resultCard').classList.remove('show');
   document.getElementById('celebration').classList.remove('show');
+  // v5.9.3: also reset stage 1 state — otherwise nextTo2 stays enabled and bronze fires without doing demo
+  stage1StartTime = null;
+  stage1Played = false;
+  stage1Covered = false;
+  stage1PlayCount = 0;
+  stage1CoverCount = 0;
+  refreshStage1Next();
+  coverScene.classList.remove('playing', 'covered');
+  speaker.classList.remove('playing');
+  ear.classList.remove('hear');
+  btnCover.textContent = '✋ 遮耳仔';
+  btnCover.classList.remove('primary');
   resetLogChips();
   goStage('2');
 });
@@ -3197,6 +3214,9 @@ document.getElementById('cmpUseWinner').addEventListener('click', () => {
   document.getElementById('sealReq').textContent = '✓';
   document.getElementById('sealReq').style.color = 'var(--good)';
   document.getElementById('sealGrid').classList.remove('waiting');
+  document.getElementById('nextTo3').disabled = false;
+  // v5.9.3: render cup synchronously — without this, clicking nextTo3 would show empty cup
+  buildCup();
   goStage('2');
   showToast(`已用 ${SHELL_LABEL[shell]} + ${SEAL_LABEL[seal]} 預填！`, 2500);
   speak('已為你揀咗贏嘅組合，去整啦！');
