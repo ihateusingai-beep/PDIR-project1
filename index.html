@@ -28,6 +28,23 @@
     --fs-scale: 1;
   }
   html { font-size: calc(16px * var(--fs-scale)); }
+  /* v5.13: respect OS-level reduce-motion preference (ASD / motion-sensitive students) */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  /* v5.13: explicit toggle override (some browsers don't report query) */
+  html[data-reduce-motion="on"] *,
+  html[data-reduce-motion="on"] *::before,
+  html[data-reduce-motion="on"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
 
@@ -57,7 +74,7 @@
   .step-btn.active { background: var(--primary); border-color: var(--primary); color: white;
     transform: translateY(-3px); box-shadow: 0 10px 24px -8px rgba(232,93,60,0.5); }
   .step-btn.active .step-num { background: white; color: var(--primary); }
-  .step-btn.done { background: var(--good-soft); border-color: var(--good); }
+  .step-btn.done { background: var(--good-soft); border-color: var(--good); border-width: 5px; }
   .step-btn.done .step-num { background: var(--good); color: white; }
   .step-btn.done::after { content: "✓"; position: absolute; top: 6px; right: 8px; color: var(--good); font-size: 0.9rem; font-weight: 900; }
   .step-num { width: 38px; height: 38px; background: var(--primary-soft); color: var(--primary);
@@ -131,7 +148,7 @@
     color: white; border-radius: 50%; line-height: 30px; text-align: center; margin-right: 8px; font-size: 1.05rem; }
   .pick-q .req { color: var(--primary); font-size: 0.85rem; margin-left: 6px; }
   .mat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
-  .mat-row.waiting .mat-card:not(.picked) { opacity: 0.45; }
+  .mat-row.waiting .mat-card:not(.picked) { opacity: 0.45; cursor: not-allowed; }
   .mat-card { background: var(--paper); border: 3px solid var(--line); border-radius: 20px;
     padding: 18px 12px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden; }
   .mat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px -8px rgba(0,0,0,0.12); }
@@ -142,9 +159,23 @@
     outline-offset: 3px;
     box-shadow: 0 0 0 6px rgba(90,143,200,0.25);
   }
-  .mat-card.picked { border-color: var(--good); background: var(--good-soft); }
+  .mat-card.picked {
+    border-color: var(--good);
+    background: var(--good-soft);
+    border-width: 5px; /* v5.13: thicker border for non-color cue */
+    box-shadow: 0 4px 12px -2px rgba(76, 175, 106, 0.4); /* extra shadow for non-color cue */
+  }
   .mat-card.picked::before {
-    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    content: "✓"; /* v5.13: explicit ✓ icon (was empty bar — color-blind users couldn't tell) */
+    position: absolute; top: 6px; right: 8px;
+    width: 24px; height: 24px; line-height: 24px; text-align: center;
+    background: var(--good); color: white;
+    border-radius: 50%; font-weight: 900; font-size: 0.9rem;
+    box-shadow: 0 2px 4px rgba(76, 175, 106, 0.4);
+  }
+  /* keep subtle gradient bar for visual flair but no longer sole indicator */
+  .mat-card.picked::after {
+    content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
     background: linear-gradient(90deg, var(--good), #6fd087, var(--good));
     animation: shine 2s ease-in-out infinite;
   }
@@ -205,8 +236,17 @@
   .sound-meter { width: 200px; height: 200px; border-radius: 50%; background: white;
     border: 6px solid var(--line); display: grid; place-items: center;
     transition: all 0.3s; position: relative; z-index: 1; }
-  .sound-meter.loud { background: var(--primary-soft); border-color: var(--primary); animation: shake 0.3s; }
-  .sound-meter.quiet { background: var(--good-soft); border-color: var(--good); }
+  .sound-meter.loud {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    border-width: 9px; /* v5.13: thicker border for non-color cue */
+    animation: shake 0.3s;
+  }
+  .sound-meter.quiet {
+    background: var(--good-soft);
+    border-color: var(--good);
+    border-width: 9px; /* v5.13: thicker border for non-color cue */
+  }
   @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
   .sound-emoji { font-size: 5.5rem; line-height: 1; }
   .sound-label { font-size: 1.4rem; font-weight: 900; margin-top: 4px; }
@@ -918,6 +958,16 @@
       <div class="setting-hint">用廣東話 / 粵語朗讀</div>
     </div>
 
+    <div class="setting-row">
+      <div class="setting-label">減少動畫 <span class="val" id="motionVal">跟系統</span></div>
+      <div class="seg" id="motionSeg" style="grid-template-columns: repeat(3, 1fr);">
+        <button class="seg-btn" data-motion="system">跟系統</button>
+        <button class="seg-btn" data-motion="off">正常動畫</button>
+        <button class="seg-btn" data-motion="on">減少動畫</button>
+      </div>
+      <div class="setting-hint">對動作敏感嘅學生可以關咗動畫</div>
+    </div>
+
     <div class="preview">
       <span class="speakable">
         <button class="speak-btn" data-text="耳罩可以擋到聲音" aria-label="試聽">
@@ -1419,8 +1469,24 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.12) ==============
-const APP_VERSION = '5.12';
+// ============== APP VERSION (v5.13) ==============
+const APP_VERSION = '5.13';
+
+// v5.13: declarative hint rule table for Stage 4 result explanation.
+// Each rule: { test(ctx) -> bool, msg }. First match wins. ctx fields:
+//   score (number), n (1/2/3 stars), shellScore/sealScore, shellId/sealId.
+// Add a new rule above the catch-all to handle a new material combo.
+// v5.13: original 7 v5.11 branches preserved in order; behaviour identical.
+const STAGE4_HINTS = [
+  { test: ctx => ctx.score >= 7, msg: '✨ 質量夠重 + 軟墊夠厚實，密封得好，聲走唔到入去。' },
+  { test: ctx => ctx.n === 2 && ctx.shellScore <= 2 && ctx.sealScore <= 2, msg: '💡 杯太薄 + 墊太軟。試下用重啲嘅杯，加厚啲嘅墊。' },
+  { test: ctx => ctx.n === 2 && ctx.shellScore <= 2, msg: '💡 杯太薄擋唔住聲。試下用膠杯或者泡棉杯。' },
+  { test: ctx => ctx.n === 2, msg: '💡 軟墊唔夠厚實，漏咗少少聲。試下用毛巾或者記憶墊。' },
+  { test: ctx => ctx.sealId === 'tissue', msg: '🧻 紙巾太薄啦！聲直接穿過去。下次用厚少少嘅軟墊。' },
+  { test: ctx => ctx.sealId === 'none', msg: '🚫 杯邊冇軟墊，聲從杯邊漏晒出去。要加厚墊密封。' },
+  { test: ctx => ctx.n === 1, msg: '💡 杯太薄 + 軟墊唔夠厚，擋唔住大聲。換重杯 + 厚墊啦。' },
+  { test: () => true, msg: '💡 試下其他組合' }, // catch-all
+];
 
 // ============== BADGE SYSTEM (v5.8) ==============
 // 9 medals: Stage 1, 2, 4 × {bronze, silver, gold}. Stage 3 has no badges (no challenge).
@@ -1624,9 +1690,12 @@ const SETTINGS_KEY = 'earmuff-pdir-settings-v1';
 const SIZE_SCALE = { S: 0.88, M: 1, L: 1.15, XL: 1.3 };
 const SIZE_LABEL = { S: '細', M: '中', L: '大', XL: '特大' };
 const RATE_LABEL = { 0.7: '慢', 0.95: '正常', 1.3: '快' };
+const MOTION_LABEL = { system: '跟系統', off: '正常動畫', on: '減少動畫' };
 
-let settings = { size: 'M', rate: 0.95, voiceURI: null };
+let settings = { size: 'M', rate: 0.95, voiceURI: null, motion: 'system' };
 try { Object.assign(settings, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); } catch (e) {}
+// v5.13: legacy settings without motion field — default to 'system'
+if (!settings.motion) settings.motion = 'system';
 
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }
 function applyFontSize() {
@@ -1634,7 +1703,17 @@ function applyFontSize() {
   document.getElementById('sizeVal').textContent = SIZE_LABEL[settings.size];
   document.querySelectorAll('#sizeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.size === settings.size));
 }
+// v5.13: reduce-motion toggle — 'on' forces data-attr, 'off' removes, 'system' removes (CSS @media handles it)
+function applyMotion() {
+  const root = document.documentElement;
+  if (settings.motion === 'on') root.setAttribute('data-reduce-motion', 'on');
+  else root.removeAttribute('data-reduce-motion');
+  const valEl = document.getElementById('motionVal');
+  if (valEl) valEl.textContent = MOTION_LABEL[settings.motion];
+  document.querySelectorAll('#motionSeg .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.motion === settings.motion));
+}
 applyFontSize();
+applyMotion();
 
 document.getElementById('sizeSeg').addEventListener('click', e => {
   const b = e.target.closest('.seg-btn'); if (!b) return;
@@ -1647,6 +1726,11 @@ document.getElementById('rateSeg').addEventListener('click', e => {
   document.querySelectorAll('#rateSeg .seg-btn').forEach(x => x.classList.toggle('active', x === b));
   // demo speak
   speak('耳罩可以擋到聲音');
+});
+// v5.13: motion seg handler
+document.getElementById('motionSeg').addEventListener('click', e => {
+  const b = e.target.closest('.seg-btn'); if (!b) return;
+  settings.motion = b.dataset.motion; saveSettings(); applyMotion();
 });
 document.getElementById('rateVal').textContent = RATE_LABEL[settings.rate];
 document.querySelectorAll('#rateSeg .seg-btn').forEach(b => b.classList.toggle('active', +b.dataset.rate === settings.rate));
@@ -2534,35 +2618,29 @@ function showResult(score) {
   const msg = document.getElementById('resultMsg');
   const why = document.getElementById('resultWhy');
   const n = score >= 7 ? 3 : score >= 4 ? 2 : 1;
-  let cls, txt, m, whyText;
+  let cls, txt, m;
+  // v5.13: declarative hint rule table — replaces v5.11 hardcoded branches
+  // Each rule: test(ctx) -> msg. First match wins. ctx has score, n, shellScore, sealScore, sealId.
+  const shellCard = document.querySelector('[data-type="shell"].picked');
+  const sealCard  = document.querySelector('[data-type="seal"].picked');
+  const hintCtx = {
+    score,
+    n,
+    shellScore: +shellCard.dataset.score,
+    sealScore:  +sealCard.dataset.score,
+    shellId: shellCard.dataset.id,
+    sealId:  sealCard.dataset.id,
+  };
+  let whyText;
+  for (const rule of STAGE4_HINTS) {
+    if (rule.test(hintCtx)) { whyText = rule.msg; break; }
+  }
   if (n === 3) {
     cls = 'great'; txt = '太棒喇！🎉'; m = '呢個組合好好用！';
-    whyText = '✨ 質量夠重 + 軟墊夠厚實，密封得好，聲走唔到入去。';
   } else if (n === 2) {
     cls = 'ok'; txt = '唔錯喎！👍'; m = '可以更好，試下揀其他嘢';
-    // v5.11: targeted hint based on which dimension is weak
-    const shellCard = document.querySelector('[data-type="shell"].picked');
-    const sealCard  = document.querySelector('[data-type="seal"].picked');
-    const shellScore = +shellCard.dataset.score;
-    const sealScore  = +sealCard.dataset.score;
-    if (shellScore <= 2 && sealScore <= 2) {
-      whyText = '💡 杯太薄 + 墊太軟。試下用重啲嘅杯，加厚啲嘅墊。';
-    } else if (shellScore <= 2) {
-      whyText = '💡 杯太薄擋唔住聲。試下用膠杯或者泡棉杯。';
-    } else {
-      whyText = '💡 軟墊唔夠厚實，漏咗少少聲。試下用毛巾或者記憶墊。';
-    }
   } else {
     cls = 'try'; txt = '試多次 🤔'; m = '換過其他組合啦';
-    // v5.11: 1-star is almost always thin shell OR tissue-grade seal
-    const sealId = document.querySelector('[data-type="seal"].picked').dataset.id;
-    if (sealId === 'tissue') {
-      whyText = '🧻 紙巾太薄啦！聲直接穿過去。下次用厚少少嘅軟墊。';
-    } else if (sealId === 'none') {
-      whyText = '🚫 杯邊冇軟墊，聲從杯邊漏晒出去。要加厚墊密封。';
-    } else {
-      whyText = '💡 杯太薄 + 軟墊唔夠厚，擋唔住大聲。換重杯 + 厚墊啦。';
-    }
   }
   card.className = 'result-card show ' + cls;
   big.textContent = txt;
