@@ -135,6 +135,13 @@
   .mat-card { background: var(--paper); border: 3px solid var(--line); border-radius: 20px;
     padding: 18px 12px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden; }
   .mat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px -8px rgba(0,0,0,0.12); }
+  /* v5.12: keyboard focus ring (visible only for keyboard, not mouse click) */
+  .mat-card:focus { outline: none; }
+  .mat-card:focus-visible {
+    outline: 4px solid var(--primary, #5a8fc8);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 6px rgba(90,143,200,0.25);
+  }
   .mat-card.picked { border-color: var(--good); background: var(--good-soft); }
   .mat-card.picked::before {
     content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
@@ -929,7 +936,7 @@
   </div>
 
   <nav class="steps" id="stepNav">
-    <button class="step-btn active" data-stage="1"><div class="step-num">1</div><div class="step-label">試吓</div></button>
+    <button class="step-btn active" data-stage="1" aria-current="step"><div class="step-num">1</div><div class="step-label">試吓</div></button>
     <button class="step-btn" data-stage="2"><div class="step-num">2</div><div class="step-label">揀料</div></button>
     <button class="step-btn" data-stage="3"><div class="step-num">3</div><div class="step-label">整好喇</div></button>
     <button class="step-btn" data-stage="4"><div class="step-num">4</div><div class="step-label">試下</div></button>
@@ -1026,8 +1033,8 @@
 
     <div class="pick-row">
       <div class="pick-q"><span class="num">①</span>杯嘅物料 <span class="req" id="shellReq">（揀一樣）</span></div>
-      <div class="mat-row" id="shellGrid">
-        <div class="mat-card" data-type="shell" data-id="paper" data-score="2" data-tts="紙杯，輕，軟">
+      <div class="mat-row" id="shellGrid" role="radiogroup" aria-label="杯嘅物料">
+        <div class="mat-card" data-type="shell" data-id="paper" data-score="2" data-tts="紙杯，輕，軟" role="radio" tabindex="0" aria-checked="false" aria-label="紙杯，輕、軟">
           <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
             <path d="M20 25 L80 25 L72 88 Q72 92 68 92 L32 92 Q28 92 28 88 Z" fill="#f4e4c1" stroke="#a08060" stroke-width="2.5"/>
             <ellipse cx="50" cy="25" rx="30" ry="6" fill="#fff" stroke="#a08060" stroke-width="2.5"/>
@@ -1037,7 +1044,7 @@
           <div class="mat-name">紙杯</div>
           <div class="mat-feel">輕、軟</div>
         </div>
-        <div class="mat-card" data-type="shell" data-id="plastic" data-score="4" data-tts="膠杯，硬，滑">
+        <div class="mat-card" data-type="shell" data-id="plastic" data-score="4" data-tts="膠杯，硬，滑" role="radio" tabindex="0" aria-checked="false" aria-label="膠杯，硬、滑">
           <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
             <path d="M20 25 L80 25 L74 88 Q74 92 70 92 L30 92 Q26 92 26 88 Z" fill="#7bc4f0" stroke="#3d7bb0" stroke-width="2.5"/>
             <ellipse cx="50" cy="25" rx="30" ry="6" fill="#a8d8f5" stroke="#3d7bb0" stroke-width="2.5"/>
@@ -1048,7 +1055,7 @@
           <div class="mat-name">膠杯</div>
           <div class="mat-feel">硬、滑</div>
         </div>
-        <div class="mat-card" data-type="shell" data-id="foam" data-score="3" data-tts="泡棉杯，軟，有彈性">
+        <div class="mat-card" data-type="shell" data-id="foam" data-score="3" data-tts="泡棉杯，軟，有彈性" role="radio" tabindex="0" aria-checked="false" aria-label="泡棉杯，軟、有彈性">
           <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
             <path d="M22 25 L78 25 L70 88 Q70 92 66 92 L34 92 Q30 92 30 88 Z" fill="#f5d76e" stroke="#b8941a" stroke-width="2.5"/>
             <ellipse cx="50" cy="25" rx="28" ry="6" fill="#fce394" stroke="#b8941a" stroke-width="2.5"/>
@@ -1067,8 +1074,8 @@
 
     <div class="pick-row">
       <div class="pick-q"><span class="num">②</span>軟墊 <span class="req" id="sealReq">🔒 先揀杯</span></div>
-      <div class="mat-row waiting" id="sealGrid">
-        <div class="mat-card" data-type="seal" data-id="none" data-score="0" data-tts="唔要墊，直接貼耳">
+      <div class="mat-row waiting" id="sealGrid" role="radiogroup" aria-label="軟墊">
+        <div class="mat-card" data-type="seal" data-id="none" data-score="0" data-tts="唔要墊，直接貼耳" role="radio" tabindex="-1" aria-checked="false" aria-label="唔要墊，直接貼耳" aria-disabled="true">
           <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
             <ellipse cx="50" cy="50" rx="35" ry="10" fill="none" stroke="#a09080" stroke-width="3" stroke-dasharray="6 4"/>
             <line x1="15" y1="50" x2="85" y2="50" stroke="#a09080" stroke-width="2" opacity="0.4"/>
@@ -1077,7 +1084,7 @@
           <div class="mat-name">唔要墊</div>
           <div class="mat-feel">直接貼耳</div>
         </div>
-        <div class="mat-card" data-type="seal" data-id="cotton" data-score="2" data-tts="棉花，軟鬆">
+        <div class="mat-card" data-type="seal" data-id="cotton" data-score="2" data-tts="棉花，軟鬆" role="radio" tabindex="-1" aria-checked="false" aria-label="棉花，軟鬆" aria-disabled="true">
           <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
             <ellipse cx="50" cy="55" rx="32" ry="22" fill="white" stroke="#d0c8b8" stroke-width="2"/>
             <circle cx="38" cy="48" r="8" fill="white" stroke="#d0c8b8" stroke-width="1.5"/>
@@ -1091,7 +1098,7 @@
           <div class="mat-name">棉花</div>
           <div class="mat-feel">軟鬆</div>
         </div>
-        <div class="mat-card" data-type="seal" data-id="foam" data-score="4" data-tts="記憶墊，軟，貼耳">
+        <div class="mat-card" data-type="seal" data-id="foam" data-score="4" data-tts="記憶墊，軟，貼耳" role="radio" tabindex="-1" aria-checked="false" aria-label="記憶墊，軟、貼耳" aria-disabled="true">
           <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
             <ellipse cx="50" cy="50" rx="35" ry="20" fill="#ff9b6a" stroke="#c0582a" stroke-width="2.5"/>
             <ellipse cx="50" cy="48" rx="30" ry="15" fill="#ffb88a" opacity="0.6"/>
@@ -1102,7 +1109,7 @@
           <div class="mat-name">記憶墊</div>
           <div class="mat-feel">軟、貼耳</div>
         </div>
-        <div class="mat-card" data-type="seal" data-id="towel" data-score="3" data-tts="毛巾，厚，吸水">
+        <div class="mat-card" data-type="seal" data-id="towel" data-score="3" data-tts="毛巾，厚，吸水" role="radio" tabindex="-1" aria-checked="false" aria-label="毛巾，厚、有紋" aria-disabled="true">
           <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
             <ellipse cx="50" cy="52" rx="34" ry="18" fill="#a8c8e8" stroke="#5a7a9a" stroke-width="2.5"/>
             <ellipse cx="50" cy="50" rx="30" ry="14" fill="#c8dcec" opacity="0.6"/>
@@ -1116,7 +1123,7 @@
           <div class="mat-name">毛巾</div>
           <div class="mat-feel">厚、有紋</div>
         </div>
-        <div class="mat-card" data-type="seal" data-id="tissue" data-score="1" data-tts="紙巾，薄，一撕就爛">
+        <div class="mat-card" data-type="seal" data-id="tissue" data-score="1" data-tts="紙巾，薄，一撕就爛" role="radio" tabindex="-1" aria-checked="false" aria-label="紙巾，薄、軟" aria-disabled="true">
           <svg class="mat-preview" viewBox="0 0 100 100" fill="none">
             <ellipse cx="50" cy="52" rx="32" ry="14" fill="#fff" stroke="#d8d4cc" stroke-width="2"/>
             <!-- thin sheet - subtle outline -->
@@ -1330,11 +1337,11 @@
 </div>
 
 <!-- ========== QUIZ MODAL ========== -->
-<div class="quiz-modal" id="quizModal">
+<div class="quiz-modal" id="quizModal" role="dialog" aria-modal="true" aria-labelledby="quizTitle">
   <div class="quiz-card">
     <div class="quiz-head">
-      <h3>🧠 小測試</h3>
-      <button class="log-close" id="quizClose">關</button>
+      <h3 id="quizTitle">🧠 小測試</h3>
+      <button class="log-close" id="quizClose" aria-label="關閉小測試">關</button>
     </div>
     <div class="quiz-progress" id="quizProgress"></div>
     <div id="quizBody"></div>
@@ -1342,11 +1349,11 @@
 </div>
 
 <!-- ========== COMPARE MODAL ========== -->
-<div class="compare-modal" id="compareModal">
+<div class="compare-modal" id="compareModal" role="dialog" aria-modal="true" aria-labelledby="compareTitle">
   <div class="compare-card">
     <div class="compare-head">
-      <h3>⚖️ 對比兩個組合</h3>
-      <button class="log-close" id="compareClose">關</button>
+      <h3 id="compareTitle">⚖️ 對比兩個組合</h3>
+      <button class="log-close" id="compareClose" aria-label="關閉對比">關</button>
     </div>
     <div class="compare-grid">
       <div class="compare-side" id="cmpLeft">
@@ -1380,11 +1387,11 @@
 </div>
 
 <!-- ========== LOG MODAL ========== -->
-<div class="log-modal" id="logModal">
+<div class="log-modal" id="logModal" role="dialog" aria-modal="true" aria-labelledby="logTitle">
   <div class="log-modal-card">
     <div class="log-modal-head">
-      <h3>📒 我嘅實驗日誌</h3>
-      <button class="log-close" id="logClose">關</button>
+      <h3 id="logTitle">📒 我嘅實驗日誌</h3>
+      <button class="log-close" id="logClose" aria-label="關閉實驗日誌">關</button>
     </div>
     <div id="conclusion" class="conclusion"></div>
     <button class="compare-trigger" id="openCompareBtn" disabled>⚖️ 對比兩個組合（要 2 個實驗）</button>
@@ -2104,9 +2111,14 @@ const completedStages = new Set();
   if (n === '3' && !(shellPicked && sealPicked)) {
     n = '2';
   }
-  document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.step-btn').forEach(b => {
+    b.classList.remove('active');
+    b.removeAttribute('aria-current');
+  });
   document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
-  document.querySelector(`.step-btn[data-stage="${n}"]`).classList.add('active');
+  const activeBtn = document.querySelector(`.step-btn[data-stage="${n}"]`);
+  activeBtn.classList.add('active');
+  activeBtn.setAttribute('aria-current', 'step');
   document.getElementById('stage-' + n).classList.add('active');
   if (n === '4') {
     // auto start loud when entering stage 4
@@ -2220,12 +2232,56 @@ document.querySelectorAll('.mat-card').forEach(card => {
 
 let shellPicked = null, sealPicked = null;
 let stage2StartTime = null;
+
+// v5.12: a11y helper — sync ARIA state on all cards in a grid
+function syncAriaPicked(grid) {
+  grid.querySelectorAll('.mat-card').forEach(c => {
+    const picked = c.classList.contains('picked');
+    c.setAttribute('aria-checked', picked ? 'true' : 'false');
+  });
+}
+
+// v5.12: a11y helper — focus + announce next card in a radiogroup (Arrow nav)
+function moveFocusInGroup(grid, currentCard, key) {
+  const cards = Array.from(grid.querySelectorAll('.mat-card'));
+  const idx = cards.indexOf(currentCard);
+  let next = idx;
+  if (key === 'ArrowRight' || key === 'ArrowDown') next = (idx + 1) % cards.length;
+  else if (key === 'ArrowLeft' || key === 'ArrowUp') next = (idx - 1 + cards.length) % cards.length;
+  else if (key === 'Home') next = 0;
+  else if (key === 'End') next = cards.length - 1;
+  else return; // not a navigation key
+  cards[next].focus();
+  // pick on focus (radio group UX: arrow moves AND selects)
+  cards[next].click();
+  // announce for screen readers
+  announce(cards[next].dataset.tts || cards[next].dataset.id);
+}
+
+// v5.12: a11y live region for SR announcements (text-only, polite)
+function announce(text) {
+  let region = document.getElementById('a11yAnnouncer');
+  if (!region) {
+    region = document.createElement('div');
+    region.id = 'a11yAnnouncer';
+    region.setAttribute('role', 'status');
+    region.setAttribute('aria-live', 'polite');
+    region.setAttribute('aria-atomic', 'true');
+    region.style.cssText = 'position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;';
+    document.body.appendChild(region);
+  }
+  // clear then set so SR picks up repeated text
+  region.textContent = '';
+  setTimeout(() => { region.textContent = text; }, 30);
+}
+
 document.querySelectorAll('.mat-card').forEach(card => {
   card.addEventListener('click', () => {
     const type = card.dataset.type;
     const grid = card.parentElement;
     grid.querySelectorAll('.mat-card').forEach(c => c.classList.remove('picked'));
     card.classList.add('picked');
+    syncAriaPicked(grid);
     if (type === 'shell') {
       shellPicked = card.dataset.id;
       // v5.9.2: start timer when first 1+1 reached; reset if user re-picks after completing once
@@ -2239,6 +2295,12 @@ document.querySelectorAll('.mat-card').forEach(card => {
       document.getElementById('shellReq').style.color = 'var(--good)';
       // unlock seal row
       document.getElementById('sealGrid').classList.remove('waiting');
+      // v5.12: enable seal cards for keyboard nav
+      document.querySelectorAll('#sealGrid .mat-card').forEach(c => {
+        c.removeAttribute('aria-disabled');
+        c.tabIndex = 0;
+      });
+      announce('揀咗' + (card.dataset.tts || '杯') + '。而家可以揀軟墊。');
     } else {
       sealPicked = card.dataset.id;
       // v5.9.2: mirror reset logic for seal re-pick
@@ -2249,10 +2311,33 @@ document.querySelectorAll('.mat-card').forEach(card => {
       }
       document.getElementById('sealReq').textContent = '✓';
       document.getElementById('sealReq').style.color = 'var(--good)';
+      announce('揀咗' + (card.dataset.tts || '軟墊') + '。兩個都揀晒喇，可以撳「整好喇」。');
     }
     // v5.9.1: enable stage 2 → 3 next button when 1+1 picked
     document.getElementById('nextTo3').disabled = !(shellPicked && sealPicked);
     if (shellPicked && sealPicked) buildCup();
+  });
+
+  // v5.12: keyboard navigation for mat-card (radio group pattern)
+  card.addEventListener('keydown', e => {
+    const grid = card.parentElement;
+    const navKeys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'];
+    if (navKeys.includes(e.key)) {
+      e.preventDefault();
+      // seal row disabled when shell not picked — block nav
+      if (grid.id === 'sealGrid' && !shellPicked) return;
+      moveFocusInGroup(grid, card, e.key);
+      return;
+    }
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      // seal row disabled when shell not picked — block pick
+      if (grid.id === 'sealGrid' && !shellPicked) {
+        announce('請先揀杯嘅物料');
+        return;
+      }
+      card.click();
+    }
   });
 });
 // v5.9.1: stage 2 → 3 explicit CTA (was missing — only step nav could jump)
@@ -3493,6 +3578,15 @@ document.getElementById('openQuizBtn').addEventListener('click', openQuiz);
 document.getElementById('quizClose').addEventListener('click', closeQuiz);
 document.getElementById('quizModal').addEventListener('click', e => {
   if (e.target.id === 'quizModal') closeQuiz();
+});
+
+// v5.12: ESC key closes any open modal (keyboard accessibility)
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('quizModal').classList.contains('show')) closeQuiz();
+  else if (document.getElementById('logModal').classList.contains('show')) document.getElementById('logClose').click();
+  else if (document.getElementById('compareModal').classList.contains('show')) document.getElementById('compareClose').click();
+  else if (document.getElementById('celebration').classList.contains('show')) document.getElementById('certClose').click();
 });
 
 document.getElementById('certClose').addEventListener('click', () => {
