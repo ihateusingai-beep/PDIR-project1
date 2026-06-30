@@ -66,6 +66,28 @@
   .hero-sub { font-size: 1rem; color: var(--ink-2); font-weight: 500; }
 
   /* PDIR nav */
+  /* v5.14: mini-progress — 4 segments above step nav, fills as user advances */
+  .mini-progress { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 22px 0 -8px; }
+  .mini-seg {
+    height: 8px; background: var(--line); border-radius: 4px;
+    transition: background 0.4s ease, transform 0.4s ease;
+    position: relative; overflow: hidden;
+  }
+  .mini-seg-label {
+    position: absolute; left: 0; right: 0; top: 12px;
+    text-align: center; font-size: 0.78rem; font-weight: 700;
+    color: var(--ink-2); opacity: 0; transition: opacity 0.3s ease;
+  }
+  .mini-seg.done { background: var(--good); }
+  .mini-seg.cur { background: var(--primary); transform: scaleY(1.4); }
+  .mini-seg.cur .mini-seg-label,
+  .mini-seg.done .mini-seg-label { opacity: 1; }
+  .mini-seg.done .mini-seg-label { color: var(--good); }
+  .mini-seg.cur .mini-seg-label { color: var(--primary); }
+  @media (prefers-reduced-motion: reduce) {
+    .mini-seg { transition: none; }
+  }
+
   .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 28px 0 20px; }
   .step-btn { background: var(--paper); border: 3px solid var(--line); border-radius: 20px;
     padding: 14px 8px; cursor: pointer; text-align: center; font-family: inherit;
@@ -985,6 +1007,14 @@
     </div>
   </div>
 
+  <!-- v5.14: mini-progress — 4 segments, fills as user advances through stages -->
+  <div class="mini-progress" id="miniProgress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="活動進度">
+    <div class="mini-seg" data-seg="1"><span class="mini-seg-label">試吓</span></div>
+    <div class="mini-seg" data-seg="2"><span class="mini-seg-label">揀料</span></div>
+    <div class="mini-seg" data-seg="3"><span class="mini-seg-label">整好喇</span></div>
+    <div class="mini-seg" data-seg="4"><span class="mini-seg-label">試下</span></div>
+  </div>
+
   <nav class="steps" id="stepNav">
     <button class="step-btn active" data-stage="1" aria-current="step"><div class="step-num">1</div><div class="step-label">試吓</div></button>
     <button class="step-btn" data-stage="2"><div class="step-num">2</div><div class="step-label">揀料</div></button>
@@ -1469,8 +1499,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.13) ==============
-const APP_VERSION = '5.13';
+// ============== APP VERSION (v5.14) ==============
+const APP_VERSION = '5.14';
 
 // v5.13: declarative hint rule table for Stage 4 result explanation.
 // Each rule: { test(ctx) -> bool, msg }. First match wins. ctx fields:
@@ -1683,6 +1713,8 @@ function renderBadgeGallery() {
 }
 
 renderBadgePips();
+// v5.14: render mini-progress on initial load (stage 1 active by default)
+renderMiniProgress('1');
 document.getElementById('appVersion').textContent = APP_VERSION;
 
 // ============== SETTINGS (TTS + font) ==============
@@ -2190,6 +2222,20 @@ function startMuffled(totalScore) {
 
 // ============== STAGE NAV ==============
 const completedStages = new Set();
+// v5.14: mini-progress render — segments mark done/cur/pending based on completedStages + active
+function renderMiniProgress(curStage) {
+  const root = document.getElementById('miniProgress');
+  if (!root) return;
+  const cur = parseInt(curStage, 10);
+  root.setAttribute('aria-valuenow', String(cur));
+  root.setAttribute('aria-label', `活動進度：第 ${cur} 步，共 4 步`);
+  root.querySelectorAll('.mini-seg').forEach(seg => {
+    const segN = parseInt(seg.dataset.seg, 10);
+    seg.classList.remove('done', 'cur');
+    if (completedStages.has(String(segN))) seg.classList.add('done');
+    else if (segN === cur) seg.classList.add('cur');
+  });
+}
  function goStage(n) {
   // v5.9.2: guard stage 3 entry — must have 1+1 picked, else redirect to stage 2 (avoid empty cup)
   if (n === '3' && !(shellPicked && sealPicked)) {
@@ -2211,6 +2257,8 @@ const completedStages = new Set();
   } else {
     stopAudio();
   }
+  // v5.14: update mini-progress bar
+  renderMiniProgress(n);
   // Auto-guide TTS: read stage title + hint 700ms after entering
   const stageEl = document.getElementById('stage-' + n);
   const titleEl = stageEl.querySelector('.stage-title .speakable');
@@ -2233,6 +2281,9 @@ document.getElementById('stepNav').addEventListener('click', e => {
 function markDone(n) {
   completedStages.add(n);
   document.querySelector(`.step-btn[data-stage="${n}"]`).classList.add('done');
+  // v5.14: refresh mini-progress (a stage just flipped to done)
+  const activeBtn = document.querySelector('.step-btn.active');
+  renderMiniProgress(activeBtn ? activeBtn.dataset.stage : n);
 }
 
 // ============== STAGE 1: 遮住 ==============
