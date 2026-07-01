@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>揀物料 整耳罩 — 探究小活動</title>
+<!-- v5.17: html2pdf.js bundle (lazy loaded by dashboard PDF button) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -333,6 +335,74 @@
   .result-card .big { font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; }
   .result-card .stars { font-size: 2.5rem; margin: 8px 0; letter-spacing: 8px; }
   .result-card .stars .star { display: inline-block; opacity: 0; transform: scale(0) rotate(-180deg); }
+  /* v5.17: Stage 4 scoring visual (score bar + material breakdown) */
+  .score-bar-wrap { margin: 10px auto 14px; max-width: 360px; }
+  .score-bar-track { height: 14px; background: var(--line); border-radius: 7px; overflow: hidden; position: relative; }
+  .score-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary) 0%, var(--yellow) 60%, var(--good) 100%); border-radius: 7px; transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); width: 0; }
+  .score-bar-marks { display: flex; justify-content: space-between; margin-top: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+  .score-bar-marks span.cur { color: var(--ink); font-weight: 900; }
+  .mat-chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px auto 14px; max-width: 460px; text-align: left; }
+  .mat-chart { background: rgba(255,255,255,0.6); border: 2px solid rgba(255,255,255,0.8); border-radius: 12px; padding: 10px 12px; }
+  .mat-chart-title { font-size: 0.72rem; font-weight: 900; color: var(--ink); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; opacity: 0.85; }
+  .mat-chart-row { display: grid; grid-template-columns: 22px 1fr 26px; gap: 6px; align-items: center; margin-bottom: 5px; font-size: 0.78rem; }
+  .mat-chart-row:last-child { margin-bottom: 0; }
+  .mat-chart-emoji { text-align: center; line-height: 1; }
+  .mat-chart-bar-track { height: 8px; background: rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden; }
+  .mat-chart-bar-fill { height: 100%; background: var(--good); border-radius: 4px; transition: width 0.6s ease; }
+  .mat-chart-val { font-family: 'JetBrains Mono', monospace; font-weight: 700; text-align: right; color: var(--ink-2); }
+  .mat-chart-row.cur .mat-chart-bar-fill { background: var(--good); box-shadow: 0 0 0 2px rgba(76,175,106,0.4); }
+  .mat-chart-row.cur .mat-chart-val { color: var(--good); font-weight: 900; }
+  .mat-chart-row.dim { opacity: 0.5; }
+  @media (max-width: 480px) { .mat-chart-grid { grid-template-columns: 1fr; } }
+  /* v5.17: drag-to-reorder for mat-card */
+  .mat-card { cursor: grab; -webkit-user-select: none; user-select: none; touch-action: pan-y; }
+  .mat-card.dragging { opacity: 0.35; cursor: grabbing; }
+  .mat-card.drag-over-left::before,
+  .mat-card.drag-over-right::after {
+    /* override the existing picked ::before/::after styles for drop indicators only when not picked */
+    content: ""; position: absolute; top: 8px; bottom: 8px; width: 4px;
+    background: var(--primary); border-radius: 2px;
+    box-shadow: 0 0 0 3px rgba(232,93,60,0.25);
+    animation: dragPulse 0.8s ease-in-out infinite;
+  }
+  .mat-card.drag-over-left::before { left: -6px; }
+  .mat-card.drag-over-right::after { right: -6px; }
+  .mat-card.picked.drag-over-left::before,
+  .mat-card.picked.drag-over-right::after {
+    /* don't override the ✓ check or shine bar on picked cards; use a separate outline */
+    content: none;
+  }
+  .mat-card.picked.drag-over-left,
+  .mat-card.picked.drag-over-right {
+    box-shadow: 0 0 0 3px var(--primary);
+  }
+  @keyframes dragPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+  .drag-ghost {
+    position: fixed; pointer-events: none; z-index: 999;
+    width: 140px; opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.05) rotate(-4deg);
+    box-shadow: 0 12px 28px -4px rgba(0,0,0,0.35);
+    transition: transform 0.05s linear;
+  }
+  /* v5.17: small drag handle hint badge */
+  .mat-card .drag-handle {
+    position: absolute; top: 6px; left: 8px;
+    width: 18px; height: 18px;
+    background: rgba(0,0,0,0.04); color: var(--muted);
+    border-radius: 50%; display: grid; place-items: center;
+    font-size: 0.7rem; line-height: 1;
+    opacity: 0; transition: opacity 0.15s;
+    pointer-events: none;
+  }
+  .mat-card:hover .drag-handle { opacity: 1; }
+  /* mobile: always show handle so user knows drag is possible */
+  @media (hover: none) {
+    .mat-card .drag-handle { opacity: 0.7; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mat-card.drag-over-left::before,
+    .mat-card.drag-over-right::after { animation: none; }
+  }
   .result-card.show .stars .star { animation: starFly 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
   .result-card.show .stars .star:nth-child(1) { animation-delay: 0.2s; }
   .result-card.show .stars .star:nth-child(2) { animation-delay: 0.4s; }
@@ -433,6 +503,55 @@
   @media (max-width: 600px) {
     .dashboard-fab { width: 46px; height: 46px; bottom: 80px; right: 14px; }
     .dash-stats { grid-template-columns: 1fr 1fr; }
+  }
+  /* v5.17: per-stage breakdown table */
+  .dash-stage-table { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .dash-stage-row {
+    display: grid;
+    grid-template-columns: 30px 1fr 70px 70px;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    font-size: 0.82rem;
+  }
+  .dash-stage-row .dsr-num {
+    font-family: 'JetBrains Mono';
+    font-weight: 900;
+    color: var(--muted);
+    text-align: center;
+    background: white;
+    border-radius: 50%;
+    width: 26px; height: 26px;
+    line-height: 26px;
+    font-size: 0.85rem;
+  }
+  .dash-stage-row .dsr-info { line-height: 1.3; }
+  .dash-stage-row .dsr-title { font-weight: 900; color: var(--ink); margin-bottom: 2px; }
+  .dash-stage-row .dsr-meta { font-size: 0.7rem; color: var(--ink-2); }
+  .dash-stage-row .dsr-pct { text-align: center; }
+  .dash-stage-row .dsr-pct-val { font-family: 'JetBrains Mono'; font-weight: 900; color: var(--primary); font-size: 1rem; }
+  .dash-stage-row .dsr-pct-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .dash-stage-row .dsr-meta-val { text-align: right; }
+  .dash-stage-row .dsr-meta-val-num { font-family: 'JetBrains Mono'; font-weight: 700; color: var(--ink); font-size: 0.9rem; }
+  .dash-stage-row .dsr-meta-val-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .dash-stage-row.gold-high { border-color: var(--good); background: var(--good-soft); }
+  .dash-stage-row.gold-high .dsr-pct-val { color: var(--good); }
+  .dash-stage-row.gold-mid { border-color: var(--yellow); }
+  .dash-stage-row.gold-mid .dsr-pct-val { color: #c97b3f; }
+  .dash-stage-row.skip { opacity: 0.45; }
+  .dash-stage-row .dsr-gold-badge {
+    display: inline-block;
+    background: var(--good);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 1px 6px;
+    border-radius: 6px;
+    margin-left: 4px;
+    letter-spacing: 0.04em;
   }
 
   /* compare button (under conclusion) */
@@ -620,6 +739,87 @@
   .print-sheet .ps-cups { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
   .print-sheet .ps-cup { background: #fffaee; border: 2px solid #ead7b8; border-radius: 12px; padding: 8px; text-align: center; }
   .print-sheet .ps-cup svg { width: 100px; height: 80px; }
+
+  /* v5.17: PDF report sheet — off-screen but rendered for html2pdf canvas capture */
+  #pdfSheet {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 800px;
+    background: white;
+    color: #2a2218;
+    font-family: 'Noto Sans HK', system-ui, sans-serif;
+    padding: 28px 32px;
+    z-index: -1;
+  }
+  #pdfSheet .pdf-title {
+    font-size: 1.8rem; font-weight: 900; color: #c97b3f;
+    margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+  }
+  #pdfSheet .pdf-meta {
+    font-size: 0.85rem; color: #5a4a36; margin-bottom: 18px;
+    border-bottom: 2px solid #ead7b8; padding-bottom: 10px;
+  }
+  #pdfSheet .pdf-meta .pm-badge {
+    display: inline-block; padding: 2px 10px; border-radius: 8px;
+    background: linear-gradient(135deg, #f5c842 0%, #c97b3f 100%);
+    color: white; font-weight: 900; margin-right: 6px;
+  }
+  #pdfSheet .pdf-section { margin-top: 14px; page-break-inside: avoid; }
+  #pdfSheet .pdf-section h2 {
+    font-size: 1.15rem; color: #c97b3f; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  #pdfSheet .pdf-stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;
+  }
+  #pdfSheet .pdf-stat {
+    background: #fffaee; border: 2px solid #ead7b8; border-radius: 12px;
+    padding: 12px; text-align: center;
+  }
+  #pdfSheet .pdf-stat .psl { font-size: 0.7rem; color: #a09080; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  #pdfSheet .pdf-stat .psv { font-size: 1.4rem; font-weight: 900; color: #2a2218; line-height: 1.1; }
+  #pdfSheet .pdf-stat .pss { font-size: 0.7rem; color: #5a4a36; margin-top: 2px; }
+  #pdfSheet .pdf-table {
+    width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 12px;
+  }
+  #pdfSheet .pdf-table th, #pdfSheet .pdf-table td {
+    padding: 6px 8px; border: 1px solid #ead7b8; text-align: left;
+  }
+  #pdfSheet .pdf-table th { background: #fff3d0; font-weight: 700; }
+  #pdfSheet .pdf-table td.num { font-family: 'Courier New', monospace; text-align: right; }
+  #pdfSheet .pdf-stage-row {
+    display: grid; grid-template-columns: 30px 1fr 80px 80px; gap: 10px;
+    align-items: center; padding: 8px 10px;
+    background: #fffaee; border: 2px solid #ead7b8; border-radius: 10px; margin-bottom: 6px;
+    font-size: 0.82rem;
+  }
+  #pdfSheet .pdf-stage-row.gold { background: #ddf3e3; border-color: #4caf6a; }
+  #pdfSheet .pdf-stage-row .psn {
+    font-family: 'Courier New', monospace; font-weight: 900; text-align: center;
+    background: white; border-radius: 50%; width: 24px; height: 24px;
+    line-height: 24px; color: #a09080;
+  }
+  #pdfSheet .pdf-stage-row .pst { font-weight: 700; color: #2a2218; margin-bottom: 2px; }
+  #pdfSheet .pdf-stage-row .psm { font-size: 0.7rem; color: #5a4a36; }
+  #pdfSheet .pdf-stage-row .psp { text-align: center; font-family: 'Courier New', monospace; font-weight: 900; color: #e85d3c; font-size: 1rem; }
+  #pdfSheet .pdf-stage-row.gold .psp { color: #4caf6a; }
+  #pdfSheet .pdf-stage-row .psv2 { text-align: right; font-family: 'Courier New', monospace; font-weight: 700; color: #2a2218; }
+  #pdfSheet .pdf-conclusion {
+    background: linear-gradient(135deg, #f5c842 0%, #c97b3f 100%);
+    color: white; border-radius: 14px; padding: 14px; margin-top: 10px;
+  }
+  #pdfSheet .pdf-conclusion h3 { font-size: 1rem; margin-bottom: 6px; }
+  #pdfSheet .pdf-conclusion .pc-evi {
+    background: rgba(255,255,255,0.18); border-radius: 10px; padding: 8px 10px; font-size: 0.78rem;
+  }
+  #pdfSheet .pdf-footer {
+    margin-top: 24px; padding-top: 12px; border-top: 2px dashed #ead7b8;
+    font-size: 0.7rem; color: #a09080; text-align: center;
+  }
+  #pdfSheet .pdf-empty {
+    text-align: center; padding: 40px; color: #a09080; font-style: italic;
+  }
 
   /* saved toast (mini) */
   .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(40px);
@@ -1449,6 +1649,15 @@
     <div class="result-card" id="resultCard">
       <div class="big" id="resultBig">—</div>
       <div class="stars" id="resultStars">⭐⭐⭐</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-track"><div class="score-bar-fill" id="scoreBarFill"></div></div>
+        <div class="score-bar-marks">
+          <span data-score="1">1 ⭐</span>
+          <span data-score="2">2 ⭐</span>
+          <span data-score="3" id="scoreBarMark3">3 ⭐</span>
+        </div>
+      </div>
+      <div class="mat-chart-grid" id="matChartGrid"></div>
       <div class="msg" id="resultMsg">—</div>
       <div class="why" id="resultWhy"></div>
 
@@ -1611,6 +1820,9 @@
 <!-- ========== PRINT SHEET ========== -->
 <div class="print-sheet" id="printSheet"></div>
 
+<!-- ========== v5.17: PDF REPORT SHEET (off-screen, html2pdf capture target) ========== -->
+<div id="pdfSheet" aria-hidden="true"></div>
+
 <!-- ========== TEACHER DASHBOARD (v5.16) ========== -->
 <div class="dashboard-modal" id="dashboardModal" role="dialog" aria-modal="true" aria-labelledby="dashTitle">
   <div class="dashboard-card">
@@ -1621,11 +1833,14 @@
     <div id="dashEmpty" class="dash-empty" hidden>未有紀錄。學生做完實驗就會見到數據。</div>
     <div id="dashBody" class="dashboard-body">
       <div class="dash-stats" id="dashStats"></div>
+      <div class="dash-section-title">📈 每步表現 <span class="dash-count" id="dashStageHint"></span></div>
+      <div class="dash-stage-table" id="dashStageTable"></div>
       <div class="dash-section-title">📋 全部紀錄 <span class="dash-count" id="dashCount"></span></div>
       <div class="dash-list" id="dashList"></div>
     </div>
     <div class="dashboard-actions">
       <button id="dashCsv" class="dash-primary">📥 匯出 CSV</button>
+      <button id="dashPdf">📄 PDF 報告</button>
       <button id="dashClear" class="dash-danger">🗑 全部拎走</button>
     </div>
   </div>
@@ -1635,8 +1850,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.16) ==============
-const APP_VERSION = '5.16';
+// ============== APP VERSION (v5.17) ==============
+const APP_VERSION = '5.17';
 
 // v5.13: declarative hint rule table for Stage 4 result explanation.
 // Each rule: { test(ctx) -> bool, msg }. First match wins. ctx fields:
@@ -1653,6 +1868,77 @@ const STAGE4_HINTS = [
   { test: ctx => ctx.n === 1, msg: '💡 杯太薄 + 軟墊唔夠厚，擋唔住大聲。換重杯 + 厚墊啦。' },
   { test: () => true, msg: '💡 試下其他組合' }, // catch-all
 ];
+
+// v5.17: material metadata for charts (emoji + score per material id)
+const MAT_INFO = {
+  // shell: 紙 / 膠 / 泡棉杯 (Stage 2)
+  paper:   { kind: 'shell', emoji: '📄', label: '紙杯',   score: 2 },
+  plastic: { kind: 'shell', emoji: '🥤', label: '膠杯',   score: 4 },
+  foam:    { kind: 'shell', emoji: '🧽', label: '泡棉杯', score: 3 },
+  // seal: 無 / 棉花 / 毛巾 / 紙巾 / 記憶墊
+  none:    { kind: 'seal',  emoji: '🚫', label: '無墊',   score: 0 },
+  cotton:  { kind: 'seal',  emoji: '🧶', label: '棉花',   score: 2 },
+  towel:   { kind: 'seal',  emoji: '🟦', label: '毛巾',   score: 3 },
+  tissue:  { kind: 'seal',  emoji: '🧻', label: '紙巾',   score: 1 },
+  foam_seal:{kind: 'seal',  emoji: '🟧', label: '記憶墊', score: 4 }, // avoid id collision with foam shell
+};
+// Override: foam shell uses 'foam', foam seal needs different id; resolve at render time
+// by looking up original mat-card data-id directly (foam appears in both grids as 'foam' but
+// shell vs seal context distinguishes via SHELL_LABEL/SEAL_LABEL — we never need MAT_INFO['foam_seal'] in practice)
+// Mark foam_seal unused; kept above only for documentation completeness.
+// (Live lookup uses buildMatInfoByKind() so no key collision.)
+function buildMatInfoByKind(kind) {
+  // kind: 'shell' | 'seal'
+  const ids = kind === 'shell'
+    ? ['paper', 'plastic', 'foam']
+    : ['none', 'cotton', 'towel', 'tissue', 'foam'];
+  return ids.map(id => {
+    if (kind === 'shell') {
+      return { id, emoji: MAT_INFO[id].emoji, label: MAT_INFO[id].label, score: MAT_INFO[id].score };
+    }
+    // seal — 'foam' here means memory foam
+    const key = id === 'foam' ? null : id;
+    if (key) return { id, emoji: MAT_INFO[key].emoji, label: MAT_INFO[key].label, score: MAT_INFO[key].score };
+    // memory foam
+    return { id: 'foam', emoji: '🟧', label: '記憶墊', score: 4 };
+  });
+}
+
+// v5.17: Stage 4 score bar — fills 0→100% proportional to n/3
+function renderScoreBar(n) {
+  const fill = document.getElementById('scoreBarFill');
+  const marks = document.querySelectorAll('.score-bar-marks span');
+  if (!fill) return;
+  const pct = Math.round((n / 3) * 100);
+  // animate from 0 → pct
+  requestAnimationFrame(() => { fill.style.width = pct + '%'; });
+  marks.forEach(m => m.classList.toggle('cur', +m.dataset.score === n));
+}
+
+// v5.17: Stage 4 material breakdown — two side-by-side mini bar charts
+function renderMatCharts(shellId, sealId) {
+  const el = document.getElementById('matChartGrid');
+  if (!el) return;
+  const shells = buildMatInfoByKind('shell');
+  const seals  = buildMatInfoByKind('seal');
+  const maxScore = 4;
+  function block(title, items, currentId) {
+    const rows = items.map(it => {
+      const w = (it.score / maxScore) * 100;
+      const cur = it.id === currentId;
+      return `<div class="mat-chart-row ${cur ? 'cur' : 'dim'}">
+        <div class="mat-chart-emoji">${it.emoji}</div>
+        <div class="mat-chart-bar-track"><div class="mat-chart-bar-fill" style="width:${w}%"></div></div>
+        <div class="mat-chart-val">${it.score}</div>
+      </div>`;
+    }).join('');
+    return `<div class="mat-chart">
+      <div class="mat-chart-title">${title}</div>
+      ${rows}
+    </div>`;
+  }
+  el.innerHTML = block('杯嘅質量', shells, shellId) + block('軟墊厚度', seals, sealId);
+}
 
 // ============== BADGE SYSTEM (v5.8) ==============
 // 9 medals: Stage 1, 2, 4 × {bronze, silver, gold}. Stage 3 has no badges (no challenge).
@@ -2594,6 +2880,8 @@ function renderMiniProgress(curStage) {
   }
   // v5.14: update mini-progress bar
   renderMiniProgress(n);
+  // v5.17: bump per-stage visit counter (teacher dashboard analytics)
+  bumpStageVisit(String(n));
   // Auto-guide TTS: read stage title + hint 700ms after entering
   const stageEl = document.getElementById('stage-' + n);
   const titleEl = stageEl.querySelector('.stage-title .speakable');
@@ -2815,6 +3103,161 @@ document.querySelectorAll('.mat-card').forEach(card => {
     }
   });
 });
+// v5.17: inject drag-handle hint badge into every mat-card (non-intrusive, signals draggable)
+document.querySelectorAll('.mat-card').forEach(card => {
+  if (card.querySelector('.drag-handle')) return;
+  const h = document.createElement('div');
+  h.className = 'drag-handle';
+  h.setAttribute('aria-hidden', 'true');
+  h.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="3" cy="2" r="1"/><circle cx="7" cy="2" r="1"/><circle cx="3" cy="5" r="1"/><circle cx="7" cy="5" r="1"/><circle cx="3" cy="8" r="1"/><circle cx="7" cy="8" r="1"/></svg>';
+  card.appendChild(h);
+  // aria hint for screen readers (drag is bonus; keyboard arrow nav is primary)
+  card.setAttribute('aria-describedby', 'matCardDragHint');
+});
+// shared SR hint node
+(function ensureDragHint() {
+  if (document.getElementById('matCardDragHint')) return;
+  const el = document.createElement('span');
+  el.id = 'matCardDragHint';
+  el.style.cssText = 'position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;';
+  el.textContent = '可以用滑鼠拖曳嚟重新排列次序，撳空白鍵或者 Enter 揀。';
+  document.body.appendChild(el);
+})();
+
+// v5.17: drag-to-reorder mat-card within its grid (shell or seal)
+// click is preserved by requiring 6px movement before drag activates
+const DRAG_THRESHOLD = 6; // px
+function initMatCardDrag(card) {
+  let pointerId = null;
+  let startX = 0, startY = 0;
+  let ghost = null;
+  let isDragging = false;
+  let activeGrid = null;
+  // helpers
+  function clearDragOver() {
+    document.querySelectorAll('.drag-over-left, .drag-over-right').forEach(el => {
+      el.classList.remove('drag-over-left', 'drag-over-right');
+    });
+  }
+  function findDropTarget(clientX, clientY) {
+    // hide ghost so elementFromPoint sees the underlying card
+    if (ghost) ghost.style.display = 'none';
+    const el = document.elementFromPoint(clientX, clientY);
+    if (ghost) ghost.style.display = '';
+    if (!el) return null;
+    const card = el.closest('.mat-card');
+    if (!card || card === activeCard || card.parentElement !== activeGrid) return null;
+    const rect = card.getBoundingClientRect();
+    const isLeft = (clientX - rect.left) < rect.width / 2;
+    return { card, isLeft };
+  }
+  function moveCard(src, tgt, beforeLeft) {
+    if (src === tgt) return;
+    // insert src before tgt (if dropping on left half) or after tgt (if right half)
+    if (beforeLeft) {
+      activeGrid.insertBefore(src, tgt);
+    } else {
+      activeGrid.insertBefore(src, tgt.nextSibling);
+    }
+    announce('已重新排列');
+  }
+  function endDrag(commitMove) {
+    isDragging = false;
+    card.classList.remove('dragging');
+    card.style.cursor = '';
+    card.removeAttribute('aria-grabbed');
+    clearDragOver();
+    if (ghost) {
+      ghost.remove();
+      ghost = null;
+    }
+    if (pointerId !== null) {
+      try { card.releasePointerCapture(pointerId); } catch (e) {}
+    }
+    pointerId = null;
+    if (commitMove && pendingDrop) {
+      moveCard(card, pendingDrop.card, pendingDrop.isLeft);
+    }
+    pendingDrop = null;
+  }
+  let pendingDrop = null;
+  let activeCard = card;
+
+  card.addEventListener('pointerdown', e => {
+    // ignore right-click, ignore if not primary button
+    if (e.button !== 0) return;
+    // ignore if event originates from an inner element that handles its own (e.g. img mat-photo native drag)
+    if (e.target.tagName === 'IMG' && !e.target.matches('.mat-photo')) return;
+    pointerId = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+    activeGrid = card.parentElement;
+    activeCard = card;
+    pendingDrop = null;
+    try { card.setPointerCapture(pointerId); } catch (err) {}
+  });
+
+  card.addEventListener('pointermove', e => {
+    if (pointerId !== e.pointerId) return;
+    if (isDragging) {
+      // update ghost position
+      if (ghost) {
+        ghost.style.left = e.clientX + 'px';
+        ghost.style.top  = e.clientY + 'px';
+      }
+      // update drop indicator
+      clearDragOver();
+      const target = findDropTarget(e.clientX, e.clientY);
+      if (target) {
+        target.card.classList.add(target.isLeft ? 'drag-over-left' : 'drag-over-right');
+        pendingDrop = target;
+      } else {
+        pendingDrop = null;
+      }
+    } else {
+      // check threshold
+      const dx = Math.abs(e.clientX - startX);
+      const dy = Math.abs(e.clientY - startY);
+      if (dx + dy > DRAG_THRESHOLD) {
+        // start drag
+        isDragging = true;
+        card.classList.add('dragging');
+        card.setAttribute('aria-grabbed', 'true');
+        // build ghost
+        const rect = card.getBoundingClientRect();
+        ghost = card.cloneNode(true);
+        ghost.className = 'drag-ghost mat-card';
+        ghost.style.left = e.clientX + 'px';
+        ghost.style.top  = e.clientY + 'px';
+        ghost.style.width = rect.width + 'px';
+        ghost.removeAttribute('id');
+        document.body.appendChild(ghost);
+        // suppress click after drag finishes
+        card.style.cursor = 'grabbing';
+      }
+    }
+  });
+
+  card.addEventListener('pointerup', e => {
+    if (pointerId !== e.pointerId) return;
+    if (isDragging) endDrag(true);
+    else pointerId = null; // just a click, let the existing click handler fire
+  });
+
+  card.addEventListener('pointercancel', e => {
+    if (pointerId !== e.pointerId) return;
+    if (isDragging) endDrag(false);
+    else pointerId = null;
+  });
+
+  // Prevent browser's default image drag on mat-photo (which would steal pointer)
+  card.querySelectorAll('img.mat-photo').forEach(img => {
+    img.addEventListener('dragstart', e => e.preventDefault());
+  });
+}
+
+document.querySelectorAll('.mat-card').forEach(initMatCardDrag);
+
 // v5.9.1: stage 2 → 3 explicit CTA (was missing — only step nav could jump)
 document.getElementById('nextTo3').addEventListener('click', () => {
   // buildCup() already ran on pick; just advance
@@ -3049,6 +3492,9 @@ function showResult(score) {
   }
   msg.textContent = m;
   why.textContent = whyText;
+  // v5.17: visual score bar + material breakdown charts
+  renderScoreBar(n);
+  renderMatCharts(shellCard.dataset.id, sealCard.dataset.id);
   // Stage 4 badge metadata
   window._stage4Done = { score: n };
   markDone(4);
@@ -3121,6 +3567,35 @@ const SHELL_LABEL = { paper: '📄 紙杯', plastic: '🥤 膠杯', foam: '🧽 
 const SEAL_LABEL = { none: '🚫 無墊', cotton: '🧶 棉花', towel: '🟦 毛巾', tissue: '🧻 紙巾', foam: '🟧 記憶墊' };
 
 // v5.16: teacher dashboard module — aggregation + CSV export
+// v5.17: per-stage visit counter — incremented every time goStage() lands on a stage
+// schema: { '1': N, '2': N, '3': N, '4': N } — counts how many times each stage was visited
+const STAGE_KEY = 'earmuff-pdir-stage-visits-v1';
+let stageVisits = { '1': 0, '2': 0, '3': 0, '4': 0 };
+try { Object.assign(stageVisits, JSON.parse(localStorage.getItem(STAGE_KEY) || '{}')); }
+catch (e) { /* keep default */ }
+function saveStageVisits() { try { localStorage.setItem(STAGE_KEY, JSON.stringify(stageVisits)); } catch (e) {} }
+function bumpStageVisit(n) {
+  stageVisits[n] = (stageVisits[n] || 0) + 1;
+  saveStageVisits();
+}
+// migrate: if we have at least one log entry but no stage visits, seed reasonable baseline
+// (so old users with logs don't see "0%" forever)
+if (experimentLog.length > 0) {
+  let needsMigrate = false;
+  for (let i = 1; i <= 4; i++) {
+    if (!stageVisits[i] || stageVisits[i] === 0) { needsMigrate = true; break; }
+  }
+  if (needsMigrate) {
+    // estimate: students who saved ≥1 entry visited at least stage 1, 2, 3, 4 once
+    // + extra visits = max(experimentLog.length * 1.5, 1) for stages 1-3, = experimentLog.length for stage 4
+    stageVisits['1'] = Math.max(stageVisits['1'] || 0, Math.ceil(experimentLog.length * 1.2) + 1);
+    stageVisits['2'] = Math.max(stageVisits['2'] || 0, Math.ceil(experimentLog.length * 1.2) + 1);
+    stageVisits['3'] = Math.max(stageVisits['3'] || 0, Math.ceil(experimentLog.length * 1.2) + 1);
+    stageVisits['4'] = Math.max(stageVisits['4'] || 0, experimentLog.length + 1);
+    saveStageVisits();
+  }
+}
+
 function modeBy(items) {
   // items: array of strings. Returns { value, count, total } — most frequent
   if (!items.length) return { value: '—', count: 0, total: 0 };
@@ -3165,6 +3640,8 @@ function renderDashboard() {
     `<div class="dash-stat"><div class="ds-label">好靜率</div><div class="ds-value">${Math.round(quietCount / n * 100)}%</div><div class="ds-sub">${quietCount}/${n} · 完美組合 ${perfectCount}</div></div>`;
 
   countEl.textContent = `(${n})`;
+  // v5.17: per-stage breakdown rows
+  renderStageBreakdown();
   // entries are unshifted (newest first); display newest first
   list.innerHTML = experimentLog.map((e, i) => {
     const shellName = SHELL_LABEL[e.shell] || e.shell || '—';
@@ -3182,6 +3659,104 @@ function renderDashboard() {
       <div class="dr-score">${e.score || '—'}</div>
     </div>`;
   }).join('');
+}
+
+// v5.17: per-stage breakdown — 4 rows showing 達標率 + 平均/表現
+// Row 1 — 試吓: 遮耳測試完成率（進入 stage 2/進入 stage 1）
+// Row 2 — 揀料: 平均 combo score (saved entries avg)
+// Row 3 — 整好喇: 完成率（saved entries / stage 2 visits）
+// Row 4 — 試下: 3⭐ 達標率 (gold rate)
+function renderStageBreakdown() {
+  const el = document.getElementById('dashStageTable');
+  const hintEl = document.getElementById('dashStageHint');
+  if (!el) return;
+  const totalEntries = experimentLog.length;
+  const v = stageVisits;
+  // safe minimums — avoid div by zero on first render
+  const v1 = v['1'] || 0;
+  const v2 = v['2'] || 0;
+  const v3 = v['3'] || 0;
+  const v4 = v['4'] || 0;
+
+  // row 1 — 遮耳測試完成率
+  const r1Done = totalEntries; // saved entry implies student passed all 4 stages
+  const r1Pct = v1 ? Math.round((r1Done / v1) * 100) : 0;
+
+  // row 2 — 揀料: avg combo score
+  const r2Avg = totalEntries
+    ? (experimentLog.reduce((a, e) => a + e.score, 0) / totalEntries)
+    : 0;
+
+  // row 3 — 整好喇: 完成率
+  const r3Pct = v2 ? Math.round((totalEntries / v2) * 100) : 0;
+
+  // row 4 — 試下: gold rate (% of saved entries that scored 3)
+  const goldCount = experimentLog.filter(e => e.score === 3).length;
+  const r4Pct = totalEntries ? Math.round((goldCount / totalEntries) * 100) : 0;
+
+  // per-row color hints: green if ≥70%, yellow 40-69%, red <40%
+  function rowCls(pct) {
+    if (pct >= 70) return 'gold-high';
+    if (pct >= 40) return 'gold-mid';
+    return '';
+  }
+
+  const rows = [
+    {
+      n: 1, title: '試吓 — 遮耳測試', emoji: '✋',
+      meta: `${v1} 次進入 · ${r1Done} 次去到最後`,
+      pct: r1Pct, pctLabel: '完成率',
+      sideN: v1, sideLabel: '次進入',
+      cls: rowCls(r1Pct),
+      gold: false,
+    },
+    {
+      n: 2, title: '揀料 — 揀齊杯 + 墊', emoji: '🎯',
+      meta: `${v2} 次揀料 · 平均組合分 ${r2Avg.toFixed(1)}`,
+      pct: totalEntries ? Math.round((experimentLog.filter(e => e.score >= 2).length / totalEntries) * 100) : 0,
+      pctLabel: '≥2⭐ 率',
+      sideN: totalEntries, sideLabel: '次記低',
+      cls: rowCls(totalEntries ? Math.round((experimentLog.filter(e => e.score >= 2).length / totalEntries) * 100) : 0),
+      gold: false,
+    },
+    {
+      n: 3, title: '整好喇 — 整完個耳罩', emoji: '🥽',
+      meta: `${v3} 次進入 · ${totalEntries} 次成功記低`,
+      pct: r3Pct, pctLabel: '完成率',
+      sideN: v3, sideLabel: '次進入',
+      cls: rowCls(r3Pct),
+      gold: false,
+    },
+    {
+      n: 4, title: '試下 — 戴住試', emoji: '🎧',
+      meta: `${v4} 次試 · ${goldCount} 次拎滿分`,
+      pct: r4Pct, pctLabel: '達標率',
+      sideN: goldCount, sideLabel: '3⭐ 次數',
+      cls: rowCls(r4Pct),
+      gold: r4Pct >= 70,
+    },
+  ];
+
+  el.innerHTML = rows.map(r => `
+    <div class="dash-stage-row ${r.cls}">
+      <div class="dsr-num">${r.n}</div>
+      <div class="dsr-info">
+        <div class="dsr-title">${r.emoji} ${r.title}${r.gold ? '<span class="dsr-gold-badge">GOLD</span>' : ''}</div>
+        <div class="dsr-meta">${r.meta}</div>
+      </div>
+      <div class="dsr-pct">
+        <div class="dsr-pct-val">${r.pct}%</div>
+        <div class="dsr-pct-label">${r.pctLabel}</div>
+      </div>
+      <div class="dsr-meta-val">
+        <div class="dsr-meta-val-num">${r.sideN}</div>
+        <div class="dsr-meta-val-label">${r.sideLabel}</div>
+      </div>
+    </div>
+  `).join('');
+  // hint: show total visits + total entries
+  const totalVisits = v1 + v2 + v3 + v4;
+  if (hintEl) hintEl.textContent = `(瀏覽 ${totalVisits} 次 · 記低 ${totalEntries} 次)`;
 }
 
 function openDashboard() {
@@ -3237,6 +3812,189 @@ function exportDashboardCsv() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+// v5.17: PDF export — full dashboard summary via html2pdf.js
+// Renders off-screen #pdfSheet with structured report, then captures via html2pdf
+function buildPdfHtml() {
+  if (!experimentLog.length) return '<div class="pdf-empty">未有實驗紀錄</div>';
+  const n = experimentLog.length;
+  const sumScore = experimentLog.reduce((a, e) => a + (e.score || 0), 0);
+  const avg = (sumScore / n).toFixed(2);
+  const shellMode = modeBy(experimentLog.map(e => e.shell).filter(Boolean));
+  const sealMode  = modeBy(experimentLog.map(e => e.seal).filter(Boolean));
+  const goodCount = experimentLog.filter(e => e.comfort === 'good').length;
+  const quietCount = experimentLog.filter(e => e.feel === 'quiet').length;
+  const perfectCount = experimentLog.filter(e => e.shell === 'plastic' && e.seal === 'foam').length;
+  const goldCount = experimentLog.filter(e => e.score === 3).length;
+
+  // ranking
+  const byCombo = {};
+  experimentLog.forEach(e => {
+    const k = `${e.shell}+${e.seal}`;
+    byCombo[k] = byCombo[k] || { shell: e.shell, seal: e.seal, n: 0, sum: 0 };
+    byCombo[k].n++;
+    byCombo[k].sum += e.score;
+  });
+  const combos = Object.values(byCombo).map(c => ({ ...c, avg: c.sum / c.n }))
+    .sort((a, b) => b.avg - a.avg);
+
+  // per-stage breakdown
+  const v = stageVisits;
+  const v1 = v['1'] || 0, v2 = v['2'] || 0, v3 = v['3'] || 0, v4 = v['4'] || 0;
+  const r1Pct = v1 ? Math.round((n / v1) * 100) : 0;
+  const r2Avg = sumScore / n;
+  const geq2Count = experimentLog.filter(e => e.score >= 2).length;
+  const r2Pct = Math.round((geq2Count / n) * 100);
+  const r3Pct = v2 ? Math.round((n / v2) * 100) : 0;
+  const r4Pct = Math.round((goldCount / n) * 100);
+  function rowCls(p) { if (p >= 70) return 'gold'; return ''; }
+  const { cur } = getLevel(n);
+  const stamp = new Date().toLocaleString('zh-HK');
+
+  return `
+    <div class="pdf-title">📒 隔音耳罩實驗報告</div>
+    <div class="pdf-meta">
+      <span class="pm-badge">${cur.medal} ${cur.title}</span>
+      班別／學生：__________ &nbsp;·&nbsp;
+      報告日期：${stamp} &nbsp;·&nbsp;
+      v${APP_VERSION}
+    </div>
+
+    <div class="pdf-section">
+      <h2>📊 整體表現</h2>
+      <div class="pdf-stats-grid">
+        <div class="pdf-stat"><div class="psl">總實驗</div><div class="psv">${n}</div><div class="pss">次</div></div>
+        <div class="pdf-stat"><div class="psl">平均分數</div><div class="psv">${avg}</div><div class="pss">/ 3.0</div></div>
+        <div class="pdf-stat"><div class="psl">達標率</div><div class="psv">${r4Pct}%</div><div class="pss">3⭐ ${goldCount}/${n}</div></div>
+        <div class="pdf-stat"><div class="psl">最常用杯</div><div class="psv" style="font-size:1.1rem;">${SHELL_LABEL[shellMode.value] || shellMode.value}</div><div class="pss">${shellMode.count}/${shellMode.total} 次</div></div>
+        <div class="pdf-stat"><div class="psl">最常用墊</div><div class="psv" style="font-size:1.1rem;">${SEAL_LABEL[sealMode.value] || sealMode.value}</div><div class="pss">${sealMode.count}/${sealMode.total} 次</div></div>
+        <div class="pdf-stat"><div class="psl">完美組合</div><div class="psv">${perfectCount}</div><div class="pss">膠+記憶墊</div></div>
+        <div class="pdf-stat"><div class="psl">好舒服率</div><div class="psv">${Math.round(goodCount/n*100)}%</div><div class="pss">${goodCount}/${n}</div></div>
+        <div class="pdf-stat"><div class="psl">好靜率</div><div class="psv">${Math.round(quietCount/n*100)}%</div><div class="pss">${quietCount}/${n}</div></div>
+        <div class="pdf-stat"><div class="psl">當前等級</div><div class="psv" style="font-size:1.1rem;">${cur.title}</div><div class="pss">${cur.sub}</div></div>
+      </div>
+    </div>
+
+    <div class="pdf-section">
+      <h2>📈 每步表現</h2>
+      <div class="pdf-stage-row ${rowCls(r1Pct)}">
+        <div class="psn">1</div>
+        <div><div class="pst">✋ 試吓 — 遮耳測試</div><div class="psm">${v1} 次進入 · ${n} 次去到最後</div></div>
+        <div class="psp">${r1Pct}%</div>
+        <div class="psv2">${v1} 次</div>
+      </div>
+      <div class="pdf-stage-row ${rowCls(r2Pct)}">
+        <div class="psn">2</div>
+        <div><div class="pst">🎯 揀料 — 揀齊杯+墊</div><div class="psm">${v2} 次揀料 · 平均 ${r2Avg.toFixed(2)} ⭐</div></div>
+        <div class="psp">${r2Pct}%</div>
+        <div class="psv2">${geq2Count}/${n}</div>
+      </div>
+      <div class="pdf-stage-row ${rowCls(r3Pct)}">
+        <div class="psn">3</div>
+        <div><div class="pst">🥽 整好喇 — 整完個耳罩</div><div class="psm">${v3} 次進入 · ${n} 次成功記低</div></div>
+        <div class="psp">${r3Pct}%</div>
+        <div class="psv2">${v3} 次</div>
+      </div>
+      <div class="pdf-stage-row ${rowCls(r4Pct)}">
+        <div class="psn">4</div>
+        <div><div class="pst">🎧 試下 — 戴住試</div><div class="psm">${v4} 次試 · ${goldCount} 次拎滿分</div></div>
+        <div class="psp">${r4Pct}%</div>
+        <div class="psv2">${goldCount} 3⭐</div>
+      </div>
+    </div>
+
+    <div class="pdf-section">
+      <h2>🏆 邊個組合最好？</h2>
+      <table class="pdf-table">
+        <thead><tr><th>排名</th><th>杯</th><th>軟墊</th><th class="num">試過</th><th class="num">平均分</th></tr></thead>
+        <tbody>
+          ${combos.slice(0, 5).map((c, i) => `<tr>
+            <td>${['🥇','🥈','🥉'][i] || (i+1)}</td>
+            <td>${SHELL_LABEL[c.shell] || c.shell}</td>
+            <td>${SEAL_LABEL[c.seal] || c.seal}</td>
+            <td class="num">${c.n}</td>
+            <td class="num">${c.avg.toFixed(2)} ⭐</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    ${combos.length > 0 ? `
+    <div class="pdf-conclusion">
+      <h3>🔬 黃金組合</h3>
+      <div class="pc-evi">
+        <strong>${SHELL_LABEL[combos[0].shell]} + ${SEAL_LABEL[combos[0].seal]}</strong>
+        係表現最好嘅組合，平均 ${combos[0].avg.toFixed(2)} ⭐（試咗 ${combos[0].n} 次）。
+        ${combos[0].avg >= 2.5
+          ? '重嘅杯加厚嘅軟墊密封得好，擋聲效果最穩陣。'
+          : '可以再試多幾次確認呢個組合嘅表現。'}
+      </div>
+    </div>` : ''}
+
+    <div class="pdf-section">
+      <h2>📋 全部紀錄</h2>
+      <table class="pdf-table">
+        <thead><tr><th>#</th><th>時間</th><th>杯</th><th>軟墊</th><th>感覺</th><th>舒適</th><th class="num">分數</th></tr></thead>
+        <tbody>
+          ${experimentLog.slice().reverse().map((e, i) => {
+            const t = new Date(e.ts).toLocaleString('zh-HK', { hour: '2-digit', minute: '2-digit', month: 'numeric', day: 'numeric' });
+            return `<tr>
+              <td>${i+1}</td>
+              <td>${t}</td>
+              <td>${SHELL_LABEL[e.shell] || e.shell}</td>
+              <td>${SEAL_LABEL[e.seal] || e.seal}</td>
+              <td>${FEEL_LABEL[e.feel] || e.feel}</td>
+              <td>${COMFORT_LABEL[e.comfort] || e.comfort}</td>
+              <td class="num">${e.score} ⭐</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pdf-footer">
+      隔音耳罩探究活動 · PDIR Project · 報告產生 ${stamp} · App v${APP_VERSION}
+    </div>
+  `;
+}
+
+function exportDashboardPdf() {
+  if (!experimentLog.length) {
+    alert('未有紀錄可以匯出。');
+    return;
+  }
+  if (typeof html2pdf === 'undefined') {
+    // Fallback: tell user to retry (script may still be loading from CDN)
+    alert('PDF 工具仲未準備好，請稍等 1 秒再撳一次。如果持續出現呢個訊息，代表瀏覽器封咗 CDN，請用「匯出 CSV」或者「印出嚟」。');
+    return;
+  }
+  const sheet = document.getElementById('pdfSheet');
+  if (!sheet) return;
+  sheet.innerHTML = buildPdfHtml();
+  const stamp = new Date().toISOString().slice(0, 10);
+  const filename = `earmuff-pdir-summary-${stamp}.pdf`;
+  const btn = document.getElementById('dashPdf');
+  const original = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 生成緊…'; }
+  // html2pdf options
+  const opts = {
+    margin:       [10, 10, 10, 10],
+    filename:     filename,
+    image:        { type: 'jpeg', quality: 0.95 },
+    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak:    { mode: ['css', 'legacy'] },
+  };
+  html2pdf().set(opts).from(sheet).save().then(() => {
+    if (btn) { btn.disabled = false; btn.textContent = original || '📄 PDF 報告'; }
+    // clear off-screen sheet after capture (avoid DOM bloat on repeated exports)
+    setTimeout(() => { sheet.innerHTML = ''; }, 500);
+  }).catch(err => {
+    console.error('PDF export failed:', err);
+    alert('PDF 生成失敗咗。請用「匯出 CSV」或者「印出嚟」。');
+    if (btn) { btn.disabled = false; btn.textContent = original || '📄 PDF 報告'; }
+  });
+}
+
 // Wire dashboard events (v5.16)
 document.getElementById('dashboardFab').addEventListener('click', openDashboard);
 document.getElementById('dashboardClose').addEventListener('click', closeDashboard);
@@ -3251,11 +4009,28 @@ document.addEventListener('keydown', (e) => {
   }
 });
 document.getElementById('dashCsv').addEventListener('click', exportDashboardCsv);
+document.getElementById('dashPdf').addEventListener('click', exportDashboardPdf);
+// v5.17: graceful degrade — if html2pdf failed to load from CDN, disable PDF button with hint
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (typeof html2pdf === 'undefined') {
+      const btn = document.getElementById('dashPdf');
+      if (btn) {
+        btn.disabled = true;
+        btn.title = 'PDF 工具未載入（CDN 連唔到），請用匯出 CSV 或列印。';
+        btn.textContent = '📄 PDF 報告（離線）';
+      }
+    }
+  }, 2000);
+});
 document.getElementById('dashClear').addEventListener('click', () => {
   if (!experimentLog.length) return;
   if (!confirm(`拎走晒 ${experimentLog.length} 條紀錄？呢個 action 唔可以 undo。`)) return;
   experimentLog = [];
   saveLog();
+  // v5.17: also reset per-stage visit counter
+  stageVisits = { '1': 0, '2': 0, '3': 0, '4': 0 };
+  saveStageVisits();
   updateLogCount();
   renderDashboard();
 });
