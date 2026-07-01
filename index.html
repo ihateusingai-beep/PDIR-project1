@@ -354,6 +354,35 @@
   .mat-chart-row.cur .mat-chart-val { color: var(--good); font-weight: 900; }
   .mat-chart-row.dim { opacity: 0.5; }
   @media (max-width: 480px) { .mat-chart-grid { grid-template-columns: 1fr; } }
+  /* v5.18: inline per-stage chart panel (Stage 1/2/3) — shown after primary action completes */
+  .stage-chart-panel {
+    margin-top: 14px;
+    background: linear-gradient(135deg, #e1edf9 0%, #f0f7fc 100%);
+    border: 2px solid var(--soft-blue);
+    border-radius: 16px;
+    padding: 12px 14px;
+    display: none;
+    animation: pop 0.4s ease;
+  }
+  .stage-chart-panel.show { display: block; }
+  .stage-chart-head {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.85rem; font-weight: 900; color: var(--soft-blue);
+    margin-bottom: 8px;
+  }
+  .stage-chart-head .sch-icon { font-size: 1.1rem; }
+  .stage-chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+  .stage-chart-grid.single { grid-template-columns: 1fr; }
+  .stage-chart-summary {
+    margin-top: 8px; padding: 8px 10px;
+    background: white; border-radius: 10px;
+    font-size: 0.82rem; color: var(--ink-2); line-height: 1.5;
+  }
+  .stage-chart-summary strong { color: var(--ink); font-weight: 900; }
+  /* tighten mat-chart inside stage-chart-panel (smaller padding) */
+  .stage-chart-panel .mat-chart { background: white; border-color: var(--soft-blue-bg); padding: 8px 10px; }
+  .stage-chart-panel .mat-chart-title { font-size: 0.7rem; color: var(--soft-blue); opacity: 1; margin-bottom: 6px; }
+  @media (max-width: 480px) { .stage-chart-grid { grid-template-columns: 1fr; } }
   /* v5.17: drag-to-reorder for mat-card */
   .mat-card { cursor: grab; -webkit-user-select: none; user-select: none; touch-action: pan-y; }
   .mat-card.dragging { opacity: 0.35; cursor: grabbing; }
@@ -552,6 +581,59 @@
     border-radius: 6px;
     margin-left: 4px;
     letter-spacing: 0.04em;
+  }
+  /* v5.18: per-stage aggregated chart in dashboard */
+  .dash-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .dash-metric-card {
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    padding: 12px;
+  }
+  .dash-metric-card .dm-head {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.85rem; font-weight: 900; color: var(--ink-2);
+    margin-bottom: 10px;
+  }
+  .dash-metric-card .dm-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin-bottom: 8px;
+  }
+  .dash-metric-card .dm-stat {
+    text-align: center; padding: 6px 4px;
+    background: white; border-radius: 10px;
+    border: 1.5px solid var(--line);
+  }
+  .dash-metric-card .dm-stat-v {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 900; font-size: 1.1rem;
+    color: var(--ink); line-height: 1.1;
+  }
+  .dash-metric-card .dm-stat-l {
+    font-size: 0.65rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-top: 3px;
+  }
+  .dash-metric-card .dm-mini-bar {
+    height: 6px; background: var(--line);
+    border-radius: 3px; overflow: hidden;
+    margin-top: 6px;
+  }
+  .dash-metric-card .dm-mini-fill {
+    height: 100%; background: var(--soft-blue);
+    border-radius: 3px; transition: width 0.6s ease;
+  }
+  .dash-metric-card .dm-empty {
+    font-size: 0.78rem; color: var(--muted);
+    font-style: italic; text-align: center; padding: 8px;
+  }
+  @media (max-width: 600px) {
+    .dash-metrics-grid { grid-template-columns: 1fr; }
   }
 
   /* compare button (under conclusion) */
@@ -1396,6 +1478,16 @@
         <button class="big-btn primary" id="btnCoverPlay">▶ 播聲音</button>
         <button class="big-btn choice" id="btnCover">✋ 遮耳仔</button>
       </div>
+
+      <!-- v5.18: stage 1 inline chart — shown after first play+cover cycle -->
+      <div class="stage-chart-panel" id="stage1ChartPanel" aria-live="polite">
+        <div class="stage-chart-head">
+          <span class="sch-icon">📊</span>
+          <span>你嘅探索過程</span>
+        </div>
+        <div class="stage-chart-grid" id="stage1ChartGrid"></div>
+        <div class="stage-chart-summary" id="stage1ChartSummary"></div>
+      </div>
     </div>
 
     <button class="next-btn" id="nextTo2" disabled>揀料去 ➜</button>
@@ -1541,6 +1633,16 @@
       未揀軟墊之前，軟墊嗰行會變暗。揀咗杯先可以揀墊。兩個都揀晒先可以「整」。軟墊厚薄唔同，擋聲差好遠。
     </div>
 
+    <!-- v5.18: stage 2 inline chart — shown after 1+1 picked -->
+    <div class="stage-chart-panel" id="stage2ChartPanel" aria-live="polite">
+      <div class="stage-chart-head">
+        <span class="sch-icon">📊</span>
+        <span>你嘅揀料過程</span>
+      </div>
+      <div class="stage-chart-grid" id="stage2ChartGrid"></div>
+      <div class="stage-chart-summary" id="stage2ChartSummary"></div>
+    </div>
+
     <button class="next-btn" id="nextTo3" disabled>整好喇 ➜</button>
   </section>
 
@@ -1590,6 +1692,16 @@
       </svg>
       <div class="cup-label" id="cupLabel">—</div>
       <div class="cup-sub" id="cupSub">—</div>
+    </div>
+
+    <!-- v5.18: stage 3 inline chart — shown after build complete -->
+    <div class="stage-chart-panel" id="stage3ChartPanel" aria-live="polite">
+      <div class="stage-chart-head">
+        <span class="sch-icon">📊</span>
+        <span>你嘅觀察時間</span>
+      </div>
+      <div class="stage-chart-grid" id="stage3ChartGrid"></div>
+      <div class="stage-chart-summary" id="stage3ChartSummary"></div>
     </div>
 
     <button class="next-btn" id="nextTo4">去試下 ➜</button>
@@ -1835,6 +1947,8 @@
       <div class="dash-stats" id="dashStats"></div>
       <div class="dash-section-title">📈 每步表現 <span class="dash-count" id="dashStageHint"></span></div>
       <div class="dash-stage-table" id="dashStageTable"></div>
+      <div class="dash-section-title">🎨 每步 chart 總覽 <span class="dash-count" id="dashMetricsHint"></span></div>
+      <div class="dash-metrics-grid" id="dashMetricsGrid"></div>
       <div class="dash-section-title">📋 全部紀錄 <span class="dash-count" id="dashCount"></span></div>
       <div class="dash-list" id="dashList"></div>
     </div>
@@ -1850,8 +1964,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.17) ==============
-const APP_VERSION = '5.17';
+// ============== APP VERSION (v5.18) ==============
+const APP_VERSION = '5.18';
 
 // v5.13: declarative hint rule table for Stage 4 result explanation.
 // Each rule: { test(ctx) -> bool, msg }. First match wins. ctx fields:
@@ -1916,28 +2030,197 @@ function renderScoreBar(n) {
 }
 
 // v5.17: Stage 4 material breakdown — two side-by-side mini bar charts
+// v5.18: generalized to renderBarCharts(containerId, blocks) where blocks is an array of
+//   { title, items: [{emoji, label, value, current?}], max }
+//   — used by Stage 4 (mat breakdown) AND Stage 1/2/3 (participation metrics).
 function renderMatCharts(shellId, sealId) {
-  const el = document.getElementById('matChartGrid');
-  if (!el) return;
   const shells = buildMatInfoByKind('shell');
   const seals  = buildMatInfoByKind('seal');
   const maxScore = 4;
-  function block(title, items, currentId) {
-    const rows = items.map(it => {
-      const w = (it.score / maxScore) * 100;
-      const cur = it.id === currentId;
-      return `<div class="mat-chart-row ${cur ? 'cur' : 'dim'}">
-        <div class="mat-chart-emoji">${it.emoji}</div>
+  const blocks = [
+    { title: '杯嘅質量', items: shells.map(s => ({ id: s.id, emoji: s.emoji, label: s.label, value: s.score, current: s.id === shellId })), max: maxScore },
+    { title: '軟墊厚度', items: seals.map(s => ({ id: s.id, emoji: s.emoji, label: s.label, value: s.score, current: s.id === sealId })), max: maxScore },
+  ];
+  renderBarCharts('matChartGrid', blocks);
+}
+
+// v5.18: generic mini bar-chart renderer
+// containerId — DOM id to populate
+// blocks — [{ title, items: [{emoji, label, value, current}], max }]
+//   - value is the numeric; max is the denominator (value/max → bar width %)
+//   - current: boolean — highlights with green ring + bolder value
+//   - if no current, no row gets the "cur" class (all dim)
+function renderBarCharts(containerId, blocks) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const html = blocks.map(b => {
+    const rows = b.items.map(it => {
+      const v = typeof it.value === 'number' ? it.value : 0;
+      const w = b.max > 0 ? Math.max(0, Math.min(100, (v / b.max) * 100)) : 0;
+      const cur = !!it.current;
+      const cls = cur ? 'cur' : '';
+      // value label: number + optional suffix (e.g. "3 次")
+      const valText = it.display != null ? it.display : v;
+      return `<div class="mat-chart-row ${cls}">
+        <div class="mat-chart-emoji">${it.emoji || ''}</div>
         <div class="mat-chart-bar-track"><div class="mat-chart-bar-fill" style="width:${w}%"></div></div>
-        <div class="mat-chart-val">${it.score}</div>
+        <div class="mat-chart-val">${valText}</div>
       </div>`;
     }).join('');
     return `<div class="mat-chart">
-      <div class="mat-chart-title">${title}</div>
+      <div class="mat-chart-title">${b.title}</div>
       ${rows}
     </div>`;
+  }).join('');
+  el.innerHTML = html;
+}
+
+// v5.18: per-stage metrics container — populated as student progresses, included in experimentLog entry
+// Shape: { s1: {play, cover, elapsed, audioMode}, s2: {picks, reorders, elapsed, finalShell, finalSeal}, s3: {dwell, cupScore, perfect} }
+const STAGE_METRICS = { s1: null, s2: null, s3: null };
+// Mutable counters (also tracked here for dashboard read-back)
+let stage2ReorderCount = 0;
+let stage3StartTime = null;
+let stage3SparkleCount = 0;
+let stage3FirstTry = true; // for "no reorder" badge logic if we add one later
+
+// v5.18: Stage 1 chart — shown after play+cover both happened
+function renderStage1Chart() {
+  if (!stage1Played || !stage1Covered) return; // gate
+  const elapsed = stage1StartTime ? (Date.now() - stage1StartTime) / 1000 : 0;
+  const blocks = [
+    {
+      title: '播放次數',
+      items: [
+        { emoji: '▶️', label: '撳咗幾多次播', value: stage1PlayCount, display: stage1PlayCount + ' 次', current: true },
+        { emoji: '🔁', label: '基本值', value: 1, display: '1' },
+      ],
+      max: Math.max(2, stage1PlayCount),
+    },
+    {
+      title: '遮耳次數',
+      items: [
+        { emoji: '✋', label: '撳咗幾多次遮', value: stage1CoverCount, display: stage1CoverCount + ' 次', current: true },
+        { emoji: '🔁', label: '基本值', value: 1, display: '1' },
+      ],
+      max: Math.max(2, stage1CoverCount),
+    },
+  ];
+  renderBarCharts('stage1ChartGrid', blocks);
+  const summary = document.getElementById('stage1ChartSummary');
+  if (summary) {
+    let tone, msg;
+    if (stage1PlayCount === 1 && stage1CoverCount === 1 && elapsed <= 8) {
+      tone = '⚡'; msg = `<strong>閃電反應！</strong>你只撳咗 1 次 play + 1 次 cover，${elapsed.toFixed(1)} 秒就完成。`;
+    } else if (stage1PlayCount <= 2 && stage1CoverCount <= 2) {
+      tone = '👍'; msg = `完成喇！共撳咗 <strong>${stage1PlayCount}</strong> 次 play、<strong>${stage1CoverCount}</strong> 次 cover，${elapsed.toFixed(1)} 秒。`;
+    } else if (elapsed > 30) {
+      tone = '🐢'; msg = `慢慢試都 OK！共試咗 <strong>${stage1PlayCount}</strong> 次 play、<strong>${stage1CoverCount}</strong> 次 cover，${elapsed.toFixed(0)} 秒。`;
+    } else {
+      tone = '✅'; msg = `完成喇！共撳咗 <strong>${stage1PlayCount}</strong> 次 play、<strong>${stage1CoverCount}</strong> 次 cover，${elapsed.toFixed(1)} 秒。`;
+    }
+    summary.innerHTML = `${tone} ${msg}`;
   }
-  el.innerHTML = block('杯嘅質量', shells, shellId) + block('軟墊厚度', seals, sealId);
+  // snapshot metrics for log entry
+  STAGE_METRICS.s1 = {
+    play: stage1PlayCount,
+    cover: stage1CoverCount,
+    elapsed: Math.round(elapsed * 10) / 10,
+    audioMode: audioMode || 'demo',
+  };
+  const panel = document.getElementById('stage1ChartPanel');
+  if (panel) panel.classList.add('show');
+}
+
+// v5.18: Stage 2 chart — shown after 1+1 picked (both shell+seal selected)
+function renderStage2Chart() {
+  if (!shellPicked || !sealPicked) return;
+  const elapsed = stage2StartTime ? (Date.now() - stage2StartTime) / 1000 : 0;
+  const totalPicks = stage2ReorderCount + 2; // 2 initial picks (shell + seal) + re-picks via reorder
+  // count how many "pick actions" actually happened via DOM class (more accurate than reorder-only)
+  // (reorderCount counts drag-reorder moves; user may also click to change without reorder)
+  const blocks = [
+    {
+      title: '組合分數',
+      items: [
+        { emoji: SHELL_LABEL[shellPicked]?.split(' ')[0] || '🥤', label: '杯', value: +document.querySelector('.mat-card[data-type="shell"].picked').dataset.score, display: +document.querySelector('.mat-card[data-type="shell"].picked').dataset.score + ' 分', current: true },
+        { emoji: SEAL_LABEL[sealPicked]?.split(' ')[0] || '🟧', label: '墊', value: +document.querySelector('.mat-card[data-type="seal"].picked').dataset.score, display: +document.querySelector('.mat-card[data-type="seal"].picked').dataset.score + ' 分', current: true },
+      ],
+      max: 4,
+    },
+    {
+      title: '你嘅揀嘢節奏',
+      items: [
+        { emoji: '🖱️', label: '拖曳重排', value: stage2ReorderCount, display: stage2ReorderCount + ' 次', current: stage2ReorderCount > 0 },
+        { emoji: '⏱️', label: '揀料用咗', value: Math.round(elapsed), display: Math.round(elapsed) + ' 秒', current: elapsed > 0 },
+      ],
+      max: Math.max(5, stage2ReorderCount, Math.round(elapsed)),
+    },
+  ];
+  renderBarCharts('stage2ChartGrid', blocks);
+  const summary = document.getElementById('stage2ChartSummary');
+  if (summary) {
+    const total = +document.querySelector('.mat-card[data-type="shell"].picked').dataset.score + +document.querySelector('.mat-card[data-type="seal"].picked').dataset.score;
+    const perfect = shellPicked === 'plastic' && sealPicked === 'foam';
+    let msg;
+    if (perfect) {
+      msg = `🏆 <strong>黃金組合！</strong>膠杯 + 記憶墊 = 8 分，係 rule engine 推薦嘅最強組合。${elapsed.toFixed(1)} 秒完成${stage2ReorderCount > 0 ? `，仲試咗 ${stage2ReorderCount} 次拖曳重排` : ''}。`;
+    } else if (total >= 7) {
+      msg = `✨ <strong>高分組合！</strong>${total} 分。${elapsed.toFixed(1)} 秒完成${stage2ReorderCount > 0 ? `（${stage2ReorderCount} 次重排）` : '，一步到位'}${!perfect ? '，但可以再試黃金組合' : ''}。`;
+    } else if (total >= 5) {
+      msg = `👍 <strong>唔錯！</strong>${total} 分。${elapsed.toFixed(1)} 秒${stage2ReorderCount > 0 ? `（${stage2ReorderCount} 次重排）` : ''}。`;
+    } else {
+      msg = `💡 <strong>可以更好！</strong>${total} 分。試下用重啲嘅杯同厚啲嘅軟墊。${elapsed.toFixed(1)} 秒。`;
+    }
+    summary.innerHTML = msg;
+  }
+  STAGE_METRICS.s2 = {
+    picks: totalPicks,
+    reorders: stage2ReorderCount,
+    elapsed: Math.round(elapsed * 10) / 10,
+    finalShell: shellPicked,
+    finalSeal: sealPicked,
+    totalScore: +document.querySelector('.mat-card[data-type="shell"].picked').dataset.score + +document.querySelector('.mat-card[data-type="seal"].picked').dataset.score,
+  };
+  const panel = document.getElementById('stage2ChartPanel');
+  if (panel) panel.classList.add('show');
+}
+
+// v5.18: Stage 3 chart — shown when stage 3 becomes active + cup built
+function renderStage3Chart() {
+  if (!stage3StartTime) stage3StartTime = Date.now(); // first enter
+  const elapsed = (Date.now() - stage3StartTime) / 1000;
+  // stage 3 has no score — show "dwell time" + "sparkle count" as participation metrics
+  const blocks = [
+    {
+      title: '觀察時間',
+      items: [
+        { emoji: '👀', label: '你停喺呢度', value: Math.round(elapsed), display: Math.round(elapsed) + ' 秒', current: true },
+        { emoji: '🆗', label: '參考值', value: 5, display: '5 秒' },
+      ],
+      max: Math.max(10, Math.round(elapsed)),
+    },
+    {
+      title: '耳罩狀態',
+      items: [
+        { emoji: '✨', label: '裝飾閃光', value: stage3SparkleCount, display: stage3SparkleCount + ' 粒', current: stage3SparkleCount > 0 },
+        { emoji: '🥽', label: '基本值', value: 1, display: '1' },
+      ],
+      max: Math.max(2, stage3SparkleCount),
+    },
+  ];
+  renderBarCharts('stage3ChartGrid', blocks);
+  const summary = document.getElementById('stage3ChartSummary');
+  if (summary) {
+    summary.innerHTML = `🥽 個耳罩整好喇！<strong>${SHELL_LABEL[shellPicked] || ''} + ${SEAL_LABEL[sealPicked] || ''}</strong>，${stage3SparkleCount} 粒閃光裝飾咗。你停咗 ${elapsed.toFixed(1)} 秒觀察。`;
+  }
+  STAGE_METRICS.s3 = {
+    dwell: Math.round(elapsed * 10) / 10,
+    sparkles: stage3SparkleCount,
+    cupScore: STAGE_METRICS.s2?.totalScore || 0,
+  };
+  const panel = document.getElementById('stage3ChartPanel');
+  if (panel) panel.classList.add('show');
 }
 
 // ============== BADGE SYSTEM (v5.8) ==============
@@ -2882,6 +3165,21 @@ function renderMiniProgress(curStage) {
   renderMiniProgress(n);
   // v5.17: bump per-stage visit counter (teacher dashboard analytics)
   bumpStageVisit(String(n));
+  // v5.18: stage 3 dwell timer — start/refresh when entering stage 3
+  if (n === '3') {
+    if (!stage3StartTime) stage3StartTime = Date.now();
+    renderStage3Chart();
+    // refresh dwell time live while student observes
+    if (window._stage3RefreshTimer) clearInterval(window._stage3RefreshTimer);
+    window._stage3RefreshTimer = setInterval(() => {
+      if (document.getElementById('stage-3').classList.contains('active')) {
+        renderStage3Chart();
+      } else {
+        clearInterval(window._stage3RefreshTimer);
+        window._stage3RefreshTimer = null;
+      }
+    }, 2000);
+  }
   // Auto-guide TTS: read stage title + hint 700ms after entering
   const stageEl = document.getElementById('stage-' + n);
   const titleEl = stageEl.querySelector('.stage-title .speakable');
@@ -2922,6 +3220,10 @@ const nextTo2 = document.getElementById('nextTo2');
 function refreshStage1Next() {
   // both must happen: played once AND covered once
   nextTo2.disabled = !(stage1Played && stage1Covered);
+  // v5.18: reveal stage 1 chart panel when both criteria met (idempotent — only fires once visually)
+  if (stage1Played && stage1Covered) {
+    renderStage1Chart();
+  }
 }
 
 btnCoverPlay.addEventListener('click', async (e) => {
@@ -3078,7 +3380,11 @@ document.querySelectorAll('.mat-card').forEach(card => {
     }
     // v5.9.1: enable stage 2 → 3 next button when 1+1 picked
     document.getElementById('nextTo3').disabled = !(shellPicked && sealPicked);
-    if (shellPicked && sealPicked) buildCup();
+    if (shellPicked && sealPicked) {
+      buildCup();
+      // v5.18: render stage 2 chart panel after 1+1 (or when re-picking)
+      renderStage2Chart();
+    }
   });
 
   // v5.12: keyboard navigation for mat-card (radio group pattern)
@@ -3159,6 +3465,9 @@ function initMatCardDrag(card) {
     } else {
       activeGrid.insertBefore(src, tgt.nextSibling);
     }
+    // v5.18: count this reorder action + refresh stage 2 chart (if shown)
+    stage2ReorderCount++;
+    if (shellPicked && sealPicked) renderStage2Chart();
     announce('已重新排列');
   }
   function endDrag(commitMove) {
@@ -3386,6 +3695,8 @@ function buildCup() {
       [70, 30, 0], [200, 40, 1], [240, 100, 2], [30, 90, 3],
       [180, 25, 0], [50, 130, 1], [220, 130, 2], [130, 15, 3]
     ];
+    // v5.18: count sparkles for stage 3 chart + metric
+    stage3SparkleCount = sparkles.length;
     sparklesEl.innerHTML = sparkles.map(([cx, cy, i], idx) =>
       `<g transform="translate(${cx} ${cy})" style="animation: sparkle 1.5s ease-in-out ${idx * 0.1}s infinite;">
         <path d="M0 -8 L2 -2 L8 0 L2 2 L0 8 L-2 2 L-8 0 L-2 -2 Z" fill="#f5c842" stroke="#c97b3f" stroke-width="1"/>
@@ -3511,6 +3822,7 @@ document.getElementById('btnRetry').addEventListener('click', () => {
   // stage 2 state
   shellPicked = null; sealPicked = null;
   stage2StartTime = null; // v5.9.3: reset timer so fast-badge isn't trivially earned on retry
+  stage2ReorderCount = 0; // v5.18: reset reorder counter
   window._lastBuildKey = null; // v5.9.3: clear idempotency guard so same combo re-renders
   document.querySelectorAll('.mat-card').forEach(c => c.classList.remove('picked'));
   document.getElementById('shellReq').textContent = '（揀一樣）';
@@ -3541,6 +3853,16 @@ document.getElementById('btnRetry').addEventListener('click', () => {
   stage1Covered = false;
   stage1PlayCount = 0;
   stage1CoverCount = 0;
+  // v5.18: reset stage 3 metrics + chart panels (hidden until next cycle)
+  stage3StartTime = null;
+  stage3SparkleCount = 0;
+  STAGE_METRICS.s1 = null;
+  STAGE_METRICS.s2 = null;
+  STAGE_METRICS.s3 = null;
+  ['stage1ChartPanel', 'stage2ChartPanel', 'stage3ChartPanel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+  });
   refreshStage1Next();
   coverScene.classList.remove('playing', 'covered');
   speaker.classList.remove('playing');
@@ -3642,6 +3964,8 @@ function renderDashboard() {
   countEl.textContent = `(${n})`;
   // v5.17: per-stage breakdown rows
   renderStageBreakdown();
+  // v5.18: aggregated per-stage metric cards
+  renderDashMetrics();
   // entries are unshifted (newest first); display newest first
   list.innerHTML = experimentLog.map((e, i) => {
     const shellName = SHELL_LABEL[e.shell] || e.shell || '—';
@@ -3757,6 +4081,82 @@ function renderStageBreakdown() {
   // hint: show total visits + total entries
   const totalVisits = v1 + v2 + v3 + v4;
   if (hintEl) hintEl.textContent = `(瀏覽 ${totalVisits} 次 · 記低 ${totalEntries} 次)`;
+}
+
+// v5.18: aggregated per-stage metrics dashboard — averages + extremes from experimentLog[].metrics
+// Skips entries without metrics (v5.17 or older entries); uses available data only.
+function renderDashMetrics() {
+  const el = document.getElementById('dashMetricsGrid');
+  const hintEl = document.getElementById('dashMetricsHint');
+  if (!el) return;
+  // filter entries that have metrics
+  const withM = experimentLog.filter(e => e.metrics && typeof e.metrics === 'object');
+  if (!withM.length) {
+    el.innerHTML = '<div class="dash-metric-card" style="grid-column: 1/-1; text-align:center;"><div class="dm-empty">尚未收集 stage 1-3 數據（舊 log 無 metrics 欄位，做新實驗後會出現）</div></div>';
+    if (hintEl) hintEl.textContent = '';
+    return;
+  }
+  // helpers
+  function avg(arr, key) {
+    const v = arr.map(e => e.metrics?.s1?.[key] ?? e.metrics?.s2?.[key] ?? e.metrics?.s3?.[key]).filter(x => typeof x === 'number');
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+  }
+  function max(arr, key, stage) {
+    const v = arr.map(e => e.metrics?.[stage]?.[key]).filter(x => typeof x === 'number');
+    return v.length ? Math.max(...v) : null;
+  }
+  // Stage 1 — play, cover, elapsed
+  const s1N = withM.filter(e => e.metrics.s1).length;
+  const s1AvgPlay   = s1N ? avg(withM.filter(e => e.metrics.s1), 'play').toFixed(1) : '—';
+  const s1AvgCover  = s1N ? avg(withM.filter(e => e.metrics.s1), 'cover').toFixed(1) : '—';
+  const s1AvgTime   = s1N ? avg(withM.filter(e => e.metrics.s1), 'elapsed').toFixed(1) : '—';
+  // Stage 2 — picks, reorders, elapsed
+  const s2N = withM.filter(e => e.metrics.s2).length;
+  const s2AvgReorder = s2N ? avg(withM.filter(e => e.metrics.s2), 'reorders').toFixed(1) : '—';
+  const s2AvgTime    = s2N ? avg(withM.filter(e => e.metrics.s2), 'elapsed').toFixed(1) : '—';
+  const s2AvgScore   = s2N ? avg(withM.filter(e => e.metrics.s2), 'totalScore').toFixed(1) : '—';
+  // Stage 3 — dwell, sparkles
+  const s3N = withM.filter(e => e.metrics.s3).length;
+  const s3AvgDwell   = s3N ? avg(withM.filter(e => e.metrics.s3), 'dwell').toFixed(1) : '—';
+  const s3AvgSparkle = s3N ? avg(withM.filter(e => e.metrics.s3), 'sparkles').toFixed(1) : '—';
+  // Stage 4 — derived from entries (always present)
+  const s4AvgScore = (experimentLog.reduce((a, e) => a + (e.score || 0), 0) / experimentLog.length).toFixed(1);
+  const s4GoldCount = experimentLog.filter(e => e.score === 3).length;
+  const s4GoldRate  = experimentLog.length ? Math.round((s4GoldCount / experimentLog.length) * 100) : 0;
+  // render
+  function card(headEmoji, headLabel, stats) {
+    return `<div class="dash-metric-card">
+      <div class="dm-head">${headEmoji} ${headLabel}</div>
+      <div class="dm-stats">${stats.map(s => `
+        <div class="dm-stat">
+          <div class="dm-stat-v">${s.v}</div>
+          <div class="dm-stat-l">${s.l}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+  el.innerHTML =
+    card('✋', `第 1 步 (${s1N} 個)`, [
+      { v: s1AvgPlay, l: 'avg play' },
+      { v: s1AvgCover, l: 'avg cover' },
+      { v: s1AvgTime + 's', l: 'avg 用時' },
+    ]) +
+    card('🎯', `第 2 步 (${s2N} 個)`, [
+      { v: s2AvgScore, l: 'avg 分數' },
+      { v: s2AvgReorder, l: 'avg 重排' },
+      { v: s2AvgTime + 's', l: 'avg 用時' },
+    ]) +
+    card('🥽', `第 3 步 (${s3N} 個)`, [
+      { v: s3AvgDwell + 's', l: 'avg 觀察' },
+      { v: s3AvgSparkle, l: 'avg 閃光' },
+      { v: '—', l: '無評分' },
+    ]) +
+    card('🎧', `第 4 步 (${experimentLog.length} 個)`, [
+      { v: s4AvgScore + '⭐', l: 'avg 分數' },
+      { v: s4GoldRate + '%', l: '達標率' },
+      { v: s4GoldCount, l: '3⭐ 次數' },
+    ]);
+  if (hintEl) hintEl.textContent = `(基於 ${withM.length} 條有 metrics 嘅 log)`;
 }
 
 function openDashboard() {
@@ -3901,6 +4301,32 @@ function buildPdfHtml() {
         <div class="psv2">${goldCount} 3⭐</div>
       </div>
     </div>
+
+    ${(() => {
+      // v5.18: per-stage aggregated metrics (if any entries have metrics)
+      const withM = experimentLog.filter(e => e.metrics && typeof e.metrics === 'object');
+      if (!withM.length) return '';
+      function avg(stage, key) {
+        const v = withM.map(e => e.metrics?.[stage]?.[key]).filter(x => typeof x === 'number');
+        return v.length ? (v.reduce((a, b) => a + b, 0) / v.length).toFixed(1) : '—';
+      }
+      const s1n = withM.filter(e => e.metrics.s1).length;
+      const s2n = withM.filter(e => e.metrics.s2).length;
+      const s3n = withM.filter(e => e.metrics.s3).length;
+      return `
+        <div class="pdf-section">
+          <h2>🎨 每步參與指標 (avg)</h2>
+          <table class="pdf-table">
+            <thead><tr><th>步</th><th>名稱</th><th class="num">參與數</th><th class="num">主要指標 (avg)</th><th class="num">次要指標 (avg)</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>✋ 遮耳測試</td><td class="num">${s1n}</td><td class="num">${avg('s1','elapsed')}s 用時</td><td class="num">${avg('s1','play')} play · ${avg('s1','cover')} cover</td></tr>
+              <tr><td>2</td><td>🎯 揀料</td><td class="num">${s2n}</td><td class="num">${avg('s2','totalScore')} 組合分</td><td class="num">${avg('s2','reorders')} 重排 · ${avg('s2','elapsed')}s</td></tr>
+              <tr><td>3</td><td>🥽 整耳罩</td><td class="num">${s3n}</td><td class="num">${avg('s3','dwell')}s 觀察</td><td class="num">${avg('s3','sparkles')} 閃光</td></tr>
+              <tr><td>4</td><td>🎧 試戴</td><td class="num">${experimentLog.length}</td><td class="num">${avgScore} ⭐ avg</td><td class="num">${r4Pct}% 達標</td></tr>
+            </tbody>
+          </table>
+        </div>`;
+    })()}
 
     <div class="pdf-section">
       <h2>🏆 邊個組合最好？</h2>
@@ -4065,6 +4491,14 @@ function resetLogChips() {
 document.getElementById('logSave').addEventListener('click', () => {
   // use the auto score from the result card (1/2/3 stars)
   const autoScore = getScore();
+  // v5.18: capture fresh stage 3 snapshot (dwell timer may have advanced)
+  if (stage3StartTime && document.getElementById('stage-3').classList.contains('active')) {
+    STAGE_METRICS.s3 = {
+      dwell: Math.round(((Date.now() - stage3StartTime) / 1000) * 10) / 10,
+      sparkles: stage3SparkleCount,
+      cupScore: STAGE_METRICS.s2?.totalScore || 0,
+    };
+  }
   const entry = {
     id: Date.now(),
     ts: new Date().toISOString(),
@@ -4073,6 +4507,8 @@ document.getElementById('logSave').addEventListener('click', () => {
     feel: logPick.feel,
     comfort: logPick.comfort,
     score: autoScore,
+    // v5.18: per-stage metrics snapshot (Stage 1/2/3 participation + interaction signals)
+    metrics: JSON.parse(JSON.stringify(STAGE_METRICS)),
   };
   experimentLog.unshift(entry);
   saveLog();
