@@ -434,6 +434,59 @@
   .pick-path-empty {
     font-size: 0.78rem; color: var(--muted); font-style: italic;
   }
+  /* v5.20: pick-path replay animation */
+  @keyframes pillDropIn {
+    0%   { opacity: 0; transform: translateY(-12px) scale(0.85); }
+    60%  { opacity: 1; transform: translateY(2px) scale(1.08); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes pillPop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+  .pick-path-pill.animate {
+    opacity: 0;
+    animation: pillDropIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  .pick-path-pill.animate.is-final {
+    animation: pillDropIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+               pillPop 0.55s ease-out 0.5s;
+  }
+  .pick-path-arrow.animate {
+    opacity: 0;
+    animation: pillDropIn 0.4s ease-out forwards;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pick-path-pill.animate,
+    .pick-path-arrow.animate {
+      animation-duration: 0.01ms !important;
+    }
+  }
+  /* replay toolbar */
+  .replay-toolbar {
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    margin-top: 8px; padding: 6px 10px;
+    background: white; border-radius: 10px;
+    border: 1.5px solid var(--soft-blue);
+  }
+  .replay-btn {
+    background: var(--soft-blue-bg); color: var(--soft-blue);
+    border: 2px solid var(--soft-blue); border-radius: 10px;
+    padding: 4px 10px; font-family: inherit;
+    font-size: 0.78rem; font-weight: 700; cursor: pointer;
+    transition: all 0.15s;
+    min-width: 38px; min-height: 32px;
+  }
+  .replay-btn:hover { background: var(--soft-blue); color: white; transform: translateY(-1px); }
+  .replay-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .replay-btn:disabled:hover { background: var(--soft-blue-bg); color: var(--soft-blue); transform: none; }
+  .replay-btn.active { background: var(--soft-blue); color: white; }
+  .replay-status {
+    margin-left: auto;
+    font-size: 0.7rem; color: var(--muted); font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
   /* v5.17: drag-to-reorder for mat-card */
   .mat-card { cursor: grab; -webkit-user-select: none; user-select: none; touch-action: pan-y; }
   .mat-card.dragging { opacity: 0.35; cursor: grabbing; }
@@ -557,7 +610,9 @@
     margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
   .dash-count { font-size: 0.78rem; color: var(--muted); font-weight: 700; }
   .dash-list { max-height: 280px; overflow-y: auto; padding-right: 4px; margin-bottom: 14px; }
-  .dash-row { padding: 10px 12px; background: var(--bg); border-radius: 12px; margin-bottom: 6px;
+  .dash-row { padding: 10px 12px; background: var(--bg); border-radius: 12px; margin-bottom: 6px; cursor: pointer; transition: background 0.15s, transform 0.15s; }
+  .dash-row:hover { background: var(--soft-blue-bg); transform: translateX(2px); }
+  .dash-row:active { transform: translateX(0); }
     display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
     font-size: 0.85rem; }
   .dash-row .dr-idx { font-family: 'JetBrains Mono'; font-weight: 700; color: var(--muted);
@@ -815,6 +870,44 @@
   .compare-empty { text-align: center; color: var(--muted); font-size: 0.85rem;
     padding: 10px 0; font-style: italic; }
 
+  /* v5.20: detail modal — dashboard row click → full entry detail + replay */
+  .detail-modal { position: fixed; inset: 0; z-index: 202; background: rgba(42,34,24,0.6);
+    backdrop-filter: blur(6px); display: none; place-items: center; padding: 20px; }
+  .detail-modal.show { display: grid; animation: fade 0.3s ease; }
+  .detail-card { background: var(--paper); border: 3px solid var(--line); border-radius: 24px;
+    padding: 24px; max-width: 580px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .detail-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .detail-head h3 { font-family: 'Noto Sans HK'; font-weight: 900; font-size: 1.2rem;
+    display: flex; align-items: center; gap: 8px; }
+  .detail-meta {
+    background: var(--bg); border-radius: 12px; padding: 12px 14px;
+    margin-bottom: 14px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    font-size: 0.85rem;
+  }
+  .detail-meta-row { display: flex; flex-direction: column; gap: 2px; }
+  .detail-meta-label { font-size: 0.7rem; color: var(--muted); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em; }
+  .detail-meta-val { font-weight: 900; color: var(--ink); }
+  .detail-stage-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px; background: var(--bg); border-radius: 10px;
+    margin-bottom: 4px; font-size: 0.82rem;
+  }
+  .detail-stage-row .dsr-l { font-weight: 700; color: var(--ink-2); }
+  .detail-stage-row .dsr-v { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--primary); }
+  .detail-replay-section {
+    margin-top: 14px; padding-top: 14px; border-top: 2px dashed rgba(0,0,0,0.1);
+  }
+  .detail-replay-title {
+    font-size: 0.85rem; font-weight: 900; color: var(--ink-2);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .detail-replay-empty {
+    font-size: 0.82rem; color: var(--muted); font-style: italic;
+    padding: 10px; background: var(--bg); border-radius: 10px; text-align: center;
+  }
+
   /* TTS button on conclusion card */
   .conclusion-head .conclusion-tts { margin-left: auto; background: rgba(255,255,255,0.25);
     border: 1.5px solid rgba(255,255,255,0.5); border-radius: 50%; width: 32px; height: 32px;
@@ -843,6 +936,19 @@
   .log-entry .stars-mini { color: var(--yellow); font-size: 0.9rem; }
   .log-entry .del { background: none; border: none; color: var(--warn); cursor: pointer; font-size: 1rem; padding: 4px 8px; }
   .log-entry .del:hover { color: white; background: var(--warn); border-radius: 8px; }
+  /* v5.20: clickable log entry + expanded replay area */
+  .log-entry { cursor: pointer; transition: background 0.15s; }
+  .log-entry:hover { background: var(--soft-blue-bg); }
+  .log-entry .log-replay {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    padding: 10px;
+    background: white;
+    border: 2px dashed var(--soft-blue);
+    border-radius: 10px;
+    display: none;
+  }
+  .log-entry.expanded .log-replay { display: block; animation: pop 0.3s ease; }
   .log-empty { text-align: center; padding: 30px 0; color: var(--muted); font-style: italic; }
   .log-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
   .log-stat { text-align: center; padding: 10px 6px; background: var(--bg); border-radius: 12px; }
@@ -1348,6 +1454,27 @@
 
   /* quiz section in cert */
   .quiz-section { margin: 14px 0 6px; }
+  /* v5.20: cert replay section */
+  .cert-replay {
+    margin: 14px 0 6px;
+    background: rgba(255,255,255,0.18);
+    border-radius: 14px;
+    padding: 12px 14px;
+    text-align: left;
+  }
+  .cert-replay-label {
+    font-size: 0.72rem; font-weight: 900; color: rgba(255,255,255,0.85);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .cert-replay .pick-path {
+    background: rgba(255,255,255,0.95);
+    border: none;
+  }
+  .cert-replay .replay-toolbar {
+    background: rgba(255,255,255,0.95);
+  }
   .quiz-trigger { width: 100%; padding: 12px; font-family: inherit; font-size: 0.95rem;
     font-weight: 700; background: var(--primary); color: white; border: none;
     border-radius: 14px; cursor: pointer; box-shadow: 0 4px 12px -4px rgba(232, 93, 60, 0.5);
@@ -1977,6 +2104,21 @@
       <button class="quiz-trigger" id="openQuizBtn">🧠 玩個小測試！（3 題）</button>
     </div>
 
+    <!-- v5.20: pick-path replay on cert -->
+    <div class="cert-replay" id="certReplay">
+      <div class="cert-replay-label">🛤️ 揀料路徑</div>
+      <div id="certReplayContent"></div>
+      <div class="replay-toolbar" id="certReplayToolbar">
+        <button class="replay-btn" id="certReplayPlay" aria-label="播放">▶</button>
+        <button class="replay-btn" id="certReplayPause" aria-label="暫停" disabled>⏸</button>
+        <button class="replay-btn" id="certReplayRestart" aria-label="重播">↻</button>
+        <button class="replay-btn replay-speed active" data-speed="1" aria-label="速度 1x">1×</button>
+        <button class="replay-btn replay-speed" data-speed="2" aria-label="速度 2x">2×</button>
+        <button class="replay-btn replay-speed" data-speed="0.5" aria-label="速度 0.5x">0.5×</button>
+        <span class="replay-status" id="certReplayStatus">準備中…</span>
+      </div>
+    </div>
+
     <button class="cert-close" id="certClose">收埋</button>
   </div>
 </div>
@@ -2090,12 +2232,37 @@
   </div>
 </div>
 
+<!-- ========== v5.20: DETAIL MODAL (dashboard row click → entry detail + replay) ========== -->
+<div class="detail-modal" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+  <div class="detail-card">
+    <div class="detail-head">
+      <h3 id="detailTitle">🔍 紀錄詳情</h3>
+      <button class="log-close" id="detailClose" aria-label="關閉">關</button>
+    </div>
+    <div id="detailMeta" class="detail-meta"></div>
+    <div id="detailStages"></div>
+    <div class="detail-replay-section">
+      <div class="detail-replay-title">🛤️ 揀料路徑 replay</div>
+      <div id="detailReplayContent"></div>
+      <div class="replay-toolbar" id="detailReplayToolbar">
+        <button class="replay-btn" id="detailReplayPlay" aria-label="播放">▶</button>
+        <button class="replay-btn" id="detailReplayPause" aria-label="暫停" disabled>⏸</button>
+        <button class="replay-btn" id="detailReplayRestart" aria-label="重播">↻</button>
+        <button class="replay-btn replay-speed active" data-speed="1">1×</button>
+        <button class="replay-btn replay-speed" data-speed="2">2×</button>
+        <button class="replay-btn replay-speed" data-speed="0.5">0.5×</button>
+        <span class="replay-status" id="detailReplayStatus">準備中…</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ========== TOAST ========== -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.19) ==============
-const APP_VERSION = '5.19';
+// ============== APP VERSION (v5.20) ==============
+const APP_VERSION = '5.20';
 
 // v5.13: declarative hint rule table for Stage 4 result explanation.
 // Each rule: { test(ctx) -> bool, msg }. First match wins. ctx fields:
@@ -2353,6 +2520,174 @@ function renderStage2PickPath() {
   // If neither, show empty
   if (!html) html = '<div class="pick-path-empty">未有路徑數據</div>';
   el.innerHTML = html;
+}
+
+// v5.20: pick-path REPLAY engine
+// Renders pills with stagger animation, supports play/pause/restart/speed controls.
+// path: { shells: [id, ...], seals: [id, ...] }
+// opts: { containerId, toolbarId, playId, pauseId, restartId, statusId, autoplay, speed }
+// Each instance has its own animation state tracked in window._replayStates[key]
+function renderReplay(path, opts) {
+  const container = document.getElementById(opts.containerId);
+  if (!container) return;
+  // Build pills HTML (with stagger data attributes — but we'll use CSS animation-delay)
+  if (!path || (!path.shells?.length && !path.seals?.length)) {
+    container.innerHTML = '<div class="pick-path-empty">冇 pick-path 數據</div>';
+    return null;
+  }
+  const finalShell = path.shells?.[path.shells.length - 1];
+  const finalSeal  = path.seals?.[path.seals.length - 1];
+  function pillHtml(id, isFinal, axis, idxInAxis) {
+    const label = (axis === 'shell' ? SHELL_LABEL[id] : SEAL_LABEL[id]) || id;
+    const emoji = label.split(' ')[0] || '❓';
+    const short = label.split(' ')[1] || label;
+    const cls = ['pick-path-pill', 'animate', isFinal ? 'is-final' : ''].filter(Boolean).join(' ');
+    return { cls, html: `<span class="${cls}" data-axis="${axis}" data-idx="${idxInAxis}" title="${label}">${emoji} ${short}</span>` };
+  }
+  const shells = (path.shells || []).map((id, i) => pillHtml(id, i === path.shells.length - 1, 'shell', i));
+  const seals  = (path.seals  || []).map((id, i) => pillHtml(id, i === path.seals.length - 1, 'seal', i));
+  let html = '';
+  if (shells.length) {
+    html += `<div class="pick-path-row"><span class="ppr-tag">杯</span>${shells.map((p, i) => p.html + (i < shells.length - 1 ? '<span class="pick-path-arrow animate" data-arrow-after="shell" data-idx="' + i + '">→</span>' : '')).join('')}</div>`;
+  }
+  if (seals.length) {
+    html += `<div class="pick-path-row"><span class="ppr-tag">墊</span>${seals.map((p, i) => p.html + (i < seals.length - 1 ? '<span class="pick-path-arrow animate" data-arrow-after="seal" data-idx="' + i + '">→</span>' : '')).join('')}</div>`;
+  }
+  container.innerHTML = html;
+  // === Animation state ===
+  const key = opts.containerId;
+  if (!window._replayStates) window._replayStates = {};
+  if (window._replayStates[key]) {
+    clearTimeout(window._replayStates[key].endTimer);
+  }
+  // Per-pill timing config (ms)
+  const baseStagger = 380; // delay between successive pills
+  const cupToSealGap = 220;
+  const state = {
+    speed: opts.speed || 1,
+    playing: false,
+    currentStep: 0,
+    endTimer: null,
+    rafId: null,
+    pausedAt: 0,
+  };
+  window._replayStates[key] = state;
+  // Compute total animation steps: pills + arrows
+  // Sequence: shell pills (with arrows between), then gap, then seal pills (with arrows)
+  const shellSteps = shells.length + Math.max(0, shells.length - 1); // pills + arrows
+  const sealSteps  = seals.length  + Math.max(0, seals.length - 1);
+  const totalSteps = shellSteps + sealSteps + (sealSteps > 0 ? 1 : 0); // +1 for cup→seal gap
+  function stepDuration() { return baseStagger / state.speed; }
+  function gapDuration() { return cupToSealGap / state.speed; }
+  // Apply stagger delays via inline style
+  let idx = 0;
+  function applyDelay(stepIdx) {
+    const el = container.querySelector(`[data-axis][data-idx="${Math.floor(stepIdx/2)}"]`);
+    // simpler: walk all animated elements and compute index based on order
+  }
+  // Walk in DOM order — all .animate elements
+  const animEls = Array.from(container.querySelectorAll('.animate'));
+  animEls.forEach((el, i) => {
+    el.style.animationDelay = (i * stepDuration()) + 'ms';
+  });
+  // Total animation duration (when all done)
+  const totalMs = (animEls.length - 1) * stepDuration() + 450; // last pill anim duration
+  // Hook up controls
+  const playBtn    = opts.playId    ? document.getElementById(opts.playId)    : null;
+  const pauseBtn   = opts.pauseId   ? document.getElementById(opts.pauseId)   : null;
+  const restartBtn = opts.restartId ? document.getElementById(opts.restartId) : null;
+  const statusEl   = opts.statusId   ? document.getElementById(opts.statusId) : null;
+  function setStatus(text) { if (statusEl) statusEl.textContent = text; }
+  function setPlayingUI(playing) {
+    state.playing = playing;
+    if (playBtn) playBtn.disabled = playing;
+    if (pauseBtn) pauseBtn.disabled = !playing;
+    if (playing) setStatus('播放中…');
+    else if (state.pausedAt > 0) setStatus('已暫停');
+    else setStatus('已停止');
+  }
+  function doPlay() {
+    // reset animations by removing and re-adding the elements
+    animEls.forEach(el => {
+      el.style.animation = 'none';
+      void el.offsetWidth; // force reflow
+      el.style.animation = '';
+    });
+    setPlayingUI(true);
+    state.endTimer = setTimeout(() => {
+      setPlayingUI(false);
+      setStatus('完成 ✓');
+    }, totalMs + 100);
+  }
+  function doPause() {
+    animEls.forEach(el => {
+      const cs = getComputedStyle(el);
+      el.style.animationPlayState = 'paused';
+    });
+    state.pausedAt = Date.now();
+    setPlayingUI(false);
+  }
+  function doResume() {
+    animEls.forEach(el => { el.style.animationPlayState = 'running'; });
+    setPlayingUI(true);
+  }
+  function doRestart() {
+    if (state.endTimer) clearTimeout(state.endTimer);
+    doPlay();
+  }
+  function setSpeed(s) {
+    state.speed = s;
+    // rescale delays on existing elements (no re-render — preserves button handlers)
+    const animEls2 = container.querySelectorAll('.animate');
+    animEls2.forEach((el, i) => {
+      el.style.animationDelay = (i * stepDuration()) + 'ms';
+    });
+    if (state.playing) {
+      // if mid-play, just let it finish at new speed (current delays already apply)
+      if (state.endTimer) {
+        clearTimeout(state.endTimer);
+        const totalMsNew = (animEls2.length - 1) * stepDuration() + 450;
+        state.endTimer = setTimeout(() => {
+          setPlayingUI(false);
+          setStatus('完成 ✓');
+        }, totalMsNew + 100);
+      }
+    }
+  }
+  // Wire buttons (idempotent — clear previous handlers by checking data-bound flag)
+  function wire(btn, handler) {
+    if (!btn) return;
+    if (btn._replayBound) {
+      // already bound this session — store handler for later invocation; we re-render fully on speed change
+      btn._replayHandler = handler;
+      return;
+    }
+    btn._replayBound = true;
+    btn._replayHandler = handler;
+    btn.addEventListener('click', handler);
+  }
+  if (playBtn)    wire(playBtn,    () => state.pausedAt ? doResume() : doPlay());
+  if (pauseBtn)   wire(pauseBtn,   doPause);
+  if (restartBtn) wire(restartBtn, doRestart);
+  // Speed buttons
+  const speedBtns = (opts.toolbarId ? document.querySelectorAll('#' + opts.toolbarId + ' .replay-speed') : []);
+  speedBtns.forEach(b => {
+    wire(b, () => {
+      const s = parseFloat(b.dataset.speed);
+      speedBtns.forEach(x => x.classList.toggle('active', x === b));
+      setSpeed(s);
+    });
+    b.classList.toggle('active', parseFloat(b.dataset.speed) === state.speed);
+  });
+  if (opts.autoplay !== false) {
+    doPlay();
+  } else {
+    setStatus('準備好 ▶');
+  }
+  // Hide toolbar if no controls passed (inline use case like log entry expand)
+  const toolbar = opts.toolbarId ? document.getElementById(opts.toolbarId) : null;
+  if (toolbar && opts.hideToolbar) toolbar.style.display = 'none';
+  return { state, restart: doRestart, play: doPlay, pause: doPause, setSpeed };
 }
 
 // v5.18: Stage 3 chart — shown when stage 3 becomes active + cup built
@@ -4166,7 +4501,7 @@ function renderDashboard() {
     const comfortName = COMFORT_LABEL[e.comfort] || e.comfort || '—';
     const dt = e.ts ? new Date(e.ts) : null;
     const dateStr = dt ? `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}` : '—';
-    return `<div class="dash-row">
+    return `<div class="dash-row" data-entry-id="${e.id}">
       <div class="dr-idx">#${n - i}</div>
       <div class="dr-info">
         <div class="dr-title">${shellName} + ${sealName}</div>
@@ -4175,6 +4510,14 @@ function renderDashboard() {
       <div class="dr-score">${e.score || '—'}</div>
     </div>`;
   }).join('');
+  // v5.20: click dashboard row → open detail modal with replay
+  document.querySelectorAll('.dash-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const id = row.dataset.entryId;
+      const e = experimentLog.find(x => String(x.id) === String(id));
+      if (e) openDetailModal(e);
+    });
+  });
 }
 
 // v5.17: per-stage breakdown — 4 rows showing 達標率 + 平均/表現
@@ -4773,6 +5116,72 @@ document.addEventListener('keydown', (e) => {
 });
 document.getElementById('dashCsv').addEventListener('click', exportDashboardCsv);
 document.getElementById('dashPdf').addEventListener('click', exportDashboardPdf);
+
+// v5.20: detail modal — dashboard row click → full entry detail + replay
+function openDetailModal(entry) {
+  const shellName = SHELL_LABEL[entry.shell] || entry.shell || '—';
+  const sealName  = SEAL_LABEL[entry.seal]   || entry.seal  || '—';
+  const feelName  = FEEL_LABEL[entry.feel]   || entry.feel  || '—';
+  const comfortName = COMFORT_LABEL[entry.comfort] || entry.comfort || '—';
+  const dt = entry.ts ? new Date(entry.ts) : null;
+  const dateStr = dt ? dt.toLocaleString('zh-HK') : '—';
+  const m = entry.metrics || {};
+  const meta = document.getElementById('detailMeta');
+  if (meta) {
+    meta.innerHTML = `
+      <div class="detail-meta-row"><span class="detail-meta-label">時間</span><span class="detail-meta-val">${dateStr}</span></div>
+      <div class="detail-meta-row"><span class="detail-meta-label">杯</span><span class="detail-meta-val">${shellName}</span></div>
+      <div class="detail-meta-row"><span class="detail-meta-label">軟墊</span><span class="detail-meta-val">${sealName}</span></div>
+      <div class="detail-meta-row"><span class="detail-meta-label">感覺</span><span class="detail-meta-val">${feelName}</span></div>
+      <div class="detail-meta-row"><span class="detail-meta-label">舒適</span><span class="detail-meta-val">${comfortName}</span></div>
+      <div class="detail-meta-row"><span class="detail-meta-label">分數</span><span class="detail-meta-val">${entry.score || '—'} ⭐</span></div>
+    `;
+  }
+  // per-stage rows
+  const stages = document.getElementById('detailStages');
+  if (stages) {
+    const s1 = m.s1, s2 = m.s2, s3 = m.s3;
+    let html = '';
+    if (s1) html += `<div class="detail-stage-row"><span class="dsr-l">✋ 第 1 步</span><span class="dsr-v">${s1.play} play · ${s1.cover} cover · ${s1.elapsed}s · ${s1.audioMode || 'demo'}</span></div>`;
+    if (s2) html += `<div class="detail-stage-row"><span class="dsr-l">🎯 第 2 步</span><span class="dsr-v">${s2.picks} picks · ${s2.reorders} reorder · ${s2.elapsed}s · ${s2.totalScore} 分</span></div>`;
+    if (s3) html += `<div class="detail-stage-row"><span class="dsr-l">🥽 第 3 步</span><span class="dsr-v">${s3.dwell}s dwell · ${s3.sparkles} 閃光</span></div>`;
+    html += `<div class="detail-stage-row"><span class="dsr-l">🎧 第 4 步</span><span class="dsr-v">${entry.score || '—'} ⭐</span></div>`;
+    stages.innerHTML = html || '<div class="pick-path-empty">冇 stage metrics（v5.18 之前）</div>';
+  }
+  // replay
+  if (m.s2?.pickPath) {
+    renderReplay(m.s2.pickPath, {
+      containerId: 'detailReplayContent',
+      toolbarId: 'detailReplayToolbar',
+      playId: 'detailReplayPlay',
+      pauseId: 'detailReplayPause',
+      restartId: 'detailReplayRestart',
+      statusId: 'detailReplayStatus',
+      autoplay: true,
+      speed: 1,
+    });
+  } else {
+    document.getElementById('detailReplayContent').innerHTML = '<div class="detail-replay-empty">呢條 log 冇 pick-path（v5.19 之前）</div>';
+    const tb = document.getElementById('detailReplayToolbar');
+    if (tb) tb.style.display = 'none';
+  }
+  document.getElementById('detailModal').classList.add('show');
+}
+function closeDetailModal() {
+  document.getElementById('detailModal').classList.remove('show');
+  // reset toolbar display in case it was hidden
+  const tb = document.getElementById('detailReplayToolbar');
+  if (tb) tb.style.display = '';
+}
+document.getElementById('detailClose').addEventListener('click', closeDetailModal);
+document.getElementById('detailModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('detailModal')) closeDetailModal();
+});
+// ESC also closes detail modal
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('detailModal').classList.contains('show')) closeDetailModal();
+});
 // v5.17: graceful degrade — if html2pdf failed to load from CDN, disable PDF button with hint
 window.addEventListener('load', () => {
   setTimeout(() => {
@@ -5207,7 +5616,7 @@ function renderLogModal() {
     list.innerHTML = experimentLog.map((e, i) => {
       const stars = '⭐'.repeat(e.score) + '<span style="opacity:0.3">⭐</span>'.repeat(3 - e.score);
       const time = new Date(e.ts).toLocaleString('zh-HK', { hour: '2-digit', minute: '2-digit', month: 'numeric', day: 'numeric' });
-      return `<div class="log-entry">
+      return `<div class="log-entry" data-entry-id="${e.id}">
         <div class="n">#${experimentLog.length - i}</div>
         <div class="info">
           <div class="title">${SHELL_LABEL[e.shell] || e.shell} + ${SEAL_LABEL[e.seal] || e.seal}</div>
@@ -5215,8 +5624,39 @@ function renderLogModal() {
         </div>
         <div class="stars-mini">${stars}</div>
         <button class="del" data-id="${e.id}">✕</button>
+        <div class="log-replay" id="logReplay-${e.id}"></div>
       </div>`;
     }).join('');
+    // v5.20: click entry → expand inline replay (skip if click target is delete button)
+    list.querySelectorAll('.log-entry').forEach(entry => {
+      entry.addEventListener('click', (ev) => {
+        if (ev.target.closest('.del')) return; // ignore delete clicks
+        const id = entry.dataset.entryId;
+        const e = experimentLog.find(x => String(x.id) === String(id));
+        if (!e) return;
+        const wasExpanded = entry.classList.contains('expanded');
+        // collapse all entries first
+        list.querySelectorAll('.log-entry.expanded').forEach(x => x.classList.remove('expanded'));
+        if (wasExpanded) return;
+        entry.classList.add('expanded');
+        const container = document.getElementById('logReplay-' + id);
+        if (!container) return;
+        if (!e.metrics?.s2?.pickPath) {
+          container.innerHTML = '<div class="pick-path-empty">呢條 log 冇 pick-path 數據（v5.19 之前）</div>';
+          return;
+        }
+        renderReplay(
+          e.metrics.s2.pickPath,
+          {
+            containerId: 'logReplay-' + id,
+            toolbarId: null, // inline — minimal
+            autoplay: true,
+            speed: 1,
+            hideToolbar: true,
+          }
+        );
+      });
+    });
     list.querySelectorAll('.del').forEach(b => {
       b.addEventListener('click', () => {
         experimentLog = experimentLog.filter(x => x.id !== +b.dataset.id);
@@ -5587,6 +6027,29 @@ function showCelebration() {
   }
   // TTS cheer
   speak('恭喜你！你完成喇！');
+  // v5.20: trigger pick-path replay on cert (autoplay)
+  // Use the live stage2PickPath (still in memory at this moment)
+  if (stage2PickPath.shells.length || stage2PickPath.seals.length) {
+    setTimeout(() => {
+      renderReplay(
+        { shells: stage2PickPath.shells.map(p => p.id), seals: stage2PickPath.seals.map(p => p.id) },
+        {
+          containerId: 'certReplayContent',
+          toolbarId: 'certReplayToolbar',
+          playId: 'certReplayPlay',
+          pauseId: 'certReplayPause',
+          restartId: 'certReplayRestart',
+          statusId: 'certReplayStatus',
+          autoplay: true,
+          speed: 1,
+        }
+      );
+    }, 600); // small delay so cert settles before pills start dropping
+  } else {
+    document.getElementById('certReplayContent').innerHTML = '<div class="pick-path-empty">冇 pick-path 數據</div>';
+    const st = document.getElementById('certReplayStatus');
+    if (st) st.textContent = '—';
+  }
 }
 
 // ============== QUIZ ==============
