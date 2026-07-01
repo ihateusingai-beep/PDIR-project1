@@ -2262,7 +2262,7 @@
 
 <script>
 // ============== APP VERSION (v5.20) ==============
-const APP_VERSION = '5.20';
+const APP_VERSION = '5.21';
 
 // v5.13: declarative hint rule table for Stage 4 result explanation.
 // Each rule: { test(ctx) -> bool, msg }. First match wins. ctx fields:
@@ -2687,7 +2687,243 @@ function renderReplay(path, opts) {
   // Hide toolbar if no controls passed (inline use case like log entry expand)
   const toolbar = opts.toolbarId ? document.getElementById(opts.toolbarId) : null;
   if (toolbar && opts.hideToolbar) toolbar.style.display = 'none';
-  return { state, restart: doRestart, play: doPlay, pause: doPause, setSpeed };
+  // v5.21: step-mode — setStep(n) reveals pills up to step n without re-render
+  function setStep(n) {
+    if (typeof n !== 'number') return;
+    state.currentStep = Math.max(0, Math.min(n, animEls.length));
+    animEls.forEach((el, i) => {
+      // Show pill i if i < currentStep (i.e., it's been "stepped through")
+      // We're NOT using animationDelay — we toggle a 'visible' class that overrides animation final state
+      if (i < state.currentStep) {
+        el.classList.add('step-shown');
+        el.style.animation = 'none';
+        el.style.opacity = '1';
+        el.style.transform = 'none';
+      } else if (i === state.currentStep && state.currentStep < animEls.length) {
+        el.classList.remove('step-shown');
+        el.style.animation = 'pillDropIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+        el.style.animationPlayState = 'running';
+        el.style.animationDelay = (i * stepDuration()) + 'ms';
+      } else {
+        el.classList.remove('step-shown');
+        el.style.animation = 'none';
+        el.style.opacity = '0';
+      }
+    });
+    state.playing = false;
+    setStatus(state.currentStep >= animEls.length ? '完成 ✓ (步進模式)' : `第 ${state.currentStep + 1} / ${animEls.length} 步`);
+  }
+  function stepNext() { setStep(Math.min(state.currentStep + 1, animEls.length)); }
+  function stepPrev() { setStep(state.currentStep - 1); }
+  return { state, restart: doRestart, play: doPlay, pause: doPause, setSpeed, setStep, stepNext, stepPrev };
+}
+
+// v5.21: GIF/ZIP export from a replay container
+// Captures the pill strip frame-by-frame into a multi-frame animated PNG ZIP fallback.
+// Uses html2canvas-style manual render via foreignObject SVG (no external lib).
+// Surfaces: cert/log/dashboard all share exportReplayFrames(containerId, label).
+async function exportReplayFrames(containerId, surfaceLabel) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const pills = Array.from(container.querySelectorAll('.pick-path-pill.animate'));
+  const arrows = Array.from(container.querySelectorAll('.pick-path-arrow.animate'));
+  if (!pills.length) { alert('冇 pick-path 數據可以輸出'); return; }
+  // Reconstruct DOM strip in offscreen clone with explicit per-element classes
+  // We'll render full strip as static SVG <foreignObject> for each frame.
+  // For each frame k in [0..total], reveal pills/arrows up to k.
+  const total = pills.length + arrows.length + 1; // plus gap
+  const W = 600, rowH = 56;
+  const rowsHtml = container.outerHTML; // grab current
+  // Build a static version with all pills pre-laid and per-frame opacity only
+  // We'll use a simpler approach: snapshot the running CSS by computing keyframe positions
+  // Pills get staged by index — capture them as a single full-strip PNG with a "highlighter"
+  // that fades in pill i at frame i.
+  // Simpler still: for each pill index, generate a frame where pill i is "highlighted" as newest.
+  const frames = [];
+  const baseFont = `16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+  const stage1Pills = pills.filter(p => p.dataset.axis === 'shell');
+  const stage2Pills = pills.filter(p => p.dataset.axis === 'seal');
+  // helper: render strip to canvas
+  function drawStrip(highlightIdx) {
+    const c = document.createElement('canvas');
+    c.width = W; c.height = rowH * 2 + 40;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#0b1220'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.font = baseFont;
+    // Row 1: shells
+    ctx.fillStyle = '#94a3b8'; ctx.font = `bold 14px ${baseFont}`;
+    ctx.fillText('杯', 12, 26);
+    let x = 40;
+    stage1Pills.forEach((p, i) => {
+      const labelText = p.textContent.trim();
+      const isFinal = p.classList.contains('is-final');
+      const isShown = i <= highlightIdx;
+      const isHighlight = i === highlightIdx;
+      const isPicked = p.classList.contains('is-final') || (typeof isShown === 'boolean' && isShown);
+      // measure width
+      ctx.font = `14px ${baseFont}`;
+      const tw = ctx.measureText(labelText).width;
+      const bw = tw + 24, bh = 28;
+      ctx.fillStyle = !isShown ? 'rgba(148,163,184,0.15)'
+                   : isFinal ? '#facc15'
+                   : '#22d3ee';
+      roundRect(ctx, x, 10, bw, bh, 14);
+      ctx.fill();
+      if (!isShown) { x += bw + 18; return; }
+      ctx.fillStyle = '#0b1220';
+      ctx.font = `bold 14px ${baseFont}`;
+      ctx.fillText(labelText, x + 12, 30);
+      if (isHighlight) {
+        ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3;
+        roundRect(ctx, x - 2, 8, bw + 4, bh + 4, 16); ctx.stroke();
+      }
+      x += bw;
+      // arrow
+      if (i < stage1Pills.length - 1 && isShown) {
+        ctx.fillStyle = '#94a3b8'; ctx.font = `bold 20px ${baseFont}`;
+        ctx.fillText('→', x + 4, 32); x += 22;
+      }
+    });
+    // Row 2: seals
+    if (stage2Pills.length) {
+      ctx.fillStyle = '#94a3b8'; ctx.font = `bold 14px ${baseFont}`;
+      ctx.fillText('墊', 12, rowH + 26);
+      x = 40;
+      const sealHighIdx = highlightIdx - stage1Pills.length - 1;
+      stage2Pills.forEach((p, i) => {
+        const globalIdx = stage1Pills.length + 1 + i; // +1 for cup→seal gap
+        const sealShown = globalIdx <= highlightIdx;
+        const sealHighlight = globalIdx === highlightIdx;
+        const labelText = p.textContent.trim();
+        const isFinal = p.classList.contains('is-final');
+        ctx.font = `14px ${baseFont}`;
+        const tw = ctx.measureText(labelText).width;
+        const bw = tw + 24, bh = 28;
+        ctx.fillStyle = !sealShown ? 'rgba(148,163,184,0.15)'
+                     : isFinal ? '#facc15'
+                     : '#22d3ee';
+        roundRect(ctx, x, rowH + 10, bw, bh, 14);
+        ctx.fill();
+        if (!sealShown) { x += bw + 18; return; }
+        ctx.fillStyle = '#0b1220';
+        ctx.font = `bold 14px ${baseFont}`;
+        ctx.fillText(labelText, x + 12, rowH + 30);
+        if (sealHighlight) {
+          ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3;
+          roundRect(ctx, x - 2, rowH + 8, bw + 4, bh + 4, 16); ctx.stroke();
+        }
+        x += bw;
+        if (i < stage2Pills.length - 1 && sealShown) {
+          ctx.fillStyle = '#94a3b8'; ctx.font = `bold 20px ${baseFont}`;
+          ctx.fillText('→', x + 4, rowH + 32); x += 22;
+        }
+      });
+    }
+    // Title at top
+    ctx.fillStyle = '#e2e8f0'; ctx.font = `bold 12px ${baseFont}`;
+    ctx.fillText(`🥽 pick-path replay — ${surfaceLabel}`, 12, c.height - 8);
+    return c;
+  }
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  // Generate frames
+  const totalFrames = pills.length + arrows.length + 2;
+  for (let k = 0; k < totalFrames; k++) {
+    const c = drawStrip(k - 1); // k=-1 means nothing shown; k>=0 means first pill shown
+    frames.push(c.toDataURL('image/png'));
+  }
+  // Build a minimal ZIP — use built-in browser download via data URL? Not feasible for many frames.
+  // Use a CDN-free minimal ZIP writer: store-only (no compression) ZIP of PNG frames.
+  // We'll inline a tiny ZIP encoder (~80 lines).
+  const zip = buildZip(frames.map((dataUri, i) => ({
+    name: `frame-${String(i).padStart(2, '0')}.png`,
+    data: dataUri.split(',')[1] // strip data:image/png;base64,
+  })));
+  const blob = new Blob([zip], { type: 'application/zip' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pdir-replay-${surfaceLabel}-${Date.now()}.zip`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+// Minimal store-only ZIP encoder (no external dep). Supports multiple files.
+function buildZip(files) {
+  // Each file: { name: string, data: base64string }
+  // Returns Uint8Array of ZIP bytes.
+  function crc32(buf) {
+    let c, table = [];
+    for (let n = 0; n < 256; n++) {
+      c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+      table[n] = c;
+    }
+    let crc = 0xffffffff;
+    for (let i = 0; i < buf.length; i++) crc = (crc >>> 8) ^ table[(crc ^ buf[i]) & 0xff];
+    return (crc ^ 0xffffffff) >>> 0;
+  }
+  function dosTime(d) {
+    return ((d.getFullYear() - 1980) << 25) | ((d.getMonth() + 1) << 21) | (d.getDate() << 16) |
+           (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() / 2);
+  }
+  function u16(n) { return [n & 0xff, (n >> 8) & 0xff]; }
+  function u32(n) { return [n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, (n >>> 24) & 0xff]; }
+  const now = new Date();
+  const dt = dosTime(now);
+  const enc = new TextEncoder();
+  const localParts = [], centralParts = [];
+  let offset = 0;
+  for (const f of files) {
+    const raw = atob(f.data);
+    const bytes = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    const nameBytes = enc.encode(f.name);
+    const crc = crc32(bytes);
+    // Local file header
+    const lh = [0x50, 0x4b, 0x03, 0x04];
+    const ver = u16(20); const flags = u16(0); const method = u16(0);
+    const mtime = u16(dt); const mdate = u16(dt >>> 16);
+    const crcBytes = u32(crc); const compSize = u32(bytes.length); const uncompSize = u32(bytes.length);
+    const nameLen = u16(nameBytes.length); const extraLen = u16(0);
+    localParts.push(new Uint8Array([...lh, ...ver, ...flags, ...method, ...mtime, ...mdate,
+      ...crcBytes, ...compSize, ...uncompSize, ...nameLen, ...extraLen]));
+    localParts.push(nameBytes);
+    localParts.push(bytes);
+    // Central directory (ZIP spec: 46-byte header + filename)
+    const ch = [0x50, 0x4b, 0x01, 0x02];
+    const verMade = u16(20); const verNeeded = u16(20);
+    const intAttr = u16(0); const extAttr = u32(0);
+    const commentLen = u16(0); const diskStart = u16(0);
+    const localOff = u32(offset);
+    centralParts.push(new Uint8Array([...ch, ...verMade, ...verNeeded, ...flags, ...method, ...mtime, ...mdate,
+      ...crcBytes, ...compSize, ...uncompSize, ...nameLen, ...extraLen, ...commentLen, ...diskStart,
+      ...intAttr, ...extAttr, ...localOff]));
+    centralParts.push(nameBytes);
+    offset += 30 + nameBytes.length + bytes.length;
+  }
+  // EOCD
+  const cdOffset = offset;
+  let cdSize = 0;
+  for (const p of centralParts) cdSize += p.length;
+  const eocd = new Uint8Array([0x50, 0x4b, 0x05, 0x06,
+    ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length),
+    ...u32(cdSize), ...u32(cdOffset), ...u16(0)]);
+  // Concatenate
+  const totalSize = offset + cdSize + eocd.length;
+  const out = new Uint8Array(totalSize);
+  let p = 0;
+  for (const part of localParts) { out.set(part, p); p += part.length; }
+  for (const part of centralParts) { out.set(part, p); p += part.length; }
+  out.set(eocd, p);
+  return out;
 }
 
 // v5.18: Stage 3 chart — shown when stage 3 becomes active + cup built
@@ -3658,6 +3894,9 @@ function renderMiniProgress(curStage) {
   activeBtn.classList.add('active');
   activeBtn.setAttribute('aria-current', 'step');
   document.getElementById('stage-' + n).classList.add('active');
+  // v5.21: persist current stage for recovery
+  stageRecovery.current = String(n);
+  saveStageState();
   if (n === '4') {
     // auto start loud when entering stage 4
     startLoud();
@@ -3706,6 +3945,9 @@ document.getElementById('stepNav').addEventListener('click', e => {
 function markDone(n) {
   completedStages.add(n);
   document.querySelector(`.step-btn[data-stage="${n}"]`).classList.add('done');
+  // v5.21: persist which stages are done + current
+  stageRecovery.completed = Array.from(completedStages);
+  saveStageState();
   // v5.14: refresh mini-progress (a stage just flipped to done)
   const activeBtn = document.querySelector('.step-btn.active');
   renderMiniProgress(activeBtn ? activeBtn.dataset.stage : n);
@@ -3746,6 +3988,9 @@ btnCoverPlay.addEventListener('click', async (e) => {
     speaker.classList.add('playing');
     ear.classList.add('hear');
     refreshStage1Next();
+    // v5.21: persist Stage 1 progress
+    stageRecovery.stage1Played = true;
+    saveStageState();
   } catch (err) {
     console.error('btnCoverPlay error:', err);
   }
@@ -3765,6 +4010,9 @@ btnCover.addEventListener('click', (e) => {
       if (playGain) playGain.gain.value = 0.5;
     }
     refreshStage1Next();
+    // v5.21: persist Stage 1 covered state
+    stageRecovery.stage1Covered = stage1Covered;
+    saveStageState();
   } catch (err) {
     console.error('btnCover error:', err);
   }
@@ -3857,6 +4105,9 @@ document.querySelectorAll('.mat-card').forEach(card => {
     syncAriaPicked(grid);
     if (type === 'shell') {
       shellPicked = card.dataset.id;
+      // v5.21: persist pick to recovery store
+      stageRecovery.shell = shellPicked; stageRecovery.shellPath = stage2PickPath.shells.map(p => p.id);
+      saveStageState();
       // v5.19: record pick-path entry (push even if same id — exploration counts)
       stage2PickPath.shells.push({
         id: card.dataset.id,
@@ -3882,6 +4133,9 @@ document.querySelectorAll('.mat-card').forEach(card => {
       announce('揀咗' + (card.dataset.tts || '杯') + '。而家可以揀軟墊。');
     } else {
       sealPicked = card.dataset.id;
+      // v5.21: persist pick to recovery store
+      stageRecovery.seal = sealPicked; stageRecovery.sealPath = stage2PickPath.seals.map(p => p.id);
+      saveStageState();
       // v5.19: record pick-path entry
       stage2PickPath.seals.push({
         id: card.dataset.id,
@@ -4217,6 +4471,9 @@ function buildCup() {
     ];
     // v5.18: count sparkles for stage 3 chart + metric
     stage3SparkleCount = sparkles.length;
+    // v5.21: persist sparkle count
+    stageRecovery.sparkle = stage3SparkleCount;
+    saveStageState();
     sparklesEl.innerHTML = sparkles.map(([cx, cy, i], idx) =>
       `<g transform="translate(${cx} ${cy})" style="animation: sparkle 1.5s ease-in-out ${idx * 0.1}s infinite;">
         <path d="M0 -8 L2 -2 L8 0 L2 2 L0 8 L-2 2 L-8 0 L-2 -2 Z" fill="#f5c842" stroke="#c97b3f" stroke-width="1"/>
@@ -4328,6 +4585,9 @@ function showResult(score) {
   renderMatCharts(shellCard.dataset.id, sealCard.dataset.id);
   // Stage 4 badge metadata
   window._stage4Done = { score: n };
+  // v5.21: persist Stage 4 score for recovery
+  stageRecovery.stage4Score = n;
+  saveStageState();
   markDone(4);
   // reset log chips so a fresh experiment can be recorded
   resetLogChips();
@@ -4424,6 +4684,21 @@ function saveStageVisits() { try { localStorage.setItem(STAGE_KEY, JSON.stringif
 function bumpStageVisit(n) {
   stageVisits[n] = (stageVisits[n] || 0) + 1;
   saveStageVisits();
+}
+
+// v5.21: per-user stage recovery — persist shell/seal picks + completedStages + currentStage + sparkle count
+// Schema: { shell, seal, completed: ['1','2','3','4'], current, sparkle, stage1Played, stage1Covered }
+const STAGE_STATE_KEY = 'earmuff-pdir-stage-state-v1';
+let stageRecovery = { shell: null, seal: null, completed: [], current: null, sparkle: 0, stage1Played: false, stage1Covered: false, stage4Score: null, stage2Path: null };
+try { Object.assign(stageRecovery, JSON.parse(localStorage.getItem(STAGE_STATE_KEY) || '{}')); }
+catch (e) { /* keep default */ }
+// Always coerce arrays
+if (!Array.isArray(stageRecovery.completed)) stageRecovery.completed = [];
+function saveStageState() {
+  try { localStorage.setItem(STAGE_STATE_KEY, JSON.stringify(stageRecovery)); } catch (e) {}
+}
+function clearStageState() {
+  try { localStorage.removeItem(STAGE_STATE_KEY); } catch (e) {}
 }
 // migrate: if we have at least one log entry but no stage visits, seed reasonable baseline
 // (so old users with logs don't see "0%" forever)
@@ -5183,6 +5458,73 @@ document.addEventListener('keydown', (e) => {
   if (document.getElementById('detailModal').classList.contains('show')) closeDetailModal();
 });
 // v5.17: graceful degrade — if html2pdf failed to load from CDN, disable PDF button with hint
+// v5.21: apply persisted stage recovery state — runs synchronously after all stage vars init
+function applyStageRecovery() {
+  if (!stageRecovery) return;
+  const r = stageRecovery;
+  // 1. restore shell + seal picks (DOM + globals)
+  if (r.shell) {
+    const card = document.querySelector(`#shellGrid .mat-card[data-id="${r.shell}"]`);
+    if (card) {
+      card.click();
+      // visual picked class
+      card.classList.add('picked');
+    }
+    shellPicked = r.shell;
+    // restore pick-path
+    if (Array.isArray(r.shellPath)) {
+      stage2PickPath.shells = r.shellPath.map(id => ({
+        id, ts: 0, score: +(document.querySelector(`#shellGrid .mat-card[data-id="${id}"]`)?.dataset.score || 0),
+      }));
+    }
+  }
+  if (r.seal) {
+    const card = document.querySelector(`#sealGrid .mat-card[data-id="${r.seal}"]`);
+    if (card) {
+      card.classList.add('picked');
+    }
+    sealPicked = r.seal;
+    if (Array.isArray(r.sealPath)) {
+      stage2PickPath.seals = r.sealPath.map(id => ({
+        id, ts: 0, score: +(document.querySelector(`#sealGrid .mat-card[data-id="${id}"]`)?.dataset.score || 0),
+      }));
+    }
+  }
+  // 2. restore completedStages + sparkle count
+  if (Array.isArray(r.completed)) {
+    r.completed.forEach(n => {
+      completedStages.add(n);
+      const btn = document.querySelector(`.step-btn[data-stage="${n}"]`);
+      if (btn) btn.classList.add('done');
+    });
+  }
+  if (r.sparkle) stage3SparkleCount = r.sparkle;
+  if (r.stage1Played) stage1Played = true;
+  if (r.stage1Covered) {
+    stage1Covered = true;
+    const btn = document.getElementById('btnCover');
+    if (btn) { btn.textContent = '✋ 移開手'; btn.classList.add('primary'); }
+    const sc = document.getElementById('coverScene');
+    if (sc) sc.classList.add('covered');
+  }
+  try { if (typeof refreshStage1Next === 'function') refreshStage1Next(); } catch (e) {}
+  try { if (typeof updateLogCount === 'function') updateLogCount(); } catch (e) {}
+  // 3. nav to last visited stage (if user got that far)
+  if (r.current && r.current !== '1') {
+    // delay slightly so DOM is settled
+    setTimeout(() => {
+      const btn = document.querySelector(`.step-btn[data-stage="${r.current}"]`);
+      if (btn) btn.click();
+    }, 300);
+  }
+}
+// run after DOMContentLoaded — call here before other 'load' handlers
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', applyStageRecovery);
+} else {
+  applyStageRecovery();
+}
+
 window.addEventListener('load', () => {
   setTimeout(() => {
     if (typeof html2pdf === 'undefined') {
@@ -6207,6 +6549,21 @@ document.addEventListener('keydown', e => {
   else if (document.getElementById('logModal').classList.contains('show')) document.getElementById('logClose').click();
   else if (document.getElementById('compareModal').classList.contains('show')) document.getElementById('compareClose').click();
   else if (document.getElementById('celebration').classList.contains('show')) document.getElementById('certClose').click();
+});
+
+// v5.21: ↑/↓/←/→ keyboard nav for active replay (skip cert autoplay context — only if user clicks into it first)
+// We track last active replay container via data attribute.
+window._lastReplayContainer = null;
+document.addEventListener('keydown', e => {
+  // Only intercept Arrow keys when modal/celebration not active
+  const certOpen = document.getElementById('celebration').classList.contains('show');
+  if (certOpen && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+    if (window._lastReplay && window._lastReplay.setStep) {
+      e.preventDefault();
+      if (e.key === 'ArrowRight') window._lastReplay.stepNext();
+      else window._lastReplay.stepPrev();
+    }
+  }
 });
 
 document.getElementById('certClose').addEventListener('click', () => {
