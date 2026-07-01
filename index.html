@@ -149,6 +149,36 @@
   .cover-scene.covered .hand { transform: translateY(-50%) scale(1) rotate(0); }
 
   .cover-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+
+  /* v5.15: audio source mode toggle (demo vs mic) + sample library */
+  .audio-mode-row { display: flex; gap: 8px; justify-content: center; align-items: center;
+    flex-wrap: wrap; margin-bottom: 10px; }
+  .audio-mode-chip { padding: 6px 14px; font-size: 0.85rem; font-weight: 600;
+    background: white; color: var(--ink-2); border: 2px solid var(--line); border-radius: 999px;
+    cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .audio-mode-chip:hover { border-color: var(--primary); color: var(--primary); }
+  .audio-mode-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+  .audio-mode-chip.recording { background: var(--primary); color: white; border-color: var(--primary);
+    animation: micPulse 0.8s ease-in-out infinite; }
+  @keyframes micPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+  .audio-mode-status { font-size: 0.78rem; color: var(--ink-2); margin-left: 4px;
+    min-height: 1.1em; line-height: 1.1em; }
+  .audio-mode-status.error { color: var(--primary); font-weight: 600; }
+  .audio-mode-status.ok { color: var(--good); }
+
+  .audio-sample-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 12px; min-height: 32px; }
+  .audio-sample-row.hidden { display: none; }
+  .audio-sample-chip { padding: 4px 12px; font-size: 0.78rem; font-weight: 600;
+    background: var(--bg); color: var(--ink-2); border: 2px solid transparent;
+    border-radius: 999px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .audio-sample-chip:hover { border-color: var(--soft-blue); color: var(--soft-blue); }
+  .audio-sample-chip.active { background: var(--soft-blue-bg); color: var(--soft-blue);
+    border-color: var(--soft-blue); }
+  @media (prefers-reduced-motion: reduce) {
+    .audio-mode-chip.recording { animation: none; }
+    .audio-mode-chip, .audio-sample-chip { transition: none; }
+  }
   .big-btn { padding: 14px 24px; font-size: 1.05rem; font-weight: 700; font-family: inherit;
     border: 3px solid transparent; border-radius: 16px; cursor: pointer; transition: all 0.15s; min-width: 130px; }
   .big-btn.primary { background: var(--primary); color: white; }
@@ -1041,7 +1071,7 @@
       <div class="tts-progress"><div class="tts-progress-fill"></div></div>
       <span class="tts-status">未開始</span>
     </div>
-    <p class="stage-hint">撳「播聲音」，再用「遮耳仔」試吓</p>
+    <p class="stage-hint">撳「播聲音」，再用「遮耳仔」試吓（可以揀示範聲或者錄自己把聲）</p>
 
     <div class="cover-demo">
       <div class="cover-scene" id="coverScene">
@@ -1074,6 +1104,19 @@
             <path d="M40 30 Q40 25 45 25" stroke="#c97b3f" stroke-width="2" fill="none" opacity="0.5"/>
           </svg>
         </div>
+      </div>
+
+      <div class="audio-mode-row" role="group" aria-label="聲音來源">
+        <button class="audio-mode-chip active" data-mode="demo" aria-pressed="true">🔊 示範聲</button>
+        <button class="audio-mode-chip" data-mode="mic" aria-pressed="false">🎤 我嘅聲</button>
+        <span class="audio-mode-status" id="audioModeStatus" aria-live="polite"></span>
+      </div>
+
+      <div class="audio-sample-row" id="audioSampleRow" role="group" aria-label="示範聲種類">
+        <button class="audio-sample-chip active" data-sample="noise" aria-pressed="true">白噪音</button>
+        <button class="audio-sample-chip" data-sample="high" aria-pressed="false">高音</button>
+        <button class="audio-sample-chip" data-sample="mid" aria-pressed="false">中音</button>
+        <button class="audio-sample-chip" data-sample="low" aria-pressed="false">低音</button>
       </div>
 
       <div class="cover-actions">
@@ -1499,8 +1542,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.14) ==============
-const APP_VERSION = '5.14';
+// ============== APP VERSION (v5.15) ==============
+const APP_VERSION = '5.15';
 
 // v5.13: declarative hint rule table for Stage 4 result explanation.
 // Each rule: { test(ctx) -> bool, msg }. First match wins. ctx fields:
@@ -2189,12 +2232,35 @@ let playNode = null, playGain = null, playFilter = null;
 function stopAudio() {
   if (playNode) { try { playNode.stop(); } catch(e){} playNode = null; }
 }
+
+// v5.15: sample library — 4 variants, current sample picked by chip click
+let currentSampleKind = 'noise'; // 'noise' | 'high' | 'mid' | 'low'
+
+function fillSampleBuffer(d, kind) {
+  // d is a Float32Array of ctx.sampleRate * 2 samples; fill with deterministic-ish waveform
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.5;
+  if (kind === 'noise') return; // pure white noise already filled
+  // For tonal variants, overlay sine waves on top of noise for texture
+  const overlays = {
+    high: [2200, 4400],   // 2.2kHz + 4.4kHz high-pitch squeal
+    mid:  [660, 990],     // 660Hz + 990Hz mid beep
+    low:  [110, 165]      // 110Hz + 165Hz low rumble
+  };
+  const sr = (typeof audioCtx !== 'undefined' && audioCtx && audioCtx.sampleRate) || 44100;
+  const freqs = overlays[kind] || overlays.mid;
+  for (let i = 0; i < d.length; i++) {
+    let s = 0;
+    for (const f of freqs) s += Math.sin(2 * Math.PI * f * i / sr);
+    // mix tonal layer with existing noise (lower amplitude for tonal so noise dominates)
+    d[i] = d[i] * 0.55 + (s / freqs.length) * 0.45;
+  }
+}
+
 function startLoud() {
   stopAudio();
   const ctx = getCtx();
   const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.5;
+  fillSampleBuffer(buf.getChannelData(0), currentSampleKind);
   const src = ctx.createBufferSource();
   src.buffer = buf; src.loop = true;
   const g = ctx.createGain(); g.gain.value = 0.5;
@@ -2206,8 +2272,7 @@ function startMuffled(totalScore) {
   stopAudio();
   const ctx = getCtx();
   const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.5;
+  fillSampleBuffer(buf.getChannelData(0), currentSampleKind);
   const src = ctx.createBufferSource();
   src.buffer = buf; src.loop = true;
   const filt = ctx.createBiquadFilter();
@@ -2219,6 +2284,183 @@ function startMuffled(totalScore) {
   src.start();
   playNode = src; playGain = g; playFilter = filt;
 }
+
+// v5.15: mic recorder + mode-aware play wiring for Stage 1
+let audioMode = 'demo'; // 'demo' | 'mic'
+let micPermission = 'unknown'; // 'unknown' | 'granted' | 'denied' | 'unsupported'
+let micRecorder = null;
+let micStream = null;
+let micChunks = [];
+let micBlob = null;
+let micBufferSource = null;
+const MIC_RECORD_MS = 2000;
+
+function isMicSupported() {
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+}
+
+function setMode(newMode) {
+  audioMode = newMode;
+  document.querySelectorAll('.audio-mode-chip').forEach(c => {
+    const on = c.dataset.mode === newMode;
+    c.classList.toggle('active', on);
+    c.setAttribute('aria-pressed', String(on));
+  });
+  const sampleRow = document.getElementById('audioSampleRow');
+  if (sampleRow) sampleRow.classList.toggle('hidden', newMode !== 'demo');
+  stopAudio();
+  if (micBufferSource) { try { micBufferSource.stop(); } catch(e){} micBufferSource = null; }
+  // v5.15: clear visual playing state when switching mode
+  const scene = document.getElementById('coverScene');
+  const sp = document.getElementById('speaker');
+  const ea = document.getElementById('ear');
+  if (scene) scene.classList.remove('playing');
+  if (sp) sp.classList.remove('playing');
+  if (ea) ea.classList.remove('hear');
+  const st = document.getElementById('audioModeStatus');
+  if (newMode === 'demo') {
+    if (st) { st.textContent = ''; st.className = 'audio-mode-status'; }
+  } else {
+    // mic mode entered
+    if (!isMicSupported()) {
+      micPermission = 'unsupported';
+      if (st) { st.textContent = '瀏覽器唔支援咪高峰，請用示範聲'; st.className = 'audio-mode-status error'; }
+    } else if (micPermission === 'denied') {
+      if (st) { st.textContent = '之前拒絕咗咪高峰，請用示範聲'; st.className = 'audio-mode-status error'; }
+    } else if (micBlob) {
+      if (st) { st.textContent = '已錄好喇，撳播試吓'; st.className = 'audio-mode-status ok'; }
+    } else {
+      if (st) { st.textContent = '撳「播聲音」試錄你把聲'; st.className = 'audio-mode-status'; }
+    }
+  }
+}
+
+function setSampleKind(kind) {
+  currentSampleKind = kind;
+  document.querySelectorAll('.audio-sample-chip').forEach(c => {
+    const on = c.dataset.sample === kind;
+    c.classList.toggle('active', on);
+    c.setAttribute('aria-pressed', String(on));
+  });
+  // If currently playing in demo mode, restart with new sample
+  if (audioMode === 'demo' && playNode) {
+    startLoud();
+  }
+}
+
+async function requestMic() {
+  if (micPermission === 'granted' && micStream) return micStream;
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    micPermission = 'granted';
+    return micStream;
+  } catch (err) {
+    console.warn('mic permission error:', err);
+    if (err && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
+      micPermission = 'denied';
+    } else {
+      micPermission = 'unsupported';
+    }
+    return null;
+  }
+}
+
+async function recordMic(durationMs) {
+  const stream = await requestMic();
+  if (!stream) return null;
+  return new Promise((resolve) => {
+    micChunks = [];
+    let recorder;
+    try {
+      recorder = new MediaRecorder(stream);
+    } catch (e) {
+      console.warn('MediaRecorder constructor failed:', e);
+      resolve(null);
+      return;
+    }
+    micRecorder = recorder;
+    recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) micChunks.push(e.data); };
+    recorder.onstop = async () => {
+      micBlob = new Blob(micChunks, { type: micChunks[0]?.type || 'audio/webm' });
+      micChunks = [];
+      micRecorder = null;
+      resolve(micBlob);
+    };
+    recorder.onerror = (e) => { console.warn('recorder error:', e); resolve(null); };
+    recorder.start();
+    setTimeout(() => {
+      if (recorder.state === 'recording') recorder.stop();
+    }, durationMs);
+  });
+}
+
+async function blobToAudioBuffer(blob) {
+  const arr = await blob.arrayBuffer();
+  const ctx = getCtx();
+  try {
+    return await ctx.decodeAudioData(arr.slice(0));
+  } catch (e) {
+    console.warn('decodeAudioData failed:', e);
+    return null;
+  }
+}
+
+async function playMicBlob() {
+  if (!micBlob) return;
+  stopAudio();
+  const buf = await blobToAudioBuffer(micBlob);
+  if (!buf) return;
+  const ctx = getCtx();
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const g = ctx.createGain(); g.gain.value = 0.5;
+  src.connect(g); g.connect(ctx.destination);
+  src.start();
+  playNode = src; playGain = g; playFilter = null;
+  micBufferSource = src;
+}
+
+async function handleCoverPlay() {
+  if (audioMode === 'demo') {
+    startLoud();
+    return;
+  }
+  // mic mode: record then play
+  const st = document.getElementById('audioModeStatus');
+  if (!isMicSupported()) {
+    if (st) { st.textContent = '瀏覽器唔支援咪高峰，請用示範聲'; st.className = 'audio-mode-status error'; }
+    return;
+  }
+  const micChip = document.querySelector('.audio-mode-chip[data-mode="mic"]');
+  if (st) { st.textContent = '🎤 錄緊…講嘢啦！'; st.className = 'audio-mode-status'; }
+  if (micChip) micChip.classList.add('recording');
+  try {
+    const blob = await recordMic(MIC_RECORD_MS);
+    if (micChip) micChip.classList.remove('recording');
+    if (!blob) {
+      if (micPermission === 'denied') {
+        if (st) { st.textContent = '咪高峰被拒絕咗，請用示範聲'; st.className = 'audio-mode-status error'; }
+      } else {
+        if (st) { st.textContent = '錄音失敗，請再試或用示範聲'; st.className = 'audio-mode-status error'; }
+      }
+      return;
+    }
+    if (st) { st.textContent = '✅ 錄好喇！播緊你把聲…'; st.className = 'audio-mode-status ok'; }
+    await playMicBlob();
+  } catch (err) {
+    if (micChip) micChip.classList.remove('recording');
+    console.error('handleCoverPlay error:', err);
+    if (st) { st.textContent = '出咗錯，請再試'; st.className = 'audio-mode-status error'; }
+  }
+}
+
+// Wire mode toggle + sample chip clicks
+document.querySelectorAll('.audio-mode-chip').forEach(chip => {
+  chip.addEventListener('click', () => setMode(chip.dataset.mode));
+});
+document.querySelectorAll('.audio-sample-chip').forEach(chip => {
+  chip.addEventListener('click', () => setSampleKind(chip.dataset.sample));
+});
 
 // ============== STAGE NAV ==============
 const completedStages = new Set();
@@ -2301,10 +2543,15 @@ function refreshStage1Next() {
   nextTo2.disabled = !(stage1Played && stage1Covered);
 }
 
-btnCoverPlay.addEventListener('click', (e) => {
+btnCoverPlay.addEventListener('click', async (e) => {
   e.stopPropagation();
   try {
-    startLoud();
+    // v5.15: mode-aware — demo uses sample library, mic records then plays user audio
+    if (audioMode === 'mic') {
+      await handleCoverPlay();
+    } else {
+      startLoud();
+    }
     stage1Played = true;
     if (!stage1StartTime) stage1StartTime = Date.now();
     stage1PlayCount++;
