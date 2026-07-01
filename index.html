@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;700;900&display=swap" rel="stylesheet">
-<!-- v5.24.0: settings panel UX overhaul — motion label clarity + voice test button + reset defaults -->
+<!-- v5.24.1: TDZ hotfix — move top-level renderMiniProgress('1') call after completedStages const init (was blocking all button handlers from binding, making homepage unresponsive) -->
 <link rel="preload" href="assets/materials/cup-paper.webp" as="image" type="image/webp">
 <link rel="preload" href="assets/materials/cup-plastic.webp" as="image" type="image/webp">
 <link rel="preload" href="assets/materials/cup-foam.webp" as="image" type="image/webp">
@@ -2294,8 +2294,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.24.0) ==============
-const APP_VERSION = '5.24.0';
+// ============== APP VERSION (v5.24.1) ==============
+const APP_VERSION = '5.24.1';
 
 // v5.13: declarative hint rule table for Stage 4 result explanation.
 // Each rule: { test(ctx) -> bool, msg }. First match wins. ctx fields:
@@ -3202,8 +3202,8 @@ function renderBadgeGallery() {
 }
 
 renderBadgePips();
+// (mini-progress render moved below — needs `completedStages` const)
 // v5.14: render mini-progress on initial load (stage 1 active by default)
-renderMiniProgress('1');
 document.getElementById('appVersion').textContent = APP_VERSION;
 
 // ============== SETTINGS (TTS + font) ==============
@@ -3983,6 +3983,8 @@ document.querySelectorAll('.audio-sample-chip').forEach(chip => {
 // ============== STAGE NAV ==============
 const completedStages = new Set();
 // v5.14: mini-progress render — segments mark done/cur/pending based on completedStages + active
+// (v5.25: top-level `renderMiniProgress('1')` call moved here — must run AFTER const init)
+renderMiniProgress('1');
 function renderMiniProgress(curStage) {
   const root = document.getElementById('miniProgress');
   if (!root) return;
