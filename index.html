@@ -371,6 +371,70 @@
   .log-modal-card { background: var(--paper); border: 3px solid var(--line); border-radius: 24px;
     padding: 24px; max-width: 520px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; }
 
+  /* v5.16: teacher dashboard FAB + modal */
+  .dashboard-fab {
+    position: fixed; bottom: 90px; right: 20px; z-index: 100;
+    width: 50px; height: 50px;
+    background: var(--soft-blue); color: white;
+    border: 3px solid white; border-radius: 50%;
+    display: grid; place-items: center;
+    cursor: pointer;
+    box-shadow: 0 6px 20px -4px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+  }
+  .dashboard-fab:hover { transform: scale(1.08); background: var(--ink-2); }
+  .dashboard-modal { position: fixed; inset: 0; z-index: 220; background: rgba(42,34,24,0.6);
+    backdrop-filter: blur(6px); display: none; place-items: center; padding: 20px; }
+  .dashboard-modal.show { display: grid; animation: fade 0.3s ease; }
+  .dashboard-card { background: var(--paper); border: 3px solid var(--line); border-radius: 24px;
+    padding: 24px; max-width: 640px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; }
+  .dashboard-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .dashboard-head h3 { font-family: 'Noto Sans HK'; font-weight: 900; font-size: 1.3rem; }
+  .dashboard-close { padding: 8px 14px; font-family: inherit; font-size: 0.85rem;
+    background: var(--bg); color: var(--ink-2); border: 2px solid var(--line);
+    border-radius: 12px; cursor: pointer; font-weight: 700; }
+  .dashboard-close:hover { border-color: var(--primary); color: var(--primary); }
+  .dashboard-body { flex: 1; overflow-y: auto; min-height: 0; }
+  .dash-empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 1rem; }
+  .dash-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
+  .dash-stat { background: var(--bg); border: 2px solid var(--line); border-radius: 14px;
+    padding: 12px; text-align: center; }
+  .dash-stat .ds-label { font-size: 0.72rem; color: var(--muted); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .dash-stat .ds-value { font-size: 1.4rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .dash-stat .ds-sub { font-size: 0.72rem; color: var(--ink-2); margin-top: 2px; }
+  .dash-section-title { font-size: 0.95rem; font-weight: 900; color: var(--ink-2);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .dash-count { font-size: 0.78rem; color: var(--muted); font-weight: 700; }
+  .dash-list { max-height: 280px; overflow-y: auto; padding-right: 4px; margin-bottom: 14px; }
+  .dash-row { padding: 10px 12px; background: var(--bg); border-radius: 12px; margin-bottom: 6px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+    font-size: 0.85rem; }
+  .dash-row .dr-idx { font-family: 'JetBrains Mono'; font-weight: 700; color: var(--muted);
+    min-width: 32px; text-align: right; font-size: 0.8rem; }
+  .dash-row .dr-info { line-height: 1.4; }
+  .dash-row .dr-info .dr-title { font-weight: 700; margin-bottom: 1px; }
+  .dash-row .dr-info .dr-meta { font-size: 0.72rem; color: var(--ink-2); }
+  .dash-row .dr-score { font-family: 'JetBrains Mono'; font-weight: 900;
+    color: var(--good); font-size: 1.05rem; min-width: 32px; text-align: center; }
+  .dashboard-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .dashboard-actions button { flex: 1; padding: 12px; font-family: inherit; font-size: 0.95rem;
+    font-weight: 700; border-radius: 12px; cursor: pointer; transition: all 0.15s;
+    background: var(--bg); color: var(--ink-2); border: 2px solid var(--line); }
+  .dashboard-actions button:hover { border-color: var(--primary); color: var(--primary); }
+  .dashboard-actions button.dash-primary { background: var(--good); color: white; border-color: var(--good); }
+  .dashboard-actions button.dash-primary:hover { background: #3d9a5a; border-color: #3d9a5a; color: white; }
+  .dashboard-actions button.dash-danger { color: var(--primary); border-color: var(--primary); }
+  .dashboard-actions button.dash-danger:hover { background: var(--primary); color: white; }
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-fab { transition: none; }
+    .dashboard-modal.show { animation: none; }
+  }
+  @media (max-width: 600px) {
+    .dashboard-fab { width: 46px; height: 46px; bottom: 80px; right: 14px; }
+    .dash-stats { grid-template-columns: 1fr 1fr; }
+  }
+
   /* compare button (under conclusion) */
   .compare-trigger { display: block; width: 100%; margin-bottom: 14px; padding: 12px;
     font-family: inherit; font-size: 0.95rem; font-weight: 700;
@@ -982,6 +1046,15 @@
     </svg>
   </button>
 
+  <!-- v5.16: teacher dashboard FAB (above settings) -->
+  <button class="dashboard-fab" id="dashboardFab" aria-label="老師後台" title="老師後台">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 3h18v4H3z"/>
+      <path d="M5 7v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7"/>
+      <path d="M9 12h6M9 16h4"/>
+    </svg>
+  </button>
+
   <div class="settings-panel" id="settingsPanel">
     <div class="settings-title">⚙️ 設定 <span style="font-size:0.7rem; color:var(--muted); font-weight:400; margin-left:6px;">v<span id="appVersion"></span></span></div>
 
@@ -1538,12 +1611,32 @@
 <!-- ========== PRINT SHEET ========== -->
 <div class="print-sheet" id="printSheet"></div>
 
+<!-- ========== TEACHER DASHBOARD (v5.16) ========== -->
+<div class="dashboard-modal" id="dashboardModal" role="dialog" aria-modal="true" aria-labelledby="dashTitle">
+  <div class="dashboard-card">
+    <div class="dashboard-head">
+      <h3 id="dashTitle">⚙ 老師後台</h3>
+      <button class="dashboard-close" id="dashboardClose" aria-label="關閉後台">關</button>
+    </div>
+    <div id="dashEmpty" class="dash-empty" hidden>未有紀錄。學生做完實驗就會見到數據。</div>
+    <div id="dashBody" class="dashboard-body">
+      <div class="dash-stats" id="dashStats"></div>
+      <div class="dash-section-title">📋 全部紀錄 <span class="dash-count" id="dashCount"></span></div>
+      <div class="dash-list" id="dashList"></div>
+    </div>
+    <div class="dashboard-actions">
+      <button id="dashCsv" class="dash-primary">📥 匯出 CSV</button>
+      <button id="dashClear" class="dash-danger">🗑 全部拎走</button>
+    </div>
+  </div>
+</div>
+
 <!-- ========== TOAST ========== -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.15) ==============
-const APP_VERSION = '5.15';
+// ============== APP VERSION (v5.16) ==============
+const APP_VERSION = '5.16';
 
 // v5.13: declarative hint rule table for Stage 4 result explanation.
 // Each rule: { test(ctx) -> bool, msg }. First match wins. ctx fields:
@@ -3026,6 +3119,146 @@ const FEEL_LABEL = { quiet: '🤫 好靜', less: '🔉 細聲咗', loud: '🔊 �
 const COMFORT_LABEL = { good: '😊 好舒服', ok: '😐 還可以', bad: '😣 好唔舒服' };
 const SHELL_LABEL = { paper: '📄 紙杯', plastic: '🥤 膠杯', foam: '🧽 泡棉杯' };
 const SEAL_LABEL = { none: '🚫 無墊', cotton: '🧶 棉花', towel: '🟦 毛巾', tissue: '🧻 紙巾', foam: '🟧 記憶墊' };
+
+// v5.16: teacher dashboard module — aggregation + CSV export
+function modeBy(items) {
+  // items: array of strings. Returns { value, count, total } — most frequent
+  if (!items.length) return { value: '—', count: 0, total: 0 };
+  const counts = {};
+  for (const it of items) counts[it] = (counts[it] || 0) + 1;
+  let best = null, bestN = -1;
+  for (const k of Object.keys(counts)) {
+    if (counts[k] > bestN) { best = k; bestN = counts[k]; }
+  }
+  return { value: best, count: bestN, total: items.length };
+}
+
+function renderDashboard() {
+  const empty = document.getElementById('dashEmpty');
+  const body = document.getElementById('dashBody');
+  const list = document.getElementById('dashList');
+  const stats = document.getElementById('dashStats');
+  const countEl = document.getElementById('dashCount');
+  if (!experimentLog.length) {
+    if (empty) empty.hidden = false;
+    if (body) body.hidden = true;
+    return;
+  }
+  if (empty) empty.hidden = true;
+  if (body) body.hidden = false;
+
+  const n = experimentLog.length;
+  const sumScore = experimentLog.reduce((a, e) => a + (e.score || 0), 0);
+  const avg = (sumScore / n).toFixed(1);
+  const shellMode = modeBy(experimentLog.map(e => e.shell).filter(Boolean));
+  const sealMode  = modeBy(experimentLog.map(e => e.seal).filter(Boolean));
+  const goodCount = experimentLog.filter(e => e.comfort === 'good').length;
+  const quietCount = experimentLog.filter(e => e.feel === 'quiet').length;
+  const perfectCount = experimentLog.filter(e => e.shell === 'plastic' && e.seal === 'foam').length;
+
+  stats.innerHTML =
+    `<div class="dash-stat"><div class="ds-label">總實驗</div><div class="ds-value">${n}</div><div class="ds-sub">次</div></div>` +
+    `<div class="dash-stat"><div class="ds-label">平均分數</div><div class="ds-value">${avg}</div><div class="ds-sub">/ 3.0</div></div>` +
+    `<div class="dash-stat"><div class="ds-label">最常用杯</div><div class="ds-value">${SHELL_LABEL[shellMode.value] || shellMode.value}</div><div class="ds-sub">${shellMode.count}/${shellMode.total} 次</div></div>` +
+    `<div class="dash-stat"><div class="ds-label">最常用墊</div><div class="ds-value">${SEAL_LABEL[sealMode.value] || sealMode.value}</div><div class="ds-sub">${sealMode.count}/${sealMode.total} 次</div></div>` +
+    `<div class="dash-stat"><div class="ds-label">好舒服率</div><div class="ds-value">${Math.round(goodCount / n * 100)}%</div><div class="ds-sub">${goodCount}/${n}</div></div>` +
+    `<div class="dash-stat"><div class="ds-label">好靜率</div><div class="ds-value">${Math.round(quietCount / n * 100)}%</div><div class="ds-sub">${quietCount}/${n} · 完美組合 ${perfectCount}</div></div>`;
+
+  countEl.textContent = `(${n})`;
+  // entries are unshifted (newest first); display newest first
+  list.innerHTML = experimentLog.map((e, i) => {
+    const shellName = SHELL_LABEL[e.shell] || e.shell || '—';
+    const sealName  = SEAL_LABEL[e.seal]   || e.seal  || '—';
+    const feelName  = FEEL_LABEL[e.feel]   || e.feel  || '—';
+    const comfortName = COMFORT_LABEL[e.comfort] || e.comfort || '—';
+    const dt = e.ts ? new Date(e.ts) : null;
+    const dateStr = dt ? `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}` : '—';
+    return `<div class="dash-row">
+      <div class="dr-idx">#${n - i}</div>
+      <div class="dr-info">
+        <div class="dr-title">${shellName} + ${sealName}</div>
+        <div class="dr-meta">${dateStr} · ${feelName} · ${comfortName}</div>
+      </div>
+      <div class="dr-score">${e.score || '—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function openDashboard() {
+  renderDashboard();
+  document.getElementById('dashboardModal').classList.add('show');
+}
+function closeDashboard() {
+  document.getElementById('dashboardModal').classList.remove('show');
+}
+
+function csvEscape(v) {
+  // CSV-safe: wrap in quotes if contains comma/quote/newline; double internal quotes
+  const s = v == null ? '' : String(v);
+  if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function exportDashboardCsv() {
+  if (!experimentLog.length) {
+    alert('未有紀錄可以匯出。');
+    return;
+  }
+  const headers = ['id', 'timestamp', 'shell', 'shell_label', 'seal', 'seal_label', 'feel', 'comfort', 'score', 'app_version'];
+  const lines = [headers.join(',')];
+  // CSV: oldest first (chronological order is more useful for spreadsheet sorting)
+  const ordered = experimentLog.slice().reverse();
+  for (const e of ordered) {
+    const row = [
+      e.id,
+      e.ts,
+      e.shell || '',
+      SHELL_LABEL[e.shell] || '',
+      e.seal  || '',
+      SEAL_LABEL[e.seal]  || '',
+      e.feel || '',
+      e.comfort || '',
+      e.score == null ? '' : e.score,
+      APP_VERSION
+    ].map(csvEscape).join(',');
+    lines.push(row);
+  }
+  // Excel-friendly: BOM + CRLF
+  const csv = '\uFEFF' + lines.join('\r\n') + '\r\n';
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `earmuff-pdir-log-${stamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Wire dashboard events (v5.16)
+document.getElementById('dashboardFab').addEventListener('click', openDashboard);
+document.getElementById('dashboardClose').addEventListener('click', closeDashboard);
+document.getElementById('dashboardModal').addEventListener('click', (e) => {
+  // close on overlay click (not card click)
+  if (e.target === document.getElementById('dashboardModal')) closeDashboard();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const m = document.getElementById('dashboardModal');
+    if (m && m.classList.contains('show')) closeDashboard();
+  }
+});
+document.getElementById('dashCsv').addEventListener('click', exportDashboardCsv);
+document.getElementById('dashClear').addEventListener('click', () => {
+  if (!experimentLog.length) return;
+  if (!confirm(`拎走晒 ${experimentLog.length} 條紀錄？呢個 action 唔可以 undo。`)) return;
+  experimentLog = [];
+  saveLog();
+  updateLogCount();
+  renderDashboard();
+});
 
 // chip selection state
 let logPick = { feel: null, comfort: null };
