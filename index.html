@@ -383,6 +383,57 @@
   .stage-chart-panel .mat-chart { background: white; border-color: var(--soft-blue-bg); padding: 8px 10px; }
   .stage-chart-panel .mat-chart-title { font-size: 0.7rem; color: var(--soft-blue); opacity: 1; margin-bottom: 6px; }
   @media (max-width: 480px) { .stage-chart-grid { grid-template-columns: 1fr; } }
+  /* v5.19: pick-path sequence pills (Stage 2 inline chart) */
+  .pick-path {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: white;
+    border: 2px dashed var(--soft-blue);
+    border-radius: 12px;
+  }
+  .pick-path-label {
+    font-size: 0.72rem; font-weight: 900; color: var(--soft-blue);
+    margin-bottom: 6px; letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .pick-path-row {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .pick-path-row:last-child { margin-bottom: 0; }
+  .pick-path-row .ppr-tag {
+    font-size: 0.7rem; font-weight: 700; color: var(--muted);
+    min-width: 32px;
+  }
+  .pick-path-pill {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 3px 8px;
+    background: var(--soft-blue-bg);
+    color: var(--soft-blue);
+    border: 2px solid var(--soft-blue);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.1;
+    transition: all 0.3s;
+  }
+  .pick-path-pill.cur {
+    background: var(--good);
+    color: white;
+    border-color: var(--good);
+    box-shadow: 0 0 0 3px rgba(76,175,106,0.25);
+  }
+  .pick-path-pill.cur::after {
+    content: "✓";
+    font-weight: 900;
+    margin-left: 2px;
+  }
+  .pick-path-arrow {
+    color: var(--muted); font-size: 0.78rem; line-height: 1;
+  }
+  .pick-path-empty {
+    font-size: 0.78rem; color: var(--muted); font-style: italic;
+  }
   /* v5.17: drag-to-reorder for mat-card */
   .mat-card { cursor: grab; -webkit-user-select: none; user-select: none; touch-action: pan-y; }
   .mat-card.dragging { opacity: 0.35; cursor: grabbing; }
@@ -634,6 +685,79 @@
   }
   @media (max-width: 600px) {
     .dash-metrics-grid { grid-template-columns: 1fr; }
+  }
+  /* v5.19: Stage 2 pick-path dashboard panel */
+  .dash-path-panel {
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 18px;
+  }
+  .dash-path-stat-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    margin-bottom: 14px;
+  }
+  .dash-path-stat {
+    background: white; border: 1.5px solid var(--line);
+    border-radius: 10px; padding: 10px; text-align: center;
+  }
+  .dash-path-stat .dps-v {
+    font-family: 'JetBrains Mono', monospace; font-weight: 900;
+    font-size: 1.5rem; color: var(--primary); line-height: 1.1;
+  }
+  .dash-path-stat .dps-l {
+    font-size: 0.72rem; color: var(--ink-2); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-top: 4px;
+  }
+  .dash-path-stat.gold .dps-v { color: var(--good); }
+  .dash-path-stat.mid .dps-v { color: #c97b3f; }
+  .dash-path-common {
+    background: white; border: 2px solid var(--line); border-radius: 12px;
+    padding: 10px 12px; margin-bottom: 10px;
+  }
+  .dash-path-common:last-child { margin-bottom: 0; }
+  .dash-path-common-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .dash-path-common-title {
+    font-size: 0.78rem; font-weight: 900; color: var(--ink-2);
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .dash-path-common-count {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    background: var(--good-soft); color: var(--good);
+    padding: 2px 10px; border-radius: 10px; font-size: 0.78rem;
+  }
+  .dash-path-pills {
+    display: flex; align-items: center; gap: 3px; flex-wrap: wrap;
+    margin-bottom: 4px; font-size: 0.82rem;
+  }
+  .dash-path-pills:last-child { margin-bottom: 0; }
+  .dash-path-pills .dpp-tag {
+    font-size: 0.7rem; font-weight: 700; color: var(--muted);
+    min-width: 28px;
+  }
+  .dash-path-pills .dpp-pill {
+    display: inline-block; padding: 2px 8px;
+    background: var(--soft-blue-bg); color: var(--soft-blue);
+    border: 1.5px solid var(--soft-blue); border-radius: 999px;
+    font-size: 0.75rem; font-weight: 700;
+  }
+  .dash-path-pills .dpp-pill.cur {
+    background: var(--good); color: white; border-color: var(--good);
+  }
+  .dash-path-pills .dpp-arrow {
+    color: var(--muted); font-size: 0.7rem;
+  }
+  .dash-path-empty {
+    text-align: center; padding: 20px; color: var(--muted);
+    font-style: italic; font-size: 0.85rem;
+  }
+  @media (max-width: 600px) {
+    .dash-path-stat-row { grid-template-columns: 1fr; }
   }
 
   /* compare button (under conclusion) */
@@ -1641,6 +1765,10 @@
       </div>
       <div class="stage-chart-grid" id="stage2ChartGrid"></div>
       <div class="stage-chart-summary" id="stage2ChartSummary"></div>
+      <div class="pick-path" id="stage2PickPath">
+        <div class="pick-path-label">🛤️ 你嘅揀料路徑</div>
+        <div id="stage2PickPathContent"></div>
+      </div>
     </div>
 
     <button class="next-btn" id="nextTo3" disabled>整好喇 ➜</button>
@@ -1949,6 +2077,8 @@
       <div class="dash-stage-table" id="dashStageTable"></div>
       <div class="dash-section-title">🎨 每步 chart 總覽 <span class="dash-count" id="dashMetricsHint"></span></div>
       <div class="dash-metrics-grid" id="dashMetricsGrid"></div>
+      <div class="dash-section-title">🛤️ Stage 2 揀料路徑 <span class="dash-count" id="dashPathHint"></span></div>
+      <div class="dash-path-panel" id="dashPathPanel"></div>
       <div class="dash-section-title">📋 全部紀錄 <span class="dash-count" id="dashCount"></span></div>
       <div class="dash-list" id="dashList"></div>
     </div>
@@ -1964,8 +2094,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============== APP VERSION (v5.18) ==============
-const APP_VERSION = '5.18';
+// ============== APP VERSION (v5.19) ==============
+const APP_VERSION = '5.19';
 
 // v5.13: declarative hint rule table for Stage 4 result explanation.
 // Each rule: { test(ctx) -> bool, msg }. First match wins. ctx fields:
@@ -2174,6 +2304,8 @@ function renderStage2Chart() {
     }
     summary.innerHTML = msg;
   }
+  // v5.19: render pick-path sequence pills (cup + seal exploration order)
+  renderStage2PickPath();
   STAGE_METRICS.s2 = {
     picks: totalPicks,
     reorders: stage2ReorderCount,
@@ -2181,9 +2313,46 @@ function renderStage2Chart() {
     finalShell: shellPicked,
     finalSeal: sealPicked,
     totalScore: +document.querySelector('.mat-card[data-type="shell"].picked').dataset.score + +document.querySelector('.mat-card[data-type="seal"].picked').dataset.score,
+    // v5.19: pick-path array snapshot for dashboard aggregation
+    pickPath: {
+      shells: stage2PickPath.shells.map(p => p.id),
+      seals: stage2PickPath.seals.map(p => p.id),
+    },
   };
   const panel = document.getElementById('stage2ChartPanel');
   if (panel) panel.classList.add('show');
+}
+
+// v5.19: render pick-path as pill sequence — highlights final pick with green ring
+function renderStage2PickPath() {
+  const el = document.getElementById('stage2PickPathContent');
+  if (!el) return;
+  if (!stage2PickPath.shells.length && !stage2PickPath.seals.length) {
+    el.innerHTML = '<div class="pick-path-empty">未有路徑數據</div>';
+    return;
+  }
+  function pillsFor(items, currentFinal) {
+    return items.map((p, i) => {
+      const isCur = i === items.length - 1 && p.id === currentFinal;
+      const label = (p.kind === 'shell' ? SHELL_LABEL[p.id] : SEAL_LABEL[p.id]) || p.id;
+      const emoji = label.split(' ')[0] || '❓';
+      const shortLabel = label.split(' ')[1] || label;
+      const cls = isCur ? 'pick-path-pill cur' : 'pick-path-pill';
+      return `<span class="${cls}" title="${label}">${emoji} ${shortLabel}</span>`;
+    }).join('<span class="pick-path-arrow">→</span>');
+  }
+  const shellPills = pillsFor(stage2PickPath.shells, shellPicked);
+  const sealPills  = pillsFor(stage2PickPath.seals, sealPicked);
+  let html = '';
+  if (stage2PickPath.shells.length) {
+    html += `<div class="pick-path-row"><span class="ppr-tag">杯</span>${shellPills}</div>`;
+  }
+  if (stage2PickPath.seals.length) {
+    html += `<div class="pick-path-row"><span class="ppr-tag">墊</span>${sealPills}</div>`;
+  }
+  // If neither, show empty
+  if (!html) html = '<div class="pick-path-empty">未有路徑數據</div>';
+  el.innerHTML = html;
 }
 
 // v5.18: Stage 3 chart — shown when stage 3 becomes active + cup built
@@ -3297,6 +3466,10 @@ document.querySelectorAll('.mat-card').forEach(card => {
 
 let shellPicked = null, sealPicked = null;
 let stage2StartTime = null;
+// v5.19: pick-path tracker — captures the sequence of cup+seal the student explored
+// before settling on the final combo. Each entry: { id, ts, score }.
+// Used by Stage 2 inline chart + dashboard pick-path aggregation.
+const stage2PickPath = { shells: [], seals: [] };
 
 // v5.12: a11y helper — sync ARIA state on all cards in a grid
 function syncAriaPicked(grid) {
@@ -3349,6 +3522,12 @@ document.querySelectorAll('.mat-card').forEach(card => {
     syncAriaPicked(grid);
     if (type === 'shell') {
       shellPicked = card.dataset.id;
+      // v5.19: record pick-path entry (push even if same id — exploration counts)
+      stage2PickPath.shells.push({
+        id: card.dataset.id,
+        ts: Date.now(),
+        score: +card.dataset.score,
+      });
       // v5.9.2: start timer when first 1+1 reached; reset if user re-picks after completing once
       if (!stage2StartTime) {
         stage2StartTime = Date.now();
@@ -3368,6 +3547,12 @@ document.querySelectorAll('.mat-card').forEach(card => {
       announce('揀咗' + (card.dataset.tts || '杯') + '。而家可以揀軟墊。');
     } else {
       sealPicked = card.dataset.id;
+      // v5.19: record pick-path entry
+      stage2PickPath.seals.push({
+        id: card.dataset.id,
+        ts: Date.now(),
+        score: +card.dataset.score,
+      });
       // v5.9.2: mirror reset logic for seal re-pick
       if (!stage2StartTime) {
         stage2StartTime = Date.now();
@@ -3823,6 +4008,8 @@ document.getElementById('btnRetry').addEventListener('click', () => {
   shellPicked = null; sealPicked = null;
   stage2StartTime = null; // v5.9.3: reset timer so fast-badge isn't trivially earned on retry
   stage2ReorderCount = 0; // v5.18: reset reorder counter
+  stage2PickPath.shells = []; // v5.19: reset pick-path
+  stage2PickPath.seals = [];
   window._lastBuildKey = null; // v5.9.3: clear idempotency guard so same combo re-renders
   document.querySelectorAll('.mat-card').forEach(c => c.classList.remove('picked'));
   document.getElementById('shellReq').textContent = '（揀一樣）';
@@ -3863,6 +4050,9 @@ document.getElementById('btnRetry').addEventListener('click', () => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('show');
   });
+  // v5.19: clear pick-path pills display
+  const pathContent = document.getElementById('stage2PickPathContent');
+  if (pathContent) pathContent.innerHTML = '<div class="pick-path-empty">未有路徑數據</div>';
   refreshStage1Next();
   coverScene.classList.remove('playing', 'covered');
   speaker.classList.remove('playing');
@@ -3966,6 +4156,8 @@ function renderDashboard() {
   renderStageBreakdown();
   // v5.18: aggregated per-stage metric cards
   renderDashMetrics();
+  // v5.19: Stage 2 pick-path aggregation
+  renderDashPath();
   // entries are unshifted (newest first); display newest first
   list.innerHTML = experimentLog.map((e, i) => {
     const shellName = SHELL_LABEL[e.shell] || e.shell || '—';
@@ -4159,6 +4351,104 @@ function renderDashMetrics() {
   if (hintEl) hintEl.textContent = `(基於 ${withM.length} 條有 metrics 嘅 log)`;
 }
 
+// v5.19: Stage 2 pick-path aggregation — common paths, first-try rate, exploration depth
+// Each entry.metrics.s2.pickPath = { shells: [id, ...], seals: [id, ...] }
+// shell/seal are independent tracks (student may pick 3 cups before any seal)
+function renderDashPath() {
+  const el = document.getElementById('dashPathPanel');
+  const hintEl = document.getElementById('dashPathHint');
+  if (!el) return;
+  const withPath = experimentLog.filter(e => e.metrics?.s2?.pickPath);
+  if (!withPath.length) {
+    el.innerHTML = '<div class="dash-path-empty">尚未收集 pick-path 數據（做新實驗後會出現）</div>';
+    if (hintEl) hintEl.textContent = '';
+    return;
+  }
+  // 1) Common shell + seal pick-paths (mode — most frequent unique sequence)
+  // tally by joined sequence string
+  function tallySeq(arr, key) {
+    const counts = {};
+    withPath.forEach(e => {
+      const seq = (e.metrics.s2.pickPath[key] || []).join('→');
+      counts[seq] = (counts[seq] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([seq, n]) => ({ seq, n }))
+      .sort((a, b) => b.n - a.n);
+  }
+  const shellPaths = tallySeq([], 'shells');
+  const sealPaths  = tallySeq([], 'seals');
+  const topShell = shellPaths[0];
+  const topSeal  = sealPaths[0];
+  // 2) First-try rate — student picked final on first click (path length == 1)
+  const firstTry = withPath.filter(e => {
+    const sp = e.metrics.s2.pickPath.shells || [];
+    const pp = e.metrics.s2.pickPath.seals || [];
+    return sp.length === 1 && pp.length === 1;
+  }).length;
+  const firstTryRate = Math.round((firstTry / withPath.length) * 100);
+  // 3) Exploration depth — avg picks per student
+  const avgShellPicks = (withPath.reduce((a, e) => a + (e.metrics.s2.pickPath.shells?.length || 0), 0) / withPath.length);
+  const avgSealPicks  = (withPath.reduce((a, e) => a + (e.metrics.s2.pickPath.seals?.length || 0), 0) / withPath.length);
+  const avgTotal = (avgShellPicks + avgSealPicks).toFixed(1);
+
+  function pillsHtml(seq, kind) {
+    if (!seq) return '<span class="dash-path-empty">（無）</span>';
+    const ids = seq.split('→');
+    const final = ids[ids.length - 1];
+    return ids.map((id, i) => {
+      const label = (kind === 'shell' ? SHELL_LABEL[id] : SEAL_LABEL[id]) || id;
+      const emoji = label.split(' ')[0] || '❓';
+      const short = label.split(' ')[1] || label;
+      const cls = (i === ids.length - 1) ? 'dpp-pill cur' : 'dpp-pill';
+      return `<span class="${cls}" title="${label}">${emoji} ${short}</span>`;
+    }).join('<span class="dpp-arrow">→</span>');
+  }
+
+  let html = '<div class="dash-path-stat-row">';
+  // first-try rate
+  let tryCls = 'mid';
+  if (firstTryRate >= 60) tryCls = 'gold';
+  else if (firstTryRate < 30) tryCls = '';
+  html += `<div class="dash-path-stat ${tryCls}">
+    <div class="dps-v">${firstTryRate}%</div>
+    <div class="dps-l">首次命中 (${firstTry}/${withPath.length})</div>
+  </div>`;
+  // avg total picks (lower = more decisive)
+  let avgCls = 'gold';
+  if (avgTotal > 4) avgCls = 'mid';
+  if (avgTotal > 6) avgCls = '';
+  html += `<div class="dash-path-stat ${avgCls}">
+    <div class="dps-v">${avgTotal}</div>
+    <div class="dps-l">avg 揀料次數 (越少越果斷)</div>
+  </div>`;
+  // max picks (most exploratory student)
+  const maxPicks = Math.max(...withPath.map(e => {
+    const sp = e.metrics.s2.pickPath.shells?.length || 0;
+    const pp = e.metrics.s2.pickPath.seals?.length || 0;
+    return sp + pp;
+  }));
+  html += `<div class="dash-path-stat">
+    <div class="dps-v">${maxPicks}</div>
+    <div class="dps-l">最多探索次數</div>
+  </div>`;
+  html += '</div>';
+  // common paths
+  html += '<div class="dash-path-common">';
+  html += '<div class="dash-path-common-head"><span class="dash-path-common-title">🥤 常見杯路徑</span>';
+  html += `<span class="dash-path-common-count">${topShell ? topShell.n + '/' + withPath.length : '—'}</span></div>`;
+  html += `<div class="dash-path-pills"><span class="dpp-tag">cup</span>${pillsHtml(topShell?.seq || '', 'shell')}</div>`;
+  html += '</div>';
+  html += '<div class="dash-path-common">';
+  html += '<div class="dash-path-common-head"><span class="dash-path-common-title">🛏️ 常見軟墊路徑</span>';
+  html += `<span class="dash-path-common-count">${topSeal ? topSeal.n + '/' + withPath.length : '—'}</span></div>`;
+  html += `<div class="dash-path-pills"><span class="dpp-tag">seal</span>${pillsHtml(topSeal?.seq || '', 'seal')}</div>`;
+  html += '</div>';
+
+  el.innerHTML = html;
+  if (hintEl) hintEl.textContent = `(基於 ${withPath.length} 條 log)`;
+}
+
 function openDashboard() {
   renderDashboard();
   document.getElementById('dashboardModal').classList.add('show');
@@ -4323,6 +4613,53 @@ function buildPdfHtml() {
               <tr><td>2</td><td>🎯 揀料</td><td class="num">${s2n}</td><td class="num">${avg('s2','totalScore')} 組合分</td><td class="num">${avg('s2','reorders')} 重排 · ${avg('s2','elapsed')}s</td></tr>
               <tr><td>3</td><td>🥽 整耳罩</td><td class="num">${s3n}</td><td class="num">${avg('s3','dwell')}s 觀察</td><td class="num">${avg('s3','sparkles')} 閃光</td></tr>
               <tr><td>4</td><td>🎧 試戴</td><td class="num">${experimentLog.length}</td><td class="num">${avgScore} ⭐ avg</td><td class="num">${r4Pct}% 達標</td></tr>
+            </tbody>
+          </table>
+        </div>`;
+    })()}
+
+    ${(() => {
+      // v5.19: pick-path summary — common paths + first-try rate
+      const withPath = experimentLog.filter(e => e.metrics?.s2?.pickPath);
+      if (!withPath.length) return '';
+      function tally(key) {
+        const counts = {};
+        withPath.forEach(e => {
+          const seq = (e.metrics.s2.pickPath[key] || []).join('→');
+          counts[seq] = (counts[seq] || 0) + 1;
+        });
+        return Object.entries(counts).map(([seq, n]) => ({ seq, n })).sort((a, b) => b.n - a.n);
+      }
+      const shellPaths = tally('shells');
+      const sealPaths  = tally('seals');
+      const topShell = shellPaths[0];
+      const topSeal  = sealPaths[0];
+      const firstTry = withPath.filter(e => {
+        const sp = e.metrics.s2.pickPath.shells || [];
+        const pp = e.metrics.s2.pickPath.seals || [];
+        return sp.length === 1 && pp.length === 1;
+      }).length;
+      const firstTryRate = Math.round((firstTry / withPath.length) * 100);
+      const avgPicks = (withPath.reduce((a, e) => {
+        return a + (e.metrics.s2.pickPath.shells?.length || 0) + (e.metrics.s2.pickPath.seals?.length || 0);
+      }, 0) / withPath.length).toFixed(1);
+      function seqToLabel(seq, kind) {
+        if (!seq) return '—';
+        return seq.split('→').map(id => {
+          const lbl = (kind === 'shell' ? SHELL_LABEL[id] : SEAL_LABEL[id]) || id;
+          return lbl.split(' ')[1] || lbl;
+        }).join(' → ');
+      }
+      return `
+        <div class="pdf-section">
+          <h2>🛤️ Stage 2 揀料路徑</h2>
+          <table class="pdf-table">
+            <thead><tr><th>指標</th><th class="num">數值</th><th>說明</th></tr></thead>
+            <tbody>
+              <tr><td>首次命中率</td><td class="num">${firstTryRate}%</td><td>${firstTry}/${withPath.length} 個學生一 click 即中</td></tr>
+              <tr><td>平均揀料次數</td><td class="num">${avgPicks}</td><td>越少越果斷</td></tr>
+              <tr><td>常見杯路徑</td><td class="num">${topShell ? topShell.n + ' 次' : '—'}</td><td>${seqToLabel(topShell?.seq || '', 'shell')}</td></tr>
+              <tr><td>常見軟墊路徑</td><td class="num">${topSeal ? topSeal.n + ' 次' : '—'}</td><td>${seqToLabel(topSeal?.seq || '', 'seal')}</td></tr>
             </tbody>
           </table>
         </div>`;
